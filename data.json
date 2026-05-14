@@ -86,7 +86,7 @@
       "health": "Good",
       "planned_finish": "Apr 1, 2029",
       "forecast_finish": "Apr 1, 2029",
-      "critical_activities": "Ground floor wall installation — catch-up needed",
+      "critical_activities": "Ground floor wall installation \u2014 catch-up needed",
       "schedule_recommendation": "Deploy additional masonry crew; consider managed OT within 20% baseline",
       "budget": 692791728,
       "actual_cost": 459040121,
@@ -109,32 +109,243 @@
     }
   ],
   "change_orders": [
-    { "project": "Y2023-06-R-01", "co_no": "CHO-01", "description": "Amenities Batch 1 and 2", "amount": 5473000, "status": "For PHI Approval" },
-    { "project": "Y2023-06-R-01", "co_no": "CHO-01", "description": "Model Unit Construction", "amount": 10500000, "status": "Completed" },
-    { "project": "Y2024-06-R-01", "co_no": "CHO-02", "description": "Mass Housing Construction", "amount": 376678000, "status": "Ongoing" },
-    { "project": "Y2021-06-R-01", "co_no": "CHO-01", "description": "Deep Well Construction", "amount": 281395, "status": "Ongoing" },
-    { "project": "Y2021-06-R-01", "co_no": "CHO-02", "description": "Temporary Electrical Connection", "amount": 1510334, "status": "Ongoing" },
-    { "project": "Y2021-06-R-01", "co_no": "CHO-03", "description": "Change of Unit", "amount": 13860100, "status": "Ongoing" },
-    { "project": "Y2021-06-R-01", "co_no": "CHO-04", "description": "Additional Scope for Land Development", "amount": 314400, "status": "Ongoing" }
+    {
+      "project": "Y2023-06-R-01",
+      "co_no": "CHO-01",
+      "description": "Amenities Batch 1 and 2",
+      "amount": 5473000,
+      "status": "For PHI Approval"
+    },
+    {
+      "project": "Y2023-06-R-01",
+      "co_no": "CHO-01",
+      "description": "Model Unit Construction",
+      "amount": 10500000,
+      "status": "Completed"
+    },
+    {
+      "project": "Y2024-06-R-01",
+      "co_no": "CHO-02",
+      "description": "Mass Housing Construction",
+      "amount": 376678000,
+      "status": "Ongoing"
+    },
+    {
+      "project": "Y2021-06-R-01",
+      "co_no": "CHO-01",
+      "description": "Deep Well Construction",
+      "amount": 281395,
+      "status": "Ongoing"
+    },
+    {
+      "project": "Y2021-06-R-01",
+      "co_no": "CHO-02",
+      "description": "Temporary Electrical Connection",
+      "amount": 1510334,
+      "status": "Ongoing"
+    },
+    {
+      "project": "Y2021-06-R-01",
+      "co_no": "CHO-03",
+      "description": "Change of Unit",
+      "amount": 13860100,
+      "status": "Ongoing"
+    },
+    {
+      "project": "Y2021-06-R-01",
+      "co_no": "CHO-04",
+      "description": "Additional Scope for Land Development",
+      "amount": 314400,
+      "status": "Ongoing"
+    }
   ],
   "procurement": [
-    { "project": "Y2023-06-R-01", "item": "Elevator", "vendor": "Hyundai", "required_date": "May 10, 2026", "delivery_date": "Apr 26, 2026", "status": "Delivered", "buffer": "Early +14d", "action": "No action needed — delivered early" },
-    { "project": "Y2024-06-R-01", "item": "Tiles", "vendor": "Worldwide Interiors", "required_date": "May 15, 2026", "delivery_date": "Apr 15, 2026", "status": "In Progress", "buffer": "2 days", "action": "URGENT: Confirm delivery with Worldwide Interiors immediately" },
-    { "project": "Y2021-06-R-01", "item": "Formworks & TKP Contractor", "vendor": "SCM", "required_date": "May 26, 2026", "delivery_date": "May 26, 2026", "status": "In Progress", "buffer": "0 days", "action": "Issue formal delivery confirmation to SCM this week" }
+    {
+      "project": "Y2023-06-R-01",
+      "item": "Elevator",
+      "vendor": "Hyundai",
+      "required_date": "May 10, 2026",
+      "delivery_date": "Apr 26, 2026",
+      "status": "Delivered",
+      "buffer": "Early +14d",
+      "action": "No action needed \u2014 delivered early"
+    },
+    {
+      "project": "Y2024-06-R-01",
+      "item": "Tiles",
+      "vendor": "Worldwide Interiors",
+      "required_date": "May 15, 2026",
+      "delivery_date": "Apr 15, 2026",
+      "status": "In Progress",
+      "buffer": "2 days",
+      "action": "URGENT: Confirm delivery with Worldwide Interiors immediately"
+    },
+    {
+      "project": "Y2021-06-R-01",
+      "item": "Formworks & TKP Contractor",
+      "vendor": "SCM",
+      "required_date": "May 26, 2026",
+      "delivery_date": "May 26, 2026",
+      "status": "In Progress",
+      "buffer": "0 days",
+      "action": "Issue formal delivery confirmation to SCM this week"
+    }
   ],
   "risks": [
-    { "project": "Y2021-06-R-01", "risk": "Site Security Improvement", "impact": "High", "status": "Overdue", "owner": "Site Admin / PM", "due_date": "May 9, 2026 (OVERDUE)", "mitigation": "Submit security improvement proposal immediately. Deploy additional guards. Escalate to Operations Manager." },
-    { "project": "Y2024-06-R-01", "risk": "Lot Boundary Conflict", "impact": "High", "status": "Active", "owner": "PHI", "due_date": "May 28, 2026", "mitigation": "Schedule meeting: adjacent lot owner + PHI Legal + Licensed Surveyor. Prepare contingency construction sequencing." },
-    { "project": "Y2023-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Formalize escalation contingency plan: bulk-buy contracts, price lock agreements, escalation clauses." },
-    { "project": "Y2024-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Early procurement of high-cost items for Mass Housing scope." },
-    { "project": "Y2021-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Material procurement strategy for remaining 17.5% of works." }
+    {
+      "project": "Y2021-06-R-01",
+      "risk": "Site Security Improvement",
+      "impact": "High",
+      "status": "Overdue",
+      "owner": "Site Admin / PM",
+      "due_date": "May 9, 2026 (OVERDUE)",
+      "mitigation": "Submit security improvement proposal immediately. Deploy additional guards. Escalate to Operations Manager."
+    },
+    {
+      "project": "Y2024-06-R-01",
+      "risk": "Lot Boundary Conflict",
+      "impact": "High",
+      "status": "Active",
+      "owner": "PHI",
+      "due_date": "May 28, 2026",
+      "mitigation": "Schedule meeting: adjacent lot owner + PHI Legal + Licensed Surveyor. Prepare contingency construction sequencing."
+    },
+    {
+      "project": "Y2023-06-R-01",
+      "risk": "Price Escalation",
+      "impact": "Medium",
+      "status": "Ongoing",
+      "owner": "Project Manager",
+      "due_date": "Jun 2026",
+      "mitigation": "Formalize escalation contingency plan: bulk-buy contracts, price lock agreements, escalation clauses."
+    },
+    {
+      "project": "Y2024-06-R-01",
+      "risk": "Price Escalation",
+      "impact": "Medium",
+      "status": "Ongoing",
+      "owner": "Project Manager",
+      "due_date": "Jun 2026",
+      "mitigation": "Early procurement of high-cost items for Mass Housing scope."
+    },
+    {
+      "project": "Y2021-06-R-01",
+      "risk": "Price Escalation",
+      "impact": "Medium",
+      "status": "Ongoing",
+      "owner": "Project Manager",
+      "due_date": "Jun 2026",
+      "mitigation": "Material procurement strategy for remaining 17.5% of works."
+    }
   ],
   "action_items": [
-    { "project": "Y2021-06-R-01", "item": "Site Security — RHB DOS", "priority": "Overdue", "action": "Submit security improvement proposal to Ops Manager. Deploy additional security personnel pending formal plan.", "responsible": "Site Admin / PM", "due_date": "May 9, 2026 (OVERDUE)", "status": "Overdue" },
-    { "project": "Y2024-06-R-01", "item": "Lot Boundary Conflict — RPBohol Land", "priority": "High", "action": "PHI Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.", "responsible": "PHI / Legal", "due_date": "May 28, 2026", "status": "Pending" },
-    { "project": "Y2023-06-R-01", "item": "Guardhouse Construction — ROPA DOS", "priority": "Medium", "action": "Commence construction immediately. Supports site security and access control.", "responsible": "PIC", "due_date": "Jun 30, 2026", "status": "Pending" },
-    { "project": "ALL", "item": "Price Escalation Contingency Plan", "priority": "Medium", "action": "Develop formal plan: bulk-buy contracts, price lock agreements, escalation clauses with major suppliers.", "responsible": "Project Managers", "due_date": "Jun 2026", "status": "Pending" },
-    { "project": "Y2023-06-R-01", "item": "PHI Approval — ROPA DOS Amenities CO", "priority": "Normal", "action": "Approve or reject CHO-01 (₱5.47M). Delays risk contractor standby claims.", "responsible": "PHI Management", "due_date": "May 2026", "status": "Pending" },
-    { "project": "ALL", "item": "Safety Audit — All Sites", "priority": "Medium", "action": "Commission formal HSE audit. RHB DOS immediate review required. Increase toolbox talks to twice-weekly at RHB DOS.", "responsible": "Safety Officer", "due_date": "Jun 2026", "status": "Pending" }
+    {
+      "project": "Y2021-06-R-01",
+      "item": "Site Security \u2014 RHB DOS",
+      "priority": "Overdue",
+      "action": "Submit security improvement proposal to Ops Manager. Deploy additional security personnel pending formal plan.",
+      "responsible": "Site Admin / PM",
+      "due_date": "May 9, 2026 (OVERDUE)",
+      "status": "Overdue"
+    },
+    {
+      "project": "Y2024-06-R-01",
+      "item": "Lot Boundary Conflict \u2014 RPBohol Land",
+      "priority": "High",
+      "action": "PHI Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.",
+      "responsible": "PHI / Legal",
+      "due_date": "May 28, 2026",
+      "status": "Pending"
+    },
+    {
+      "project": "Y2023-06-R-01",
+      "item": "Guardhouse Construction \u2014 ROPA DOS",
+      "priority": "Medium",
+      "action": "Commence construction immediately. Supports site security and access control.",
+      "responsible": "PIC",
+      "due_date": "Jun 30, 2026",
+      "status": "Pending"
+    },
+    {
+      "project": "ALL",
+      "item": "Price Escalation Contingency Plan",
+      "priority": "Medium",
+      "action": "Develop formal plan: bulk-buy contracts, price lock agreements, escalation clauses with major suppliers.",
+      "responsible": "Project Managers",
+      "due_date": "Jun 2026",
+      "status": "Pending"
+    },
+    {
+      "project": "Y2023-06-R-01",
+      "item": "PHI Approval \u2014 ROPA DOS Amenities CO",
+      "priority": "Normal",
+      "action": "Approve or reject CHO-01 (\u20b15.47M). Delays risk contractor standby claims.",
+      "responsible": "PHI Management",
+      "due_date": "May 2026",
+      "status": "Pending"
+    },
+    {
+      "project": "ALL",
+      "item": "Safety Audit \u2014 All Sites",
+      "priority": "Medium",
+      "action": "Commission formal HSE audit. RHB DOS immediate review required. Increase toolbox talks to twice-weekly at RHB DOS.",
+      "responsible": "Safety Officer",
+      "due_date": "Jun 2026",
+      "status": "Pending"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "display_name": "System Administrator",
+      "role": "admin",
+      "password": "phi2026admin",
+      "projects": [
+        "ALL"
+      ],
+      "active": true
+    },
+    {
+      "username": "acanino",
+      "display_name": "Ariel M. Canino",
+      "role": "pm",
+      "password": "pm_acanino2026",
+      "projects": [
+        "Y2023-06-R-01",
+        "Y2024-06-R-01",
+        "Y2021-06-R-01"
+      ],
+      "active": true
+    },
+    {
+      "username": "dbitol",
+      "display_name": "Desi Bitol",
+      "role": "pm",
+      "password": "pm_dbitol2026",
+      "projects": [
+        "Y2023-06-R-01"
+      ],
+      "active": true
+    },
+    {
+      "username": "flumondoc",
+      "display_name": "Feliciano Lumondoc",
+      "role": "pm",
+      "password": "pm_flumondoc2026",
+      "projects": [
+        "Y2024-06-R-01"
+      ],
+      "active": true
+    },
+    {
+      "username": "eauxtero",
+      "display_name": "Edison Auxtero",
+      "role": "pm",
+      "password": "pm_eauxtero2026",
+      "projects": [
+        "Y2021-06-R-01"
+      ],
+      "active": true
+    }
   ]
 }
