@@ -197,6 +197,7 @@
   <button class="tab-btn" onclick="showTab('safety',this)">🦺 Safety & Quality</button>
   <button class="tab-btn" onclick="showTab('risk',this)">⚠️ Risks & Actions</button>
   <button class="tab-btn" onclick="showTab('exec',this)">🎯 CEO Summary</button>
+  <button class="tab-btn" onclick="showTab('scurve',this)">📈 S-Curve</button>
 </div>
 
 <div class="main" id="mainContent" style="display:none">
@@ -402,6 +403,85 @@
   </div>
 </div>
 
+
+<!-- ── S-CURVE ── -->
+<div class="tab-panel" id="tab-scurve">
+  <div class="grid-4 mb-16" id="evmKpiCards"></div>
+
+  <!-- Per-project S-Curves -->
+  <div class="section-head">
+    <h2>Per-Project S-Curves</h2>
+    <div class="section-head-line"></div>
+    <div class="section-head-tag">PLANNED vs ACTUAL vs FORECAST</div>
+  </div>
+  <div class="grid-3 mb-16" id="projectSCurveCards"></div>
+
+  <!-- Portfolio combined -->
+  <div class="section-head">
+    <h2>Portfolio Cumulative S-Curve</h2>
+    <div class="section-head-line"></div>
+    <div class="section-head-tag">ALL PROJECTS COMBINED</div>
+  </div>
+  <div class="grid-2 mb-16">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Portfolio — Cumulative Physical Progress (%)</div><span class="card-badge badge-info">COMBINED</span></div>
+      <div class="chart-box" style="position:relative"><canvas id="portfolioProgressChart" style="max-height:280px"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Portfolio — Cumulative Cost (₱M)</div><span class="card-badge badge-info">COMBINED</span></div>
+      <div class="chart-box" style="position:relative"><canvas id="portfolioCostChart" style="max-height:280px"></canvas></div>
+    </div>
+  </div>
+
+  <!-- EVM Table -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title">Earned Value Management (EVM) Summary</div>
+      <span class="card-badge badge-neutral">LATEST PERIOD</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Project</th><th>BAC (₱)</th><th>PV — Planned Value (₱)</th>
+            <th>EV — Earned Value (₱)</th><th>AC — Actual Cost (₱)</th>
+            <th>SV (EV-PV)</th><th>CV (EV-AC)</th><th>SPI</th><th>CPI</th><th>EAC (₱)</th><th>VAC (₱)</th>
+          </tr>
+        </thead>
+        <tbody id="evmTableRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- S-Curve Legend -->
+  <div class="card">
+    <div class="card-header"><div class="card-title">S-Curve Legend & Reading Guide</div></div>
+    <div class="grid-3" style="gap:12px;font-size:12px">
+      <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:24px;height:3px;background:#6b7a99;border-radius:2px"></div>
+          <strong>Planned (Baseline)</strong>
+        </div>
+        <div class="text-muted">Target cumulative progress/cost as per approved schedule. The ideal S-shape representing steady ramp-up, peak, and wind-down.</div>
+      </div>
+      <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:24px;height:3px;background:#f0b429;border-radius:2px"></div>
+          <strong>Actual</strong>
+        </div>
+        <div class="text-muted">Real cumulative progress/cost recorded to date. Above planned = ahead of schedule / over budget. Below = behind / under spend.</div>
+      </div>
+      <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="width:24px;height:3px;background:#10b981;border-radius:2px;border-top:2px dashed #10b981"></div>
+          <strong>Forecast (EAC)</strong>
+        </div>
+        <div class="text-muted">Estimate at Completion — projected trajectory from actual to finish. Based on current CPI performance trend.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end main -->
 
 <!-- FOOTER -->
@@ -514,6 +594,7 @@ function render(){
   renderSafety();
   renderRisks();
   renderExec();
+  renderSCurve();
 }
 
 // ─────────────────────────────────
@@ -1032,6 +1113,262 @@ function makeChart(id, type, data, extraOptions={}){
       ...extraOptions
     }
   });
+}
+
+// ─────────────────────────────────
+// S-CURVE
+// ─────────────────────────────────
+function renderSCurve(){
+  const ps = D.projects;
+  const fmtM = n => n==null?'—':'₱'+(n/1e6).toFixed(1)+'M';
+  const fmtPct = n => n==null?'—':n.toFixed(2)+'%';
+  const fmtCPI = n => n==null?'—':n.toFixed(3);
+  const clr = (v,good='gt1') => {
+    if(good==='gt1') return v>=1?'var(--good)':v>=0.9?'var(--warn)':'var(--danger)';
+    if(good==='pos') return v>=0?'var(--good)':'var(--danger)';
+    return 'var(--text)';
+  };
+
+  // EVM KPI cards
+  const totalBAC = ps.reduce((a,p)=>a+p.budget,0);
+  const totalPV  = ps.reduce((a,p)=>{const sc=p.s_curve||[];const last=sc[sc.length-1];return a+(last?last.planned_cost:0);},0);
+  const totalEV  = ps.reduce((a,p)=>a+(p.budget*(p.progress/100)),0);
+  const totalAC  = ps.reduce((a,p)=>a+p.actual_cost,0);
+  const portSPI  = (totalEV/totalPV).toFixed(3);
+  const portCPI  = (totalEV/totalAC).toFixed(3);
+  const portSV   = totalEV - totalPV;
+  const portCV   = totalEV - totalAC;
+
+  document.getElementById('evmKpiCards').innerHTML=`
+    <div class="card"><div class="card-header"><div class="card-title">Portfolio SPI</div><span class="card-badge ${parseFloat(portSPI)>=1?'badge-good':'badge-warn'}">${parseFloat(portSPI)>=1?'AHEAD':'MONITOR'}</span></div>
+      <div class="stat-val" style="color:${clr(parseFloat(portSPI),'gt1')}">${portSPI}</div>
+      <div class="stat-label">Schedule Performance Index</div>
+      <div class="stat-sub">${parseFloat(portSPI)>=1?'↑ Ahead of schedule':'↓ Behind schedule'}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Portfolio CPI</div><span class="card-badge ${parseFloat(portCPI)>=1?'badge-good':'badge-warn'}">${parseFloat(portCPI)>=1?'EFFICIENT':'MONITOR'}</span></div>
+      <div class="stat-val" style="color:${clr(parseFloat(portCPI),'gt1')}">${portCPI}</div>
+      <div class="stat-label">Cost Performance Index</div>
+      <div class="stat-sub">${parseFloat(portCPI)>=1?'↑ Under budget':'↓ Over budget'}</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Schedule Variance</div></div>
+      <div class="stat-val" style="color:${clr(portSV,'pos')};font-size:24px">${fmtM(portSV)}</div>
+      <div class="stat-label">SV = EV − PV (Portfolio)</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Cost Variance</div></div>
+      <div class="stat-val" style="color:${clr(portCV,'pos')};font-size:24px">${fmtM(portCV)}</div>
+      <div class="stat-label">CV = EV − AC (Portfolio)</div></div>`;
+
+  // Per-project S-Curve cards
+  const projColors = [
+    {planned:'#6b7a99',actual:'#f0b429',forecast:'#ffd166'},
+    {planned:'#6b7a99',actual:'#3b82f6',forecast:'#60a5fa'},
+    {planned:'#6b7a99',actual:'#10b981',forecast:'#34d399'},
+  ];
+
+  document.getElementById('projectSCurveCards').innerHTML = ps.map((p,i)=>`
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">${p.name}</div>
+        <span class="card-badge ${p.progress>=(p.s_curve||[{planned_progress:0}]).slice(-1)[0]?.planned_progress?'badge-good':'badge-warn'}">${p.code.substring(1,5)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Physical Progress S-Curve</div>
+      <canvas id="scurve_prog_${i}" style="max-height:180px"></canvas>
+      <div style="font-size:11px;color:var(--muted);margin:10px 0 6px">Cost S-Curve</div>
+      <canvas id="scurve_cost_${i}" style="max-height:160px"></canvas>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;font-size:11px">
+        ${(()=>{
+          const sc = p.s_curve||[];
+          const last = sc[sc.length-1]||{};
+          const BAC = p.budget;
+          const PV = last.planned_cost||0;
+          const EV = BAC*(p.progress/100);
+          const AC = p.actual_cost;
+          const SPI = PV>0?(EV/PV).toFixed(2):'—';
+          const CPI = AC>0?(EV/AC).toFixed(2):'—';
+          const SV = EV-PV;
+          const CV = EV-AC;
+          const EAC = parseFloat(CPI)>0?(BAC/parseFloat(CPI)).toFixed(0):BAC;
+          const VAC = BAC-parseFloat(EAC);
+          return`
+            <div style="background:var(--surface2);border-radius:6px;padding:8px;border:1px solid var(--border)">
+              <div style="color:var(--muted)">SPI</div>
+              <div style="font-family:'JetBrains Mono';font-size:14px;color:${parseFloat(SPI)>=1?'var(--good)':'var(--warn)'};font-weight:700">${SPI}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:6px;padding:8px;border:1px solid var(--border)">
+              <div style="color:var(--muted)">CPI</div>
+              <div style="font-family:'JetBrains Mono';font-size:14px;color:${parseFloat(CPI)>=1?'var(--good)':'var(--warn)'};font-weight:700">${CPI}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:6px;padding:8px;border:1px solid var(--border)">
+              <div style="color:var(--muted)">SV</div>
+              <div style="font-family:'JetBrains Mono';font-size:13px;color:${SV>=0?'var(--good)':'var(--danger)'};font-weight:700">${(SV/1e6).toFixed(1)}M</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:6px;padding:8px;border:1px solid var(--border)">
+              <div style="color:var(--muted)">CV</div>
+              <div style="font-family:'JetBrains Mono';font-size:13px;color:${CV>=0?'var(--good)':'var(--danger)'};font-weight:700">${(CV/1e6).toFixed(1)}M</div>
+            </div>`;
+        })()}
+      </div>
+    </div>`).join('');
+
+  // Draw per-project charts
+  ps.forEach((p,i)=>{
+    const sc = p.s_curve||[];
+    const labels = sc.map(d=>d.period);
+    const lastIdx = sc.length-1;
+    const BAC = p.budget;
+    const AC = p.actual_cost;
+    const EV = BAC*(p.progress/100);
+    const CPI_val = AC>0?EV/AC:1;
+    const EAC = BAC/CPI_val;
+    const clrs = projColors[i];
+
+    // Build forecast extension for progress
+    const lastActual = sc[lastIdx]?.actual_progress||p.progress;
+    const forecastProg = sc.map((d,j)=>j<lastIdx?null:d.actual_progress);
+    // Extend to 100%
+    const forecastLabels = [...labels,'Forecast 100%'];
+    const plannedProg = [...sc.map(d=>d.planned_progress), 100];
+    const actualProg  = [...sc.map(d=>d.actual_progress), null];
+    const fcastProg   = [...sc.map((d,j)=>j===lastIdx?d.actual_progress:null), 100];
+
+    makeChart(`scurve_prog_${i}`,'line',{
+      labels: forecastLabels,
+      datasets:[
+        {label:'Planned',data:plannedProg,borderColor:clrs.planned,backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[4,2]},
+        {label:'Actual',data:actualProg,borderColor:clrs.actual,backgroundColor:clrs.actual+'22',borderWidth:2.5,pointRadius:3,fill:true},
+        {label:'Forecast',data:fcastProg,borderColor:clrs.forecast,backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[6,3]},
+      ]
+    },{
+      scales:{
+        y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#1e2840'}},
+        x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}
+      },
+      plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}}
+    });
+
+    // Cost S-Curve
+    const plannedCost = [...sc.map(d=>+(d.planned_cost/1e6).toFixed(1)), +(BAC/1e6).toFixed(1)];
+    const actualCost  = [...sc.map(d=>+(d.actual_cost/1e6).toFixed(1)), null];
+    const fcastCost   = [...sc.map((d,j)=>j===lastIdx?+(d.actual_cost/1e6).toFixed(1):null), +(EAC/1e6).toFixed(1)];
+
+    makeChart(`scurve_cost_${i}`,'line',{
+      labels: forecastLabels,
+      datasets:[
+        {label:'Planned (₱M)',data:plannedCost,borderColor:clrs.planned,backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[4,2]},
+        {label:'Actual (₱M)',data:actualCost,borderColor:clrs.actual,backgroundColor:clrs.actual+'22',borderWidth:2.5,pointRadius:3,fill:true},
+        {label:'EAC (₱M)',data:fcastCost,borderColor:clrs.forecast,backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[6,3]},
+      ]
+    },{
+      scales:{
+        y:{ticks:{callback:v=>'₱'+v+'M'},grid:{color:'#1e2840'}},
+        x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}
+      },
+      plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}}
+    });
+  });
+
+  // Portfolio combined progress chart
+  // Normalize all projects to % of their duration, combine into unified timeline
+  const allLabels = [...new Set(ps.flatMap(p=>(p.s_curve||[]).map(d=>d.period)))].sort((a,b)=>{
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const pa=a.split(' '),pb=b.split(' ');
+    return parseInt(pa[1])-parseInt(pb[1])||months.indexOf(pa[0])-months.indexOf(pb[0]);
+  });
+
+  // Weighted avg progress across projects by budget weight
+  const totalBudget = ps.reduce((a,p)=>a+p.budget,0);
+  const weights = ps.map(p=>p.budget/totalBudget);
+
+  function interpProgress(p, period){
+    const sc=p.s_curve||[];
+    const idx=sc.findIndex(d=>d.period===period);
+    if(idx>=0) return sc[idx];
+    // interpolate
+    const before=sc.filter(d=>d.period<=period);
+    const after=sc.filter(d=>d.period>period);
+    if(!before.length||!after.length) return null;
+    return before[before.length-1];
+  }
+
+  const portfolioPlanned = allLabels.map(lbl=>{
+    let val=0;
+    ps.forEach((p,i)=>{const d=interpProgress(p,lbl);if(d)val+=d.planned_progress*weights[i];});
+    return +val.toFixed(2);
+  });
+  const portfolioActual = allLabels.map(lbl=>{
+    let val=0,cnt=0;
+    ps.forEach((p,i)=>{const d=interpProgress(p,lbl);if(d){val+=d.actual_progress*weights[i];cnt++;}});
+    return cnt?+val.toFixed(2):null;
+  });
+
+  makeChart('portfolioProgressChart','line',{
+    labels:allLabels,
+    datasets:[
+      {label:'Portfolio Planned (%)',data:portfolioPlanned,borderColor:'#6b7a99',backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[4,2]},
+      {label:'Portfolio Actual (%)',data:portfolioActual,borderColor:'#f0b429',backgroundColor:'rgba(240,180,41,.12)',borderWidth:2.5,pointRadius:3,fill:true},
+    ]
+  },{
+    scales:{
+      y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#1e2840'}},
+      x:{grid:{display:false},ticks:{maxRotation:55,font:{size:9}}}
+    }
+  });
+
+  // Portfolio cost
+  const portfolioCostPlanned = allLabels.map(lbl=>{
+    let val=0;
+    ps.forEach(p=>{const d=interpProgress(p,lbl);if(d)val+=d.planned_cost;});
+    return +(val/1e6).toFixed(1);
+  });
+  const portfolioCostActual = allLabels.map(lbl=>{
+    let val=0,cnt=0;
+    ps.forEach(p=>{const d=interpProgress(p,lbl);if(d){val+=d.actual_cost;cnt++;}});
+    return cnt?+(val/1e6).toFixed(1):null;
+  });
+
+  makeChart('portfolioCostChart','line',{
+    labels:allLabels,
+    datasets:[
+      {label:'Portfolio Planned (₱M)',data:portfolioCostPlanned,borderColor:'#6b7a99',backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[4,2]},
+      {label:'Portfolio Actual (₱M)',data:portfolioCostActual,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.12)',borderWidth:2.5,pointRadius:3,fill:true},
+    ]
+  },{
+    scales:{
+      y:{ticks:{callback:v=>'₱'+v+'M'},grid:{color:'#1e2840'}},
+      x:{grid:{display:false},ticks:{maxRotation:55,font:{size:9}}}
+    }
+  });
+
+  // EVM Table
+  document.getElementById('evmTableRows').innerHTML = ps.map(p=>{
+    const sc = p.s_curve||[];
+    const last = sc[sc.length-1]||{};
+    const BAC = p.budget;
+    const PV = last.planned_cost||0;
+    const EV = BAC*(p.progress/100);
+    const AC = p.actual_cost;
+    const SV = EV-PV;
+    const CV = EV-AC;
+    const SPI = PV>0?(EV/PV).toFixed(3):'—';
+    const CPI = AC>0?(EV/AC).toFixed(3):'—';
+    const EAC = parseFloat(CPI)>0?(BAC/parseFloat(CPI)).toFixed(0):BAC;
+    const VAC = BAC-parseFloat(EAC);
+    const fc = (v,type)=>{
+      if(type==='idx') return`<strong style="color:${parseFloat(v)>=1?'var(--good)':parseFloat(v)>=0.9?'var(--warn)':'var(--danger)'}">${v}</strong>`;
+      if(type==='var') return`<strong style="color:${v>=0?'var(--good)':'var(--danger)'}">${(v/1e6).toFixed(1)}M</strong>`;
+      return v;
+    };
+    return`<tr>
+      <td class="fw-bold">${p.name}</td>
+      <td class="td-mono">₱${(BAC/1e6).toFixed(1)}M</td>
+      <td class="td-mono">₱${(PV/1e6).toFixed(1)}M</td>
+      <td class="td-mono">₱${(EV/1e6).toFixed(1)}M</td>
+      <td class="td-mono">₱${(AC/1e6).toFixed(1)}M</td>
+      <td class="td-mono">${fc(SV,'var')}</td>
+      <td class="td-mono">${fc(CV,'var')}</td>
+      <td class="td-mono">${fc(SPI,'idx')}</td>
+      <td class="td-mono">${fc(CPI,'idx')}</td>
+      <td class="td-mono">₱${(parseFloat(EAC)/1e6).toFixed(1)}M</td>
+      <td class="td-mono" style="color:${VAC>=0?'var(--good)':'var(--danger)'}">₱${(VAC/1e6).toFixed(1)}M</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── BOOT ──

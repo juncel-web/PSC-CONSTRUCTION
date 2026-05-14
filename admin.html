@@ -152,6 +152,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="sidebar-item" onclick="showPanel('schedule',this)">📅 Schedule</button>
     <button class="sidebar-item" onclick="showPanel('cost',this)">💰 Cost & CPI</button>
     <button class="sidebar-item" onclick="showPanel('safety',this)">🦺 Safety</button>
+    <button class="sidebar-item" onclick="showPanel('scurve',this)">📈 S-Curve Data</button>
     <div class="sidebar-section">Portfolio</div>
     <button class="sidebar-item" onclick="showPanel('procurement',this)">📦 Procurement</button>
     <button class="sidebar-item" onclick="showPanel('changeorders',this)">🔄 Change Orders</button>
@@ -231,6 +232,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="panel-title">Action Items</div>
       <div id="actionForms"></div>
       <button class="btn btn-secondary btn-sm" id="addActionBtn" style="display:none" onclick="addActionRow()">+ Add Action Item</button>
+    </div>
+
+    <!-- S-CURVE DATA -->
+    <div class="admin-panel" id="panel-scurve">
+      <div class="panel-title">S-Curve Data Entry</div>
+      <div class="panel-sub">Add weekly cumulative data points per project. Each row = one reporting period.</div>
+      <div id="scurveForms"></div>
     </div>
 
     <!-- USERS (ADMIN ONLY) -->
@@ -446,6 +454,7 @@ function populateForms(){
   buildRiskForms(d.risks);
   buildActionForms(d.action_items);
   if(isAdmin())buildUserGrid(d.users||[]);
+  buildSCurveForms(d.projects);
 }
 
 function buildProcForms(items,projects){
@@ -601,6 +610,53 @@ function addCORow(){cc++;const i='n'+cc;const ps=currentData.projects;const div=
 function addRiskRow(){rc++;const i='n'+rc;const div=document.createElement('div');div.id=`risk-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)"><div class="form-group"><label>Project Code</label><input id="ri${i}_p"/></div><div class="form-group"><label>Risk</label><input id="ri${i}_risk"/></div><div class="form-group"><label>Impact</label><select id="ri${i}_imp"><option>High</option><option selected>Medium</option><option>Low</option></select></div><div class="form-group"><label>Status</label><select id="ri${i}_st"><option>Active</option><option>Ongoing</option><option>Overdue</option><option>Resolved</option></select></div><div class="form-group"><label>Owner</label><input id="ri${i}_own"/></div><div class="form-group"><label>Due Date</label><input id="ri${i}_due"/></div><div class="form-group full"><label>Mitigation</label><textarea id="ri${i}_mit"></textarea></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;document.getElementById('riskForms').appendChild(div);}
 function addActionRow(){ac++;const i='n'+ac;const div=document.createElement('div');div.id=`action-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)"><div class="form-group"><label>Project</label><input id="ai${i}_p"/></div><div class="form-group"><label>Item</label><input id="ai${i}_item"/></div><div class="form-group"><label>Priority</label><select id="ai${i}_pri"><option>High</option><option selected>Medium</option><option>Normal</option><option>Overdue</option></select></div><div class="form-group full"><label>Action</label><textarea id="ai${i}_act"></textarea></div><div class="form-group"><label>Responsible</label><input id="ai${i}_resp"/></div><div class="form-group"><label>Due Date</label><input id="ai${i}_due"/></div><div class="form-group"><label>Status</label><select id="ai${i}_st"><option selected>Pending</option><option>In Progress</option><option>Done</option><option>Overdue</option></select></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;document.getElementById('actionForms').appendChild(div);}
 
+
+// S-CURVE FORMS
+function buildSCurveForms(projects){
+  document.getElementById('scurveForms').innerHTML = projects.map((p,i)=>{
+    const e = canEdit(p.code);
+    const sc = p.s_curve || [];
+    const rows = sc.map((d,j)=>`
+      <div class="repeat-row" id="sc${i}-row-${j}" style="grid-template-columns:repeat(6,1fr)">
+        <div class="row-fields" style="grid-template-columns:repeat(6,1fr)">
+          <div class="form-group"><label>Period</label><input id="sc${i}_${j}_period" value="${d.period}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Planned Progress (%)</label><input id="sc${i}_${j}_pp" type="number" step="0.01" value="${d.planned_progress}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Actual Progress (%)</label><input id="sc${i}_${j}_ap" type="number" step="0.01" value="${d.actual_progress}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Planned Cost (₱)</label><input id="sc${i}_${j}_pc" type="number" value="${d.planned_cost}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Actual Cost (₱)</label><input id="sc${i}_${j}_ac" type="number" value="${d.actual_cost}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>EAC (₱)</label><input id="sc${i}_${j}_eac" type="number" value="${d.eac}" ${e?'':'disabled'}/></div>
+        </div>
+        ${e?`<button class="btn btn-danger btn-sm" style="margin-top:2px;flex-shrink:0" onclick="document.getElementById('sc${i}-row-${j}').remove()">✕</button>`:''}
+      </div>`).join('');
+
+    return`<div class="form-card">
+      <div class="form-card-title">${p.name} — ${p.code}${e?'':'<span style="font-size:10px;color:var(--muted);margin-left:8px">👁 View Only</span>'}
+        ${e?`<button class="btn btn-secondary btn-sm" onclick="addSCurveRow(${i})">+ Add Period</button>`:''}
+      </div>
+      <div id="sc${i}-rows">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+let scCounts = [0,0,0,0,0];
+function addSCurveRow(projIdx){
+  scCounts[projIdx] = (scCounts[projIdx]||0)+1;
+  const j = 'new'+scCounts[projIdx];
+  const div = document.createElement('div');
+  div.id = `sc${projIdx}-row-${j}`;
+  div.className = 'repeat-row';
+  div.innerHTML = `<div class="row-fields" style="grid-template-columns:repeat(6,1fr)">
+    <div class="form-group"><label>Period</label><input id="sc${projIdx}_${j}_period" placeholder="e.g. Jun 2026"/></div>
+    <div class="form-group"><label>Planned Progress (%)</label><input id="sc${projIdx}_${j}_pp" type="number" step="0.01" placeholder="0.00"/></div>
+    <div class="form-group"><label>Actual Progress (%)</label><input id="sc${projIdx}_${j}_ap" type="number" step="0.01" placeholder="0.00"/></div>
+    <div class="form-group"><label>Planned Cost (₱)</label><input id="sc${projIdx}_${j}_pc" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>Actual Cost (₱)</label><input id="sc${projIdx}_${j}_ac" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>EAC (₱)</label><input id="sc${projIdx}_${j}_eac" type="number" placeholder="0"/></div>
+  </div>
+  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('sc${projIdx}-row-${j}').remove()">✕</button>`;
+  document.getElementById(`sc${projIdx}-rows`).appendChild(div);
+}
+
 // COLLECT
 function collectData(){
   const d=JSON.parse(JSON.stringify(currentData));
@@ -646,6 +702,28 @@ function collectData(){
   d.change_orders=[...document.getElementById('coForms').querySelectorAll('.repeat-row')].map(r=>{const i=r.id.replace('co-row-','');return{project:g(`co${i}_p`)||'',co_no:g(`co${i}_no`)||'',description:g(`co${i}_desc`)||'',amount:gn(`co${i}_amt`)||0,status:g(`co${i}_st`)||'Ongoing'};}).filter(r=>r.description);
   d.risks=[...document.getElementById('riskForms').querySelectorAll('.repeat-row')].map(r=>{const i=r.id.replace('risk-row-','');return{project:g(`ri${i}_p`)||'',risk:g(`ri${i}_risk`)||'',impact:g(`ri${i}_imp`)||'Medium',status:g(`ri${i}_st`)||'Ongoing',owner:g(`ri${i}_own`)||'',due_date:g(`ri${i}_due`)||'',mitigation:g(`ri${i}_mit`)||''};}).filter(r=>r.risk);
   d.action_items=[...document.getElementById('actionForms').querySelectorAll('.repeat-row')].map(r=>{const i=r.id.replace('action-row-','');return{project:g(`ai${i}_p`)||'',item:g(`ai${i}_item`)||'',priority:g(`ai${i}_pri`)||'Normal',action:g(`ai${i}_act`)||'',responsible:g(`ai${i}_resp`)||'',due_date:g(`ai${i}_due`)||'',status:g(`ai${i}_st`)||'Pending'};}).filter(r=>r.item);
+
+  // S-Curve data per project
+  d.projects = d.projects.map((p,i)=>{
+    const rows = document.querySelectorAll(`[id^="sc${i}-row-"]`);
+    if(!rows.length) return p;
+    const sc = [...rows].map(row=>{
+      const id = row.id.replace(`sc${i}-row-`,'');
+      const period = g(`sc${i}_${id}_period`);
+      if(!period) return null;
+      return{
+        period,
+        planned_progress: gn(`sc${i}_${id}_pp`)||0,
+        actual_progress:  gn(`sc${i}_${id}_ap`)||0,
+        planned_cost:     gn(`sc${i}_${id}_pc`)||0,
+        actual_cost:      gn(`sc${i}_${id}_ac`)||0,
+        eac:              gn(`sc${i}_${id}_eac`)||p.budget,
+      };
+    }).filter(Boolean);
+    if(sc.length) p.s_curve = sc;
+    return p;
+  });
+
   return d;
 }
 
