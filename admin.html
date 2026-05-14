@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHI Dashboard — Admin Portal</title>
+<title>PSC Dashboard — Admin Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0d14;--surface:#111520;--surface2:#161c2e;--border:#1e2840;--accent:#f0b429;--accent2:#3b82f6;--accent3:#10b981;--danger:#ef4444;--warn:#f97316;--text:#e8ecf4;--muted:#6b7a99;}
@@ -99,10 +99,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-logo">PHI</div>
+  <div class="login-logo">PSC</div>
   <div class="login-card">
     <div class="login-title">Dashboard Portal</div>
-    <div class="login-sub">PHI Construction Operations — PSC</div>
+    <div class="login-sub">PSC Construction Operations — PSC</div>
     <div class="role-tabs">
       <button class="role-tab active" onclick="setRole('pm',this)">👷 Project Manager</button>
       <button class="role-tab" onclick="setRole('admin',this)">⚙️ Administrator</button>
@@ -128,7 +128,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- TOPBAR -->
 <div class="topbar" id="adminTopbar" style="display:none">
   <div style="display:flex;align-items:center;gap:10px">
-    <div class="topbar-logo">PHI</div>
+    <div class="topbar-logo">PSC</div>
     <div><div class="topbar-title">PSC Construction — Admin Portal</div><div class="topbar-sub" id="tSub">Loading…</div></div>
   </div>
   <div style="display:flex;align-items:center;gap:9px">
@@ -475,7 +475,7 @@ function buildCOForms(items,projects){
         <div class="form-group"><label>CO No.</label><input id="co${i}_no" value="${c.co_no}" ${e?'':'disabled'}/></div>
         <div class="form-group"><label>Description</label><input id="co${i}_desc" value="${c.description}" ${e?'':'disabled'}/></div>
         <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amt" type="number" value="${c.amount}" ${e?'':'disabled'}/></div>
-        <div class="form-group"><label>Status</label><select id="co${i}_st" ${e?'':'disabled'}>${['Ongoing','For PHI Approval','Completed','Cancelled'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Status</label><select id="co${i}_st" ${e?'':'disabled'}>${['Ongoing','For PSC Approval','Completed','Cancelled'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
       </div>${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`:''}
     </div>`;
   }).join('');
@@ -597,7 +597,7 @@ function toggleActive(i){
 
 // ADD ROW HELPERS
 function addProcRow(){pc++;const i='n'+pc;const ps=currentData.projects;const div=document.createElement('div');div.id=`proc-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(4,1fr)"><div class="form-group"><label>Project</label><select id="pr${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div><div class="form-group"><label>Item</label><input id="pr${i}_item"/></div><div class="form-group"><label>Vendor</label><input id="pr${i}_vendor"/></div><div class="form-group"><label>Required Date</label><input id="pr${i}_req"/></div><div class="form-group"><label>Delivery Date</label><input id="pr${i}_dlv"/></div><div class="form-group"><label>Status</label><select id="pr${i}_st"><option>In Progress</option><option>Delivered</option><option>Delayed</option></select></div><div class="form-group"><label>Buffer</label><input id="pr${i}_buf"/></div><div class="form-group"><label>Action Note</label><input id="pr${i}_act"/></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`;document.getElementById('procForms').appendChild(div);}
-function addCORow(){cc++;const i='n'+cc;const ps=currentData.projects;const div=document.createElement('div');div.id=`co-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)"><div class="form-group"><label>Project</label><select id="co${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div><div class="form-group"><label>CO No.</label><input id="co${i}_no"/></div><div class="form-group"><label>Description</label><input id="co${i}_desc"/></div><div class="form-group"><label>Amount (₱)</label><input id="co${i}_amt" type="number" value="0"/></div><div class="form-group"><label>Status</label><select id="co${i}_st"><option>Ongoing</option><option>For PHI Approval</option><option>Completed</option><option>Cancelled</option></select></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;document.getElementById('coForms').appendChild(div);}
+function addCORow(){cc++;const i='n'+cc;const ps=currentData.projects;const div=document.createElement('div');div.id=`co-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)"><div class="form-group"><label>Project</label><select id="co${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div><div class="form-group"><label>CO No.</label><input id="co${i}_no"/></div><div class="form-group"><label>Description</label><input id="co${i}_desc"/></div><div class="form-group"><label>Amount (₱)</label><input id="co${i}_amt" type="number" value="0"/></div><div class="form-group"><label>Status</label><select id="co${i}_st"><option>Ongoing</option><option>For PSC Approval</option><option>Completed</option><option>Cancelled</option></select></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;document.getElementById('coForms').appendChild(div);}
 function addRiskRow(){rc++;const i='n'+rc;const div=document.createElement('div');div.id=`risk-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)"><div class="form-group"><label>Project Code</label><input id="ri${i}_p"/></div><div class="form-group"><label>Risk</label><input id="ri${i}_risk"/></div><div class="form-group"><label>Impact</label><select id="ri${i}_imp"><option>High</option><option selected>Medium</option><option>Low</option></select></div><div class="form-group"><label>Status</label><select id="ri${i}_st"><option>Active</option><option>Ongoing</option><option>Overdue</option><option>Resolved</option></select></div><div class="form-group"><label>Owner</label><input id="ri${i}_own"/></div><div class="form-group"><label>Due Date</label><input id="ri${i}_due"/></div><div class="form-group full"><label>Mitigation</label><textarea id="ri${i}_mit"></textarea></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;document.getElementById('riskForms').appendChild(div);}
 function addActionRow(){ac++;const i='n'+ac;const div=document.createElement('div');div.id=`action-row-${i}`;div.className='repeat-row';div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)"><div class="form-group"><label>Project</label><input id="ai${i}_p"/></div><div class="form-group"><label>Item</label><input id="ai${i}_item"/></div><div class="form-group"><label>Priority</label><select id="ai${i}_pri"><option>High</option><option selected>Medium</option><option>Normal</option><option>Overdue</option></select></div><div class="form-group full"><label>Action</label><textarea id="ai${i}_act"></textarea></div><div class="form-group"><label>Responsible</label><input id="ai${i}_resp"/></div><div class="form-group"><label>Due Date</label><input id="ai${i}_due"/></div><div class="form-group"><label>Status</label><select id="ai${i}_st"><option selected>Pending</option><option>In Progress</option><option>Done</option><option>Overdue</option></select></div></div><button class="btn btn-danger btn-sm" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;document.getElementById('actionForms').appendChild(div);}
 

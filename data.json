@@ -114,7 +114,7 @@
       "co_no": "CHO-01",
       "description": "Amenities Batch 1 and 2",
       "amount": 5473000,
-      "status": "For PHI Approval"
+      "status": "For PSC Approval"
     },
     {
       "project": "Y2023-06-R-01",
@@ -206,9 +206,9 @@
       "risk": "Lot Boundary Conflict",
       "impact": "High",
       "status": "Active",
-      "owner": "PHI",
+      "owner": "PSC",
       "due_date": "May 28, 2026",
-      "mitigation": "Schedule meeting: adjacent lot owner + PHI Legal + Licensed Surveyor. Prepare contingency construction sequencing."
+      "mitigation": "Schedule meeting: adjacent lot owner + PSC Legal + Licensed Surveyor. Prepare contingency construction sequencing."
     },
     {
       "project": "Y2023-06-R-01",
@@ -252,8 +252,8 @@
       "project": "Y2024-06-R-01",
       "item": "Lot Boundary Conflict \u2014 RPBohol Land",
       "priority": "High",
-      "action": "PHI Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.",
-      "responsible": "PHI / Legal",
+      "action": "PSC Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.",
+      "responsible": "PSC / Legal",
       "due_date": "May 28, 2026",
       "status": "Pending"
     },
@@ -277,10 +277,10 @@
     },
     {
       "project": "Y2023-06-R-01",
-      "item": "PHI Approval \u2014 ROPA DOS Amenities CO",
+      "item": "PSC Approval \u2014 ROPA DOS Amenities CO",
       "priority": "Normal",
       "action": "Approve or reject CHO-01 (\u20b15.47M). Delays risk contractor standby claims.",
-      "responsible": "PHI Management",
+      "responsible": "PSC Management",
       "due_date": "May 2026",
       "status": "Pending"
     },
@@ -299,7 +299,7 @@
       "username": "admin",
       "display_name": "System Administrator",
       "role": "admin",
-      "password": "phi2026admin",
+      "password": "psc2026admin",
       "projects": [
         "ALL"
       ],
