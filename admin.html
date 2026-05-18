@@ -9,460 +9,261 @@
   :root{--bg:#0a0d14;--surface:#111520;--surface2:#161c2e;--border:#1e2840;--accent:#f0b429;--accent2:#3b82f6;--accent3:#10b981;--danger:#ef4444;--warn:#f97316;--text:#e8ecf4;--muted:#6b7a99;}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-height:100vh}
-
-  /* ── LOGIN ── */
-  .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:20px}
+  /* Login */
+  .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:24px}
   .login-logo{font-family:'Bebas Neue';font-size:48px;color:var(--accent);letter-spacing:4px}
-  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:360px}
-  .login-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:4px;text-align:center}
-  .login-sub{font-size:11px;color:var(--muted);margin-bottom:24px;text-align:center}
-  .login-role-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:6px;overflow:hidden}
-  .login-role-tab{flex:1;padding:8px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:var(--surface2);border:none;transition:all .2s}
-  .login-role-tab.active{background:var(--accent);color:#000}
-
-  /* ── TOPBAR ── */
-  .topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:50}
-  .topbar-brand{display:flex;align-items:center;gap:10px}
-  .topbar-logo{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;color:#000}
-  .topbar-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:1px}
-  .topbar-sub{font-size:10px;color:var(--muted)}
-  .user-chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 6px}
-  .user-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:12px;color:#000}
-  .user-name{font-size:11px;font-weight:600}
-  .user-role{font-size:10px;color:var(--muted)}
-
-  /* ── LAYOUT ── */
-  .admin-layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 54px)}
-  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:12px 0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;display:flex;flex-direction:column}
-  .sidebar-section{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:10px 16px 4px}
-  .sidebar-item{display:flex;align-items:center;gap:8px;padding:9px 16px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .2s;background:none;border-top:none;border-bottom:none;border-right:none;text-align:left;width:100%}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:340px;text-align:center}
+  .login-title{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:6px}
+  .login-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
+  /* Topbar */
+  .topbar{background:rgba(10,13,20,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;position:sticky;top:0;z-index:50}
+  .topbar-title{font-family:'Bebas Neue';font-size:18px;letter-spacing:1px}
+  .topbar-sub{font-size:11px;color:var(--muted)}
+  /* Layout */
+  .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+  .sidebar-item{display:block;padding:10px 20px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .2s;background:none;border-top:none;border-bottom:none;border-right:none;text-align:left;width:100%}
   .sidebar-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
   .sidebar-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(240,180,41,.05)}
-  .sidebar-item.disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
-  .sidebar-badge{margin-left:auto;font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px;background:var(--accent);color:#000}
-  .sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)}
-  .content{padding:24px;overflow-y:auto}
-
-  /* ── PANELS ── */
+  .content{padding:28px;overflow-y:auto}
+  /* Panels */
   .admin-panel{display:none}
   .admin-panel.active{display:block;animation:fadeIn .25s ease}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  .panel-header{margin-bottom:20px}
-  .panel-title{font-family:'Bebas Neue';font-size:24px;letter-spacing:1px;margin-bottom:2px}
-  .panel-sub{font-size:12px;color:var(--muted)}
-
-  /* ── CARDS ── */
-  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:14px}
-  .form-card-title{font-family:'Bebas Neue';font-size:14px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .panel-title{font-family:'Bebas Neue';font-size:24px;letter-spacing:1px;margin-bottom:4px}
+  .panel-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+  /* Cards */
+  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+  .form-card-title{font-family:'Bebas Neue';font-size:15px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
   .form-group{display:flex;flex-direction:column;gap:5px}
   .form-group.full{grid-column:1/-1}
   label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
-  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 11px;color:var(--text);font-family:'DM Sans';font-size:12px;transition:border-color .2s;outline:none;width:100%}
+  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'DM Sans';font-size:12px;transition:border-color .2s;outline:none;width:100%}
   input:focus,select:focus,textarea:focus{border-color:var(--accent)}
-  input:disabled,select:disabled,textarea:disabled{opacity:.4;cursor:not-allowed}
-  textarea{resize:vertical;min-height:56px}
-
-  /* ── BUTTONS ── */
-  .btn{padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans';font-size:12px;font-weight:700;letter-spacing:.4px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+  input[type=password]{font-family:'JetBrains Mono';letter-spacing:3px}
+  textarea{resize:vertical;min-height:60px}
+  /* Buttons */
+  .btn{padding:8px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans';font-size:12px;font-weight:700;letter-spacing:.5px;transition:all .2s}
   .btn-primary{background:var(--accent);color:#000}
   .btn-primary:hover{background:#ffd166}
   .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
   .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
-  .btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
-  .btn-success{background:rgba(16,185,129,.12);color:var(--accent3);border:1px solid rgba(16,185,129,.25)}
+  .btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
   .btn-sm{padding:5px 12px;font-size:11px}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-
-  /* ── USER MANAGEMENT CARDS ── */
-  .user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:16px}
-  .user-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .2s}
-  .user-card:hover{border-color:var(--accent)}
-  .user-card-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-  .user-card-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;flex-shrink:0}
-  .avatar-admin{background:linear-gradient(135deg,var(--accent),#e67e00);color:#000}
-  .avatar-pm{background:linear-gradient(135deg,var(--accent2),#1d4ed8);color:#fff}
-  .user-card-name{font-weight:700;font-size:13px}
-  .user-card-username{font-family:'JetBrains Mono';font-size:10px;color:var(--muted)}
-  .user-card-body{font-size:11px}
-  .user-card-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)}
-  .user-card-row:last-child{border-bottom:none}
-  .user-card-actions{display:flex;gap:6px;margin-top:12px}
-  .role-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
-  .role-admin{background:rgba(240,180,41,.2);color:var(--accent)}
-  .role-pm{background:rgba(59,130,246,.2);color:var(--accent2)}
-  .status-active{color:var(--accent3)}
-  .status-inactive{color:var(--danger)}
-  .proj-tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:9px;padding:1px 5px;margin:1px;font-family:'JetBrains Mono'}
-
-  /* ── REPEAT ROWS ── */
-  .repeat-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
-  .repeat-row .row-fields{flex:1;display:grid;gap:8px}
-  .locked-field{position:relative}
-  .locked-field::after{content:'🔒';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none}
-
-  /* ── ACCESS SCOPE INDICATOR ── */
-  .scope-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:12px}
-  .scope-admin{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.25)}
-  .scope-pm{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25)}
-  .scope-icon{font-size:18px}
-
-  /* ── STATUS BAR ── */
-  .status-bar{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 18px;font-size:12px;display:none;align-items:center;gap:8px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  /* Status */
+  .status-bar{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-size:12px;display:flex;align-items:center;gap:10px;z-index:200;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
   .status-bar.show{display:flex}
   .status-bar.success{border-color:var(--accent3);color:var(--accent3)}
   .status-bar.error{border-color:var(--danger);color:var(--danger)}
   .status-bar.loading{border-color:var(--accent);color:var(--accent)}
-
-  /* ── MODAL ── */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center}
-  .modal-overlay.show{display:flex}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;width:440px;max-width:95vw}
-  .modal-title{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:16px}
-  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
-
-  /* ── MISC ── */
-  .divider{height:1px;background:var(--border);margin:16px 0}
-  .text-muted{color:var(--muted)}
-  .fw-bold{font-weight:700}
-  .mb-16{margin-bottom:16px}
-  .mt-12{margin-top:12px}
-  .no-break{white-space:nowrap}
-  table{width:100%;border-collapse:collapse}
-  th{text-align:left;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
-  td{padding:9px 12px;font-size:12px;border-bottom:1px solid rgba(30,40,64,.5);vertical-align:middle}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:rgba(255,255,255,.02)}
-
+  /* Repeat section rows */
+  .repeat-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+  .repeat-row .row-fields{flex:1;display:grid;gap:8px}
+  .repeat-row .btn-remove{flex-shrink:0;margin-top:2px}
+  /* Config note */
+  .config-note{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.3);border-radius:8px;padding:14px;font-size:12px;color:var(--muted);margin-bottom:20px}
+  .config-note code{background:rgba(240,180,41,.15);color:var(--accent);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono';font-size:11px}
   @media(max-width:700px){
     .admin-layout{grid-template-columns:1fr}
     .sidebar{display:none}
     .form-grid,.form-grid-3{grid-template-columns:1fr}
-    .user-grid{grid-template-columns:1fr}
   }
+
+.upload-banner{display:none;background:#0a2010;border-bottom:1px solid rgba(16,185,129,.35);padding:10px 24px;align-items:center;gap:14px}
+.upload-banner.show{display:flex}
+
 </style>
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
+<!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-logo">PHI</div>
+  <div class="login-logo">PSC</div>
   <div class="login-card">
     <div class="login-title">Dashboard Portal</div>
-    <div class="login-sub">PHI Construction Operations</div>
-    <div class="login-role-tabs">
-      <button class="login-role-tab active" onclick="setLoginRole('pm',this)">👷 Project Manager</button>
-      <button class="login-role-tab" onclick="setLoginRole('admin',this)">⚙️ Administrator</button>
-    </div>
+    <div class="login-sub">PSC Construction Operations<br><span style="font-size:10px">Project Managers &amp; Administrators</span></div>
     <div class="form-group" style="margin-bottom:10px">
       <label>Username</label>
-      <input id="loginUser" placeholder="e.g. dbitol" autocomplete="username" />
+      <input id="lUser" placeholder="e.g. dbitol" autocomplete="username"/>
     </div>
-    <div class="form-group" style="margin-bottom:6px">
+    <div class="form-group" style="margin-bottom:8px">
       <label>Password</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
     </div>
-    <div id="loginError" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:10px"></div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Sign In →</button>
-    <div style="margin-top:14px;font-size:10px;color:var(--muted);text-align:center">
-      Admin login requires a GitHub PAT in addition to credentials.<br>Contact your system administrator to reset your password.
-    </div>
-    <!-- PAT field shown only for admin -->
-    <div id="patGroup" style="display:none;margin-top:12px" class="form-group">
-      <label>GitHub Personal Access Token</label>
-      <input type="password" id="loginPAT" placeholder="ghp_xxxxxxxxxxxx" />
-    </div>
+    <div id="lErr" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Sign In →</button>
+    <div style="margin-top:14px;font-size:10px;color:var(--muted);text-align:center">Contact your administrator to reset your password.</div>
   </div>
 </div>
+</div>
 
-<!-- ══ TOPBAR ══ -->
+<!-- TOPBAR -->
 <div class="topbar" id="adminTopbar" style="display:none">
-  <div class="topbar-brand">
-    <div class="topbar-logo">PHI</div>
-    <div>
-      <div class="topbar-title">PSC Construction — Admin Portal</div>
-      <div class="topbar-sub" id="topbarSub">Loading…</div>
-    </div>
+  <div>
+    <div class="topbar-title">PSC Construction — Dashboard Admin</div>
+    <div class="topbar-sub">Weekly Data Entry Panel</div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
+  <div style="display:flex;gap:12px;align-items:center">
     <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">↗ View Dashboard</a>
-    <button class="btn btn-primary btn-sm" id="publishBtn" onclick="saveAll()">💾 Save & Publish</button>
-    <div class="user-chip">
-      <div class="user-avatar" id="userAvatar">?</div>
-      <div>
-        <div class="user-name" id="userDisplayName">—</div>
-        <div class="user-role" id="userRoleLabel">—</div>
-      </div>
-    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveAll()">💾 Save & Download</button>
     <button class="btn btn-secondary btn-sm" onclick="doLogout()">Sign Out</button>
   </div>
 </div>
 
-<!-- ══ LAYOUT ══ -->
+<!-- ADMIN LAYOUT -->
+
+<!-- UPLOAD BANNER -->
+<div class="upload-banner" id="uploadBanner">
+  <span style="font-size:20px">✅</span>
+  <div style="flex:1;color:#a0d8b0;font-size:11px;line-height:1.7">
+    <strong style="color:#fff">data.json downloaded!</strong>
+    &nbsp;Upload to GitHub:&nbsp;
+    <strong>github.com/juncel-web/PSC-CONSTRUCTION</strong>
+    → click <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono';font-size:10px">data.json</code>
+    → <strong>Add file → Upload files</strong> → replace → <strong>Commit changes</strong>
+  </div>
+  <button onclick="document.getElementById('uploadBanner').classList.remove('show')"
+    style="background:none;border:1px solid rgba(16,185,129,.4);color:var(--accent3);border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">
+    ✕ Dismiss
+  </button>
+</div>
+
 <div class="admin-layout" id="adminLayout" style="display:none">
   <div class="sidebar">
-    <div class="sidebar-section">Report</div>
     <button class="sidebar-item active" onclick="showPanel('meta',this)">📋 Report Meta</button>
-
-    <div class="sidebar-section">Projects</div>
-    <button class="sidebar-item" onclick="showPanel('projects',this)" id="nav-projects">🏗 Status & Progress</button>
-    <button class="sidebar-item" onclick="showPanel('schedule',this)" id="nav-schedule">📅 Schedule</button>
-    <button class="sidebar-item" onclick="showPanel('cost',this)" id="nav-cost">💰 Cost & CPI</button>
-    <button class="sidebar-item" onclick="showPanel('safety',this)" id="nav-safety">🦺 Safety</button>
-
-    <div class="sidebar-section">Portfolio</div>
-    <button class="sidebar-item" onclick="showPanel('procurement',this)" id="nav-procurement">📦 Procurement</button>
-    <button class="sidebar-item" onclick="showPanel('changeorders',this)" id="nav-changeorders">🔄 Change Orders</button>
-    <button class="sidebar-item" onclick="showPanel('risks',this)" id="nav-risks">⚠️ Risks</button>
-    <button class="sidebar-item" onclick="showPanel('actions',this)" id="nav-actions">✅ Action Items</button>
-
-    <div class="sidebar-section" id="adminNavSection">Admin Only</div>
-    <button class="sidebar-item" onclick="showPanel('users',this)" id="nav-users" style="display:none">👥 User Access <span class="sidebar-badge" id="userCountBadge">0</span></button>
-
-    <div class="sidebar-footer">
-      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveAll()">💾 Publish</button>
+    <button class="sidebar-item" onclick="showPanel('projects',this)">🏗 Project Status</button>
+    <button class="sidebar-item" onclick="showPanel('schedule',this)">📅 Schedule</button>
+    <button class="sidebar-item" onclick="showPanel('cost',this)">💰 Cost & CPI</button>
+    <button class="sidebar-item" onclick="showPanel('procurement',this)">📦 Procurement</button>
+    <button class="sidebar-item" onclick="showPanel('changeorders',this)">🔄 Change Orders</button>
+    <button class="sidebar-item" onclick="showPanel('safety',this)">🦺 Safety</button>
+    <button class="sidebar-item" onclick="showPanel('risks',this)">⚠️ Risks</button>
+    <button class="sidebar-item" onclick="showPanel('actions',this)">✅ Action Items</button>
+    <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:8px">
+      <button class="btn btn-primary" style="width:100%" onclick="saveAll()">💾 Save & Download</button>
     </div>
   </div>
 
   <div class="content">
 
-    <!-- SCOPE BANNER -->
-    <div class="scope-banner" id="scopeBanner"></div>
+    <!-- CONFIG NOTE -->
+    <div class="config-note" id="configNote">
+      ⚙️ <strong style="color:var(--accent)">First-time setup:</strong> Open <code>admin.html</code> and <code>index.html</code> and replace <code>YOUR_GITHUB_USERNAME</code> and <code>YOUR_REPO_NAME</code> with your actual values. Your  (PAT) needs <code>repo</code> scope.
+    </div>
 
-    <!-- ── META ── -->
+    <!-- PANEL: META -->
     <div class="admin-panel active" id="panel-meta">
-      <div class="panel-header"><div class="panel-title">Report Meta</div><div class="panel-sub">Update weekly report information before publishing.</div></div>
+      <div class="panel-title">Report Meta & Data Sources</div>
+      <div class="panel-sub">Update these fields every week before publishing.</div>
       <div class="form-card">
         <div class="form-card-title">Weekly Report Info</div>
         <div class="form-grid">
-          <div class="form-group"><label>Week Of</label><input id="m_week" placeholder="e.g. May 20, 2026" /></div>
+          <div class="form-group"><label>Week Of (e.g. May 13, 2026)</label><input id="m_week" /></div>
           <div class="form-group"><label>Prepared By</label><input id="m_prepared_by" /></div>
           <div class="form-group"><label>Verified By</label><input id="m_verified_by" /></div>
           <div class="form-group"><label>Source File Name</label><input id="m_source_file" /></div>
-          <div class="form-group full"><label>File Location / Path</label><input id="m_file_location" placeholder="SharePoint URL, Google Drive link, etc." /></div>
+          <div class="form-group full"><label>File Location / Path (SharePoint URL, Drive link, etc.)</label><input id="m_file_location" /></div>
         </div>
       </div>
     </div>
 
-    <!-- ── PROJECTS ── -->
+    <!-- PANEL: PROJECTS -->
     <div class="admin-panel" id="panel-projects">
-      <div class="panel-header"><div class="panel-title">Project Status & Progress</div><div class="panel-sub">Update physical progress and overall project health.</div></div>
+      <div class="panel-title">Project Status</div>
+      <div class="panel-sub">Update general status per project. Schedule and cost details are in their own panels.</div>
       <div id="projectForms"></div>
     </div>
 
-    <!-- ── SCHEDULE ── -->
+    <!-- PANEL: SCHEDULE -->
     <div class="admin-panel" id="panel-schedule">
-      <div class="panel-header"><div class="panel-title">Schedule Control</div></div>
+      <div class="panel-title">Schedule Control</div>
       <div id="scheduleForms"></div>
     </div>
 
-    <!-- ── COST ── -->
+    <!-- PANEL: COST -->
     <div class="admin-panel" id="panel-cost">
-      <div class="panel-header"><div class="panel-title">Cost & CPI</div></div>
+      <div class="panel-title">Cost & CPI</div>
       <div id="costForms"></div>
     </div>
 
-    <!-- ── SAFETY ── -->
+    <!-- PANEL: PROCUREMENT -->
+    <div class="admin-panel" id="panel-procurement">
+      <div class="panel-title">Procurement Status</div>
+      <div class="panel-sub">Track critical material deliveries.</div>
+      <div id="procForms"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addProcRow()">+ Add Item</button>
+    </div>
+
+    <!-- PANEL: CHANGE ORDERS -->
+    <div class="admin-panel" id="panel-changeorders">
+      <div class="panel-title">Change Orders</div>
+      <div id="coForms"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addCORow()">+ Add Change Order</button>
+    </div>
+
+    <!-- PANEL: SAFETY -->
     <div class="admin-panel" id="panel-safety">
-      <div class="panel-header"><div class="panel-title">Safety & Quality</div></div>
+      <div class="panel-title">Safety & Quality</div>
       <div id="safetyForms"></div>
     </div>
 
-    <!-- ── PROCUREMENT ── -->
-    <div class="admin-panel" id="panel-procurement">
-      <div class="panel-header"><div class="panel-title">Procurement</div><div class="panel-sub">Track critical material deliveries across all projects.</div></div>
-      <div id="procForms"></div>
-      <button class="btn btn-secondary btn-sm" id="addProcBtn" onclick="addProcRow()" style="display:none">+ Add Item</button>
-    </div>
-
-    <!-- ── CHANGE ORDERS ── -->
-    <div class="admin-panel" id="panel-changeorders">
-      <div class="panel-header"><div class="panel-title">Change Orders</div></div>
-      <div id="coForms"></div>
-      <button class="btn btn-secondary btn-sm" id="addCOBtn" onclick="addCORow()" style="display:none">+ Add Change Order</button>
-    </div>
-
-    <!-- ── RISKS ── -->
+    <!-- PANEL: RISKS -->
     <div class="admin-panel" id="panel-risks">
-      <div class="panel-header"><div class="panel-title">Risk Register</div></div>
+      <div class="panel-title">Risk Register</div>
       <div id="riskForms"></div>
-      <button class="btn btn-secondary btn-sm" id="addRiskBtn" onclick="addRiskRow()" style="display:none">+ Add Risk</button>
+      <button class="btn btn-secondary btn-sm" onclick="addRiskRow()">+ Add Risk</button>
     </div>
 
-    <!-- ── ACTIONS ── -->
+    <!-- PANEL: ACTIONS -->
     <div class="admin-panel" id="panel-actions">
-      <div class="panel-header"><div class="panel-title">Action Items</div></div>
+      <div class="panel-title">Action Items</div>
       <div id="actionForms"></div>
-      <button class="btn btn-secondary btn-sm" id="addActionBtn" onclick="addActionRow()" style="display:none">+ Add Action Item</button>
-    </div>
-
-    <!-- ── USER MANAGEMENT (ADMIN ONLY) ── -->
-    <div class="admin-panel" id="panel-users">
-      <div class="panel-header"><div class="panel-title">User Access Management</div><div class="panel-sub">Add, edit, or deactivate portal users. Admin only.</div></div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
-      </div>
-      <div class="user-grid" id="userGrid"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addActionRow()">+ Add Action Item</button>
     </div>
 
   </div>
 </div>
 
-<!-- ══ ADD/EDIT USER MODAL ══ -->
-<div class="modal-overlay" id="userModal">
-  <div class="modal">
-    <div class="modal-title" id="modalTitle">Add New User</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Display Name</label><input id="mu_name" placeholder="Full Name" /></div>
-      <div class="form-group"><label>Username</label><input id="mu_username" placeholder="e.g. jdelacruz" /></div>
-      <div class="form-group"><label>Password</label><input id="mu_password" placeholder="Temporary password" /></div>
-      <div class="form-group"><label>Role</label>
-        <select id="mu_role" onchange="toggleRoleFields()">
-          <option value="pm">Project Manager</option>
-          <option value="admin">Administrator</option>
-        </select>
-      </div>
-      <div class="form-group full" id="mu_projects_group">
-        <label>Assigned Projects (hold Ctrl/Cmd to select multiple)</label>
-        <select id="mu_projects" multiple style="height:90px"></select>
-      </div>
-      <div class="form-group">
-        <label>Status</label>
-        <select id="mu_active">
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ STATUS BAR ══ -->
+<!-- STATUS BAR -->
 <div class="status-bar" id="statusBar"></div>
 
 <script>
 // ══════════════════════════════════════════════════════
-// CONFIG
+// CONFIG — match exactly what's in index.html
 // ══════════════════════════════════════════════════════
 const GITHUB_USER = 'juncel-web';
 const GITHUB_REPO = 'PSC-CONSTRUCTION';
-const API_BASE = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents`;
-const RAW_BASE = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main`;
+// Change this to your chosen password
 
-// ── STATE ──
-let GH_TOKEN = '';
+let 
 let currentData = null;
-let currentUser = null; // { username, role, projects, display_name }
-let editingUserIndex = null;
-let procCount=0, coCount=0, riskCount=0, actionCount=0;
 
-// ══════════════════════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════════════════════
-function setLoginRole(role, btn){
-  document.querySelectorAll('.login-role-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('patGroup').style.display = role==='admin'?'block':'none';
-}
-
+// ── AUTH ──
 async function doLogin(){
-  const username = document.getElementById('loginUser').value.trim().toLowerCase();
-  const password = document.getElementById('loginPass').value;
-  const pat = document.getElementById('loginPAT').value.trim();
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-
-  if(!username || !password){ errEl.textContent='Enter username and password.'; return; }
-
-  // Fetch data.json to validate credentials
+  const u    = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  const err  = document.getElementById('lErr');
+  err.textContent = '';
+  if(!u || !pass){ err.textContent = 'Please enter your username and password.'; return; }
   try {
     const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
-    if(!res.ok) throw new Error('Cannot reach data file. Check connection.');
+    if(!res.ok) throw new Error(`Cannot reach data file (HTTP ${res.status}).`);
     const data = await res.json();
-
-    const users = data.users || [];
-    const user = users.find(u => u.username.toLowerCase() === username && u.password === password);
-
-    if(!user){ errEl.textContent='Incorrect username or password.'; return; }
-    if(!user.active){ errEl.textContent='Your account has been deactivated. Contact the administrator.'; return; }
-
-    // Admin needs PAT
-    if(user.role === 'admin'){
-      if(!pat || (!pat.startsWith('ghp_') && !pat.startsWith('github_pat_'))){
-        errEl.textContent='Administrators must provide a valid GitHub PAT.'; return;
-      }
-      GH_TOKEN = pat;
-    }
-
-    currentUser = user;
-    currentData = data;
-    bootAdmin();
-
-  } catch(e){
-    errEl.textContent = e.message;
-  }
+    const user = (data.users||[]).find(x=>x.username.toLowerCase()===u && x.password===pass);
+    if(!user){ err.textContent='Incorrect username or password.'; return; }
+    if(!user.active){ err.textContent='Account deactivated. Contact administrator.'; return; }
+    currentData = data; currentUser = user;
+    boot();
+  } catch(e){ err.textContent = e.message; }
 }
 
 function doLogout(){
-  GH_TOKEN=''; currentUser=null; currentData=null;
-  location.reload();
+   location.reload();
 }
 
-// ══════════════════════════════════════════════════════
-// BOOT
-// ══════════════════════════════════════════════════════
-function bootAdmin(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('adminTopbar').style.display='flex';
-  document.getElementById('adminLayout').style.display='grid';
-
-  // Topbar user info
-  document.getElementById('userAvatar').textContent = currentUser.display_name.charAt(0).toUpperCase();
-  document.getElementById('userDisplayName').textContent = currentUser.display_name;
-  document.getElementById('userRoleLabel').textContent = currentUser.role==='admin'?'Administrator':'Project Manager';
-  document.getElementById('topbarSub').textContent =
-    `${currentUser.role==='admin'?'Full Access':'Scoped Access'} | Week of ${currentData.meta.week}`;
-
-  // Scope banner
-  const banner = document.getElementById('scopeBanner');
-  if(currentUser.role==='admin'){
-    banner.className='scope-banner scope-admin';
-    banner.innerHTML=`<span class="scope-icon">⚙️</span><div><strong style="color:var(--accent)">Administrator</strong> — Full access to all projects and settings.</div>`;
-  } else {
-    const projNames = currentUser.projects.map(code => {
-      const p = currentData.projects.find(x=>x.code===code);
-      return p ? p.name : code;
-    }).join(', ');
-    banner.className='scope-banner scope-pm';
-    banner.innerHTML=`<span class="scope-icon">👷</span><div><strong style="color:var(--accent2)">${currentUser.display_name}</strong> — You can edit data for: <strong>${projNames}</strong>. Other projects are view-only.</div>`;
-  }
-
-  // Show admin-only nav
-  if(currentUser.role==='admin'){
-    document.getElementById('nav-users').style.display='flex';
-    document.getElementById('userCountBadge').textContent = (currentData.users||[]).length;
-    // Show add buttons for portfolio items
-    ['addProcBtn','addCOBtn','addRiskBtn','addActionBtn'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.style.display='inline-flex';
-    });
-  }
-
-  // PMs can't publish directly — show info
-  if(currentUser.role==='pm'){
-    document.getElementById('publishBtn').textContent='💾 Submit Update';
-  }
-
-  populateForms();
-}
-
-// ══════════════════════════════════════════════════════
-// PANEL SWITCHING
-// ══════════════════════════════════════════════════════
+// ── PANEL SWITCHING ──
 function showPanel(id, btn){
   document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
@@ -470,381 +271,176 @@ function showPanel(id, btn){
   if(btn) btn.classList.add('active');
 }
 
-// ══════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════
+// ── STATUS ──
 function showStatus(msg, type='loading'){
   const el=document.getElementById('statusBar');
   el.textContent=msg; el.className='status-bar show '+type;
   if(type!=='loading') setTimeout(()=>el.classList.remove('show'),4000);
 }
 
-const isAdmin = () => currentUser?.role === 'admin';
-const canEditProject = (code) => isAdmin() || (currentUser?.projects||[]).includes(code);
 
-function g(id){const e=document.getElementById(id);return e?e.value.trim():null}
-function gn(id){const v=g(id);return v===''||v==null?null:parseFloat(v)}
-function gni(id){const v=g(id);return v===''||v==null?null:parseInt(v)}
 
-// ══════════════════════════════════════════════════════
-// POPULATE FORMS
-// ══════════════════════════════════════════════════════
-function populateForms(){
-  const d = currentData;
+// ── POPULATE FORMS ──
+function populateForms(d){
+  // Meta
+  ['week','prepared_by','verified_by','source_file','file_location'].forEach(k=>{
+    const el=document.getElementById('m_'+k);
+    if(el) el.value=d.meta[k]||'';
+  });
 
-  // Meta (admin only edits freely, PM can update week/prepared_by)
-  document.getElementById('m_week').value = d.meta.week||'';
-  document.getElementById('m_prepared_by').value = d.meta.prepared_by||'';
-  document.getElementById('m_verified_by').value = d.meta.verified_by||'';
-  if(!isAdmin()){
-    document.getElementById('m_verified_by').disabled = true;
-  }
-  document.getElementById('m_source_file').value = d.meta.source_file||'';
-  document.getElementById('m_file_location').value = d.meta.file_location||'';
-
-  buildProjectForms(d.projects);
-  buildScheduleForms(d.projects);
-  buildCostForms(d.projects);
-  buildSafetyForms(d.projects);
-  buildProcForms(d.procurement, d.projects);
-  buildCOForms(d.change_orders, d.projects);
-  buildRiskForms(d.risks);
-  buildActionForms(d.action_items);
-
-  if(isAdmin()) buildUserGrid(d.users||[]);
-}
-
-// ── Lock helper ──
-function lockIfReadOnly(projectCode, ...ids){
-  if(!canEditProject(projectCode)){
-    ids.forEach(id=>{
-      const el=document.getElementById(id);
-      if(el){ el.disabled=true; el.title='You do not have edit access to this project'; }
-    });
-    return true;
-  }
-  return false;
-}
-
-// ── PROJECT STATUS ──
-function buildProjectForms(projects){
-  document.getElementById('projectForms').innerHTML = projects.map((p,i)=>{
-    const editable = canEditProject(p.code);
-    const ro = editable?'':'<span style="font-size:10px;color:var(--muted);margin-left:8px">👁 View Only</span>';
-    return `<div class="form-card">
-      <div class="form-card-title">${p.name} <small style="font-family:JetBrains Mono;font-size:10px;color:var(--muted)">${p.code}</small>${ro}</div>
+  // Projects (status, health)
+  document.getElementById('projectForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} (${p.code})</div>
       <div class="form-grid">
-        <div class="form-group"><label>Progress (%)</label>
-          <input id="p${i}_progress" type="number" step="0.01" value="${p.progress}" ${editable?'':'disabled'} /></div>
+        <div class="form-group"><label>Progress (%)</label><input id="p${i}_progress" type="number" step="0.01" value="${p.progress}" /></div>
         <div class="form-group"><label>Schedule Status</label>
-          <select id="p${i}_schedule_status" ${editable?'':'disabled'}>
+          <select id="p${i}_schedule_status">
             ${['Ahead','On Track','Delayed'].map(s=>`<option ${p.schedule_status===s?'selected':''}>${s}</option>`).join('')}
           </select></div>
-        <div class="form-group"><label>Variance (days)</label>
-          <input id="p${i}_schedule_variance_days" type="number" value="${p.schedule_variance_days}" ${editable?'':'disabled'} /></div>
+        <div class="form-group"><label>Schedule Variance (days, positive = ahead)</label><input id="p${i}_schedule_variance_days" type="number" value="${p.schedule_variance_days}" /></div>
         <div class="form-group"><label>Cost Status</label>
-          <select id="p${i}_cost_status" ${editable?'':'disabled'}>
+          <select id="p${i}_cost_status">
             ${['Within Budget','At Risk','Over Budget'].map(s=>`<option ${p.cost_status===s?'selected':''}>${s}</option>`).join('')}
           </select></div>
         <div class="form-group"><label>Overall Health</label>
-          <select id="p${i}_health" ${editable?'':'disabled'}>
+          <select id="p${i}_health">
             ${['Good','At Risk','Critical'].map(s=>`<option ${p.health===s?'selected':''}>${s}</option>`).join('')}
           </select></div>
-        <div class="form-group"><label>Planned Finish</label>
-          <input id="p${i}_planned_finish" value="${p.planned_finish}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Forecast Finish</label>
-          <input id="p${i}_forecast_finish" value="${p.forecast_finish}" ${editable?'':'disabled'} /></div>
+        <div class="form-group"><label>Planned Finish</label><input id="p${i}_planned_finish" value="${p.planned_finish}" /></div>
+        <div class="form-group"><label>Forecast Finish</label><input id="p${i}_forecast_finish" value="${p.forecast_finish}" /></div>
       </div>
-    </div>`;
-  }).join('');
-}
+    </div>`).join('');
 
-// ── SCHEDULE ──
-function buildScheduleForms(projects){
-  document.getElementById('scheduleForms').innerHTML = projects.map((p,i)=>{
-    const editable = canEditProject(p.code);
-    return `<div class="form-card">
-      <div class="form-card-title">${p.name}${editable?'':' <span style="font-size:10px;color:var(--muted)">👁 View Only</span>'}</div>
+  // Schedule
+  document.getElementById('scheduleForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} — Schedule Details</div>
       <div class="form-grid">
-        <div class="form-group full"><label>Critical Activities</label>
-          <textarea id="s${i}_critical_activities" ${editable?'':'disabled'}>${p.critical_activities}</textarea></div>
-        <div class="form-group full"><label>Schedule Recommendation</label>
-          <textarea id="s${i}_schedule_recommendation" ${editable?'':'disabled'}>${p.schedule_recommendation}</textarea></div>
+        <div class="form-group full"><label>Critical Activities</label><textarea id="s${i}_critical_activities">${p.critical_activities}</textarea></div>
+        <div class="form-group full"><label>Schedule Recommendation</label><textarea id="s${i}_schedule_recommendation">${p.schedule_recommendation}</textarea></div>
       </div>
-    </div>`;
-  }).join('');
-}
+    </div>`).join('');
 
-// ── COST ──
-function buildCostForms(projects){
-  document.getElementById('costForms').innerHTML = projects.map((p,i)=>{
-    const editable = canEditProject(p.code);
-    return `<div class="form-card">
-      <div class="form-card-title">${p.name}${editable?'':' <span style="font-size:10px;color:var(--muted)">👁 View Only</span>'}</div>
+  // Cost
+  document.getElementById('costForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} — Cost Data</div>
       <div class="form-grid-3">
-        <div class="form-group"><label>Approved Budget (₱)</label>
-          <input id="c${i}_budget" type="number" value="${p.budget}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Actual Cost to Date (₱)</label>
-          <input id="c${i}_actual_cost" type="number" value="${p.actual_cost}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Forecast at Completion (₱)</label>
-          <input id="c${i}_forecast_at_completion" type="number" value="${p.forecast_at_completion}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>CPI</label>
-          <input id="c${i}_cpi" type="number" step="0.01" value="${p.cpi}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>P&A Budget (₱)</label>
-          <input id="c${i}_pa_budget" type="number" value="${p.pa_budget}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>P&A Actual (₱)</label>
-          <input id="c${i}_pa_actual" type="number" value="${p.pa_actual}" ${editable?'':'disabled'} /></div>
+        <div class="form-group"><label>Approved Budget (₱)</label><input id="c${i}_budget" type="number" value="${p.budget}" /></div>
+        <div class="form-group"><label>Actual Cost to Date (₱)</label><input id="c${i}_actual_cost" type="number" value="${p.actual_cost}" /></div>
+        <div class="form-group"><label>Forecast at Completion (₱)</label><input id="c${i}_forecast_at_completion" type="number" value="${p.forecast_at_completion}" /></div>
+        <div class="form-group"><label>CPI (auto or manual)</label><input id="c${i}_cpi" type="number" step="0.01" value="${p.cpi}" /></div>
+        <div class="form-group"><label>P&A Budget (₱)</label><input id="c${i}_pa_budget" type="number" value="${p.pa_budget}" /></div>
+        <div class="form-group"><label>P&A Actual (₱)</label><input id="c${i}_pa_actual" type="number" value="${p.pa_actual}" /></div>
       </div>
-    </div>`;
-  }).join('');
-}
+    </div>`).join('');
 
-// ── SAFETY ──
-function buildSafetyForms(projects){
-  document.getElementById('safetyForms').innerHTML = projects.map((p,i)=>{
-    const editable = canEditProject(p.code);
-    return `<div class="form-card">
-      <div class="form-card-title">${p.name}${editable?'':' <span style="font-size:10px;color:var(--muted)">👁 View Only</span>'}</div>
+  // Safety
+  document.getElementById('safetyForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} — Safety Data</div>
       <div class="form-grid-3">
-        <div class="form-group"><label>Safe Man-Hours</label>
-          <input id="sf${i}_safe_manhours" type="number" step="0.1" value="${p.safe_manhours}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Inspections Due</label>
-          <input id="sf${i}_inspections_due" type="number" value="${p.inspections_due}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Inspections Done</label>
-          <input id="sf${i}_inspections_done" type="number" value="${p.inspections_done}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>NCR Open</label>
-          <input id="sf${i}_ncr_open" type="number" value="${p.ncr_open}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Incidents</label>
-          <input id="sf${i}_incidents" type="number" value="${p.incidents}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Near Miss</label>
-          <input id="sf${i}_near_miss" type="number" value="${p.near_miss}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>DDI %</label>
-          <input id="sf${i}_ddi" type="number" step="0.01" value="${p.ddi??''}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>OT Rate %</label>
-          <input id="sf${i}_ot_rate" type="number" step="0.1" value="${p.ot_rate??''}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>OLC/ALC</label>
-          <input id="sf${i}_olc_alc" type="number" step="0.001" value="${p.olc_alc??''}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Last Toolbox Talk</label>
-          <input id="sf${i}_last_toolbox" value="${p.last_toolbox}" ${editable?'':'disabled'} /></div>
-        <div class="form-group full"><label>Safety Action / Note</label>
-          <textarea id="sf${i}_safety_action" ${editable?'':'disabled'}>${p.safety_action}</textarea></div>
+        <div class="form-group"><label>Safe Man-Hours</label><input id="sf${i}_safe_manhours" type="number" step="0.1" value="${p.safe_manhours}" /></div>
+        <div class="form-group"><label>Inspections Due</label><input id="sf${i}_inspections_due" type="number" value="${p.inspections_due}" /></div>
+        <div class="form-group"><label>Inspections Done</label><input id="sf${i}_inspections_done" type="number" value="${p.inspections_done}" /></div>
+        <div class="form-group"><label>NCR Open</label><input id="sf${i}_ncr_open" type="number" value="${p.ncr_open}" /></div>
+        <div class="form-group"><label>Incidents</label><input id="sf${i}_incidents" type="number" value="${p.incidents}" /></div>
+        <div class="form-group"><label>Near Miss</label><input id="sf${i}_near_miss" type="number" value="${p.near_miss}" /></div>
+        <div class="form-group"><label>DDI %</label><input id="sf${i}_ddi" type="number" step="0.01" value="${p.ddi??''}" placeholder="leave blank if N/A" /></div>
+        <div class="form-group"><label>OT Rate %</label><input id="sf${i}_ot_rate" type="number" step="0.1" value="${p.ot_rate??''}" placeholder="blank = N/A" /></div>
+        <div class="form-group"><label>OLC/ALC</label><input id="sf${i}_olc_alc" type="number" step="0.001" value="${p.olc_alc??''}" placeholder="blank = N/A" /></div>
+        <div class="form-group"><label>Last Toolbox Talk</label><input id="sf${i}_last_toolbox" value="${p.last_toolbox}" /></div>
+        <div class="form-group full"><label>Safety Action / Note</label><textarea id="sf${i}_safety_action">${p.safety_action}</textarea></div>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
+
+  // Procurement
+  renderProcForms(d.procurement, d.projects);
+
+  // Change Orders
+  renderCOForms(d.change_orders, d.projects);
+
+  // Risks
+  renderRiskForms(d.risks);
+
+  // Actions
+  renderActionForms(d.action_items);
 }
 
-// ── PROCUREMENT ──
-function buildProcForms(items, projects){
-  document.getElementById('procForms').innerHTML = items.map((p,i)=>{
-    const relatedProj = projects.find(x=>x.code===p.project);
-    const editable = isAdmin() || canEditProject(p.project);
-    return `<div class="repeat-row" id="proc-row-${i}">
+function renderProcForms(items, projects){
+  document.getElementById('procForms').innerHTML=items.map((p,i)=>`
+    <div class="repeat-row" id="proc-row-${i}">
       <div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
         <div class="form-group"><label>Project</label>
-          <select id="pr${i}_project" ${editable&&isAdmin()?'':'disabled'}>
-            ${projects.map(x=>`<option value="${x.code}" ${p.project===x.code?'selected':''}>${x.name}</option>`).join('')}
-          </select></div>
-        <div class="form-group"><label>Item</label><input id="pr${i}_item" value="${p.item}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor" value="${p.vendor}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Required Date</label><input id="pr${i}_required_date" value="${p.required_date}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Delivery Date</label><input id="pr${i}_delivery_date" value="${p.delivery_date}" ${editable?'':'disabled'} /></div>
+          <select id="pr${i}_project">${projects.map(x=>`<option value="${x.code}" ${p.project===x.code?'selected':''}>${x.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Item</label><input id="pr${i}_item" value="${p.item}" /></div>
+        <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor" value="${p.vendor}" /></div>
+        <div class="form-group"><label>Required Date</label><input id="pr${i}_required_date" value="${p.required_date}" /></div>
+        <div class="form-group"><label>Delivery Date</label><input id="pr${i}_delivery_date" value="${p.delivery_date}" /></div>
         <div class="form-group"><label>Status</label>
-          <select id="pr${i}_status" ${editable?'':'disabled'}>
-            ${['Delivered','In Progress','Delayed'].map(s=>`<option ${p.status===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-        <div class="form-group"><label>Buffer</label><input id="pr${i}_buffer" value="${p.buffer}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Action Note</label><input id="pr${i}_action" value="${p.action}" ${editable?'':'disabled'} /></div>
+          <select id="pr${i}_status">${['Delivered','In Progress','Delayed'].map(s=>`<option ${p.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Buffer</label><input id="pr${i}_buffer" value="${p.buffer}" /></div>
+        <div class="form-group"><label>Action / Note</label><input id="pr${i}_action" value="${p.action}" /></div>
       </div>
-      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`:''}
-    </div>`;
-  }).join('');
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>
+    </div>`).join('');
 }
 
-// ── CHANGE ORDERS ──
-function buildCOForms(items, projects){
-  document.getElementById('coForms').innerHTML = items.map((c,i)=>{
-    const editable = isAdmin() || canEditProject(c.project);
-    return `<div class="repeat-row" id="co-row-${i}">
+function renderCOForms(items, projects){
+  document.getElementById('coForms').innerHTML=items.map((c,i)=>`
+    <div class="repeat-row" id="co-row-${i}">
       <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
         <div class="form-group"><label>Project</label>
-          <select id="co${i}_project" ${isAdmin()?'':'disabled'}>
-            ${projects.map(x=>`<option value="${x.code}" ${c.project===x.code?'selected':''}>${x.name}</option>`).join('')}
-          </select></div>
-        <div class="form-group"><label>CO No.</label><input id="co${i}_co_no" value="${c.co_no}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Description</label><input id="co${i}_description" value="${c.description}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amount" type="number" value="${c.amount}" ${editable?'':'disabled'} /></div>
+          <select id="co${i}_project">${projects.map(x=>`<option value="${x.code}" ${c.project===x.code?'selected':''}>${x.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label>CO No.</label><input id="co${i}_co_no" value="${c.co_no}" /></div>
+        <div class="form-group"><label>Description</label><input id="co${i}_description" value="${c.description}" /></div>
+        <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amount" type="number" value="${c.amount}" /></div>
         <div class="form-group"><label>Status</label>
-          <select id="co${i}_status" ${editable?'':'disabled'}>
-            ${['Ongoing','For PHI Approval','Completed','Cancelled'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
+          <select id="co${i}_status">${['Ongoing','For PHI Approval','Completed','Cancelled'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
       </div>
-      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`:''}
-    </div>`;
-  }).join('');
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('co-row-${i}').remove()">✕</button>
+    </div>`).join('');
 }
 
-// ── RISKS ──
-function buildRiskForms(items){
-  document.getElementById('riskForms').innerHTML = items.map((r,i)=>{
-    const editable = isAdmin() || canEditProject(r.project);
-    return `<div class="repeat-row" id="risk-row-${i}">
+function renderRiskForms(items){
+  document.getElementById('riskForms').innerHTML=items.map((r,i)=>`
+    <div class="repeat-row" id="risk-row-${i}">
       <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
-        <div class="form-group"><label>Project Code</label><input id="ri${i}_project" value="${r.project}" ${isAdmin()?'':'disabled'} /></div>
-        <div class="form-group"><label>Risk / Issue</label><input id="ri${i}_risk" value="${r.risk}" ${editable?'':'disabled'} /></div>
+        <div class="form-group"><label>Project Code</label><input id="ri${i}_project" value="${r.project}" /></div>
+        <div class="form-group"><label>Risk / Issue</label><input id="ri${i}_risk" value="${r.risk}" /></div>
         <div class="form-group"><label>Impact</label>
-          <select id="ri${i}_impact" ${editable?'':'disabled'}>
-            ${['High','Medium','Low'].map(s=>`<option ${r.impact===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
+          <select id="ri${i}_impact">${['High','Medium','Low'].map(s=>`<option ${r.impact===s?'selected':''}>${s}</option>`).join('')}</select></div>
         <div class="form-group"><label>Status</label>
-          <select id="ri${i}_status" ${editable?'':'disabled'}>
-            ${['Overdue','Active','Ongoing','Resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-        <div class="form-group"><label>Owner</label><input id="ri${i}_owner" value="${r.owner}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Due Date</label><input id="ri${i}_due_date" value="${r.due_date}" ${editable?'':'disabled'} /></div>
-        <div class="form-group full"><label>Mitigation</label>
-          <textarea id="ri${i}_mitigation" ${editable?'':'disabled'}>${r.mitigation}</textarea></div>
+          <select id="ri${i}_status">${['Overdue','Active','Ongoing','Resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Owner</label><input id="ri${i}_owner" value="${r.owner}" /></div>
+        <div class="form-group"><label>Due Date</label><input id="ri${i}_due_date" value="${r.due_date}" /></div>
+        <div class="form-group full"><label>Mitigation / Action</label><textarea id="ri${i}_mitigation">${r.mitigation}</textarea></div>
       </div>
-      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`:''}
-    </div>`;
-  }).join('');
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>
+    </div>`).join('');
 }
 
-// ── ACTIONS ──
-function buildActionForms(items){
-  document.getElementById('actionForms').innerHTML = items.map((a,i)=>{
-    const editable = isAdmin() || canEditProject(a.project);
-    return `<div class="repeat-row" id="action-row-${i}">
+function renderActionForms(items){
+  document.getElementById('actionForms').innerHTML=items.map((a,i)=>`
+    <div class="repeat-row" id="action-row-${i}">
       <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
-        <div class="form-group"><label>Project</label><input id="ai${i}_project" value="${a.project}" ${isAdmin()?'':'disabled'} /></div>
-        <div class="form-group"><label>Item</label><input id="ai${i}_item" value="${a.item}" ${editable?'':'disabled'} /></div>
+        <div class="form-group"><label>Project</label><input id="ai${i}_project" value="${a.project}" /></div>
+        <div class="form-group"><label>Item / Issue</label><input id="ai${i}_item" value="${a.item}" /></div>
         <div class="form-group"><label>Priority</label>
-          <select id="ai${i}_priority" ${editable?'':'disabled'}>
-            ${['Overdue','High','Medium','Normal'].map(s=>`<option ${a.priority===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-        <div class="form-group full"><label>Action</label>
-          <textarea id="ai${i}_action" ${editable?'':'disabled'}>${a.action}</textarea></div>
-        <div class="form-group"><label>Responsible</label><input id="ai${i}_responsible" value="${a.responsible}" ${editable?'':'disabled'} /></div>
-        <div class="form-group"><label>Due Date</label><input id="ai${i}_due_date" value="${a.due_date}" ${editable?'':'disabled'} /></div>
+          <select id="ai${i}_priority">${['Overdue','High','Medium','Normal'].map(s=>`<option ${a.priority===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group full"><label>Recommended Action</label><textarea id="ai${i}_action">${a.action}</textarea></div>
+        <div class="form-group"><label>Responsible</label><input id="ai${i}_responsible" value="${a.responsible}" /></div>
+        <div class="form-group"><label>Due Date</label><input id="ai${i}_due_date" value="${a.due_date}" /></div>
         <div class="form-group"><label>Status</label>
-          <select id="ai${i}_status" ${editable?'':'disabled'}>
-            ${['Overdue','Pending','In Progress','Done'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
+          <select id="ai${i}_status">${['Overdue','Pending','In Progress','Done'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
       </div>
-      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`:''}
-    </div>`;
-  }).join('');
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('action-row-${i}').remove()">✕</button>
+    </div>`).join('');
 }
 
-// ══════════════════════════════════════════════════════
-// USER MANAGEMENT (ADMIN ONLY)
-// ══════════════════════════════════════════════════════
-function buildUserGrid(users){
-  document.getElementById('userGrid').innerHTML = users.map((u,i)=>{
-    const projects = u.projects.includes('ALL')
-      ? '<span class="proj-tag">ALL PROJECTS</span>'
-      : u.projects.map(code=>{
-          const p = currentData.projects.find(x=>x.code===code);
-          return `<span class="proj-tag">${p?p.name:code}</span>`;
-        }).join('');
-    return `<div class="user-card">
-      <div class="user-card-header">
-        <div class="user-card-avatar ${u.role==='admin'?'avatar-admin':'avatar-pm'}">${u.display_name.charAt(0)}</div>
-        <div>
-          <div class="user-card-name">${u.display_name}</div>
-          <div class="user-card-username">@${u.username}</div>
-        </div>
-        <span class="role-badge role-${u.role}" style="margin-left:auto">${u.role}</span>
-      </div>
-      <div class="user-card-body">
-        <div class="user-card-row"><span class="text-muted">Status</span><span class="${u.active?'status-active':'status-inactive'}">${u.active?'● Active':'○ Inactive'}</span></div>
-        <div class="user-card-row"><span class="text-muted">Projects</span><span>${projects}</span></div>
-        <div class="user-card-row"><span class="text-muted">Password</span><span class="text-muted" style="font-family:JetBrains Mono;letter-spacing:2px">••••••••</span></div>
-      </div>
-      <div class="user-card-actions">
-        <button class="btn btn-secondary btn-sm" onclick="openEditUserModal(${i})">✏️ Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="toggleUserActive(${i})">${u.active?'Deactivate':'Activate'}</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function openAddUserModal(){
-  editingUserIndex = null;
-  document.getElementById('modalTitle').textContent = 'Add New User';
-  document.getElementById('mu_name').value='';
-  document.getElementById('mu_username').value='';
-  document.getElementById('mu_password').value='';
-  document.getElementById('mu_role').value='pm';
-  document.getElementById('mu_active').value='true';
-  populateProjectSelect([]);
-  toggleRoleFields();
-  document.getElementById('userModal').classList.add('show');
-}
-
-function openEditUserModal(i){
-  editingUserIndex = i;
-  const u = currentData.users[i];
-  document.getElementById('modalTitle').textContent = 'Edit User — ' + u.display_name;
-  document.getElementById('mu_name').value = u.display_name;
-  document.getElementById('mu_username').value = u.username;
-  document.getElementById('mu_password').value = u.password;
-  document.getElementById('mu_role').value = u.role;
-  document.getElementById('mu_active').value = String(u.active);
-  populateProjectSelect(u.projects);
-  toggleRoleFields();
-  document.getElementById('userModal').classList.add('show');
-}
-
-function populateProjectSelect(selected){
-  const sel = document.getElementById('mu_projects');
-  sel.innerHTML = currentData.projects.map(p=>
-    `<option value="${p.code}" ${selected.includes(p.code)?'selected':''}>${p.name}</option>`
-  ).join('');
-}
-
-function toggleRoleFields(){
-  const role = document.getElementById('mu_role').value;
-  document.getElementById('mu_projects_group').style.display = role==='admin'?'none':'block';
-}
-
-function closeUserModal(){
-  document.getElementById('userModal').classList.remove('show');
-}
-
-function saveUser(){
-  const name = g('mu_name'), username = g('mu_username'), password = g('mu_password');
-  const role = g('mu_role'), active = g('mu_active') === 'true';
-  if(!name||!username||!password){ showStatus('Fill in all required fields','error'); return; }
-
-  let projects = ['ALL'];
-  if(role === 'pm'){
-    const sel = document.getElementById('mu_projects');
-    projects = [...sel.selectedOptions].map(o=>o.value);
-    if(!projects.length){ showStatus('Select at least one project for PM','error'); return; }
-  }
-
-  const userObj = { username: username.toLowerCase(), display_name: name, role, password, projects, active };
-
-  if(editingUserIndex !== null){
-    currentData.users[editingUserIndex] = userObj;
-  } else {
-    if(!currentData.users) currentData.users = [];
-    currentData.users.push(userObj);
-  }
-
-  buildUserGrid(currentData.users);
-  document.getElementById('userCountBadge').textContent = currentData.users.length;
-  closeUserModal();
-  showStatus('User saved — click Publish to apply changes','success');
-}
-
-function toggleUserActive(i){
-  currentData.users[i].active = !currentData.users[i].active;
-  buildUserGrid(currentData.users);
-  showStatus('Status changed — click Publish to apply','success');
-}
-
-// ── ADD ROW helpers ──
+// ── ADD ROW HELPERS ──
+let procCount=0, coCount=0, riskCount=0, actionCount=0;
 function addProcRow(){
   procCount++;
   const i='new'+procCount;
@@ -852,17 +448,16 @@ function addProcRow(){
   const div=document.createElement('div'); div.id=`proc-row-${i}`; div.className='repeat-row';
   div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
     <div class="form-group"><label>Project</label><select id="pr${i}_project">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Item</label><input id="pr${i}_item" /></div>
+    <div class="form-group"><label>Item</label><input id="pr${i}_item" placeholder="e.g. Tiles" /></div>
     <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor" /></div>
     <div class="form-group"><label>Required Date</label><input id="pr${i}_required_date" /></div>
     <div class="form-group"><label>Delivery Date</label><input id="pr${i}_delivery_date" /></div>
     <div class="form-group"><label>Status</label><select id="pr${i}_status"><option>In Progress</option><option>Delivered</option><option>Delayed</option></select></div>
     <div class="form-group"><label>Buffer</label><input id="pr${i}_buffer" /></div>
-    <div class="form-group"><label>Action Note</label><input id="pr${i}_action" /></div>
-  </div><button class="btn btn-danger btn-sm" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`;
+    <div class="form-group"><label>Action</label><input id="pr${i}_action" /></div>
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`;
   document.getElementById('procForms').appendChild(div);
 }
-
 function addCORow(){
   coCount++;
   const i='new'+coCount;
@@ -874,10 +469,9 @@ function addCORow(){
     <div class="form-group"><label>Description</label><input id="co${i}_description" /></div>
     <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amount" type="number" value="0" /></div>
     <div class="form-group"><label>Status</label><select id="co${i}_status"><option>Ongoing</option><option>For PHI Approval</option><option>Completed</option><option>Cancelled</option></select></div>
-  </div><button class="btn btn-danger btn-sm" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;
   document.getElementById('coForms').appendChild(div);
 }
-
 function addRiskRow(){
   riskCount++;
   const i='new'+riskCount;
@@ -890,10 +484,9 @@ function addRiskRow(){
     <div class="form-group"><label>Owner</label><input id="ri${i}_owner" /></div>
     <div class="form-group"><label>Due Date</label><input id="ri${i}_due_date" /></div>
     <div class="form-group full"><label>Mitigation</label><textarea id="ri${i}_mitigation"></textarea></div>
-  </div><button class="btn btn-danger btn-sm" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;
   document.getElementById('riskForms').appendChild(div);
 }
-
 function addActionRow(){
   actionCount++;
   const i='new'+actionCount;
@@ -906,81 +499,82 @@ function addActionRow(){
     <div class="form-group"><label>Responsible</label><input id="ai${i}_responsible" /></div>
     <div class="form-group"><label>Due Date</label><input id="ai${i}_due_date" /></div>
     <div class="form-group"><label>Status</label><select id="ai${i}_status"><option selected>Pending</option><option>In Progress</option><option>Done</option><option>Overdue</option></select></div>
-  </div><button class="btn btn-danger btn-sm" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;
   document.getElementById('actionForms').appendChild(div);
 }
 
-// ══════════════════════════════════════════════════════
-// COLLECT DATA
-// ══════════════════════════════════════════════════════
+// ── COLLECT DATA FROM FORMS ──
+function g(id){const e=document.getElementById(id);return e?e.value.trim():null}
+function gn(id){const v=g(id);return v===''||v==null?null:parseFloat(v)}
+function gni(id){const v=g(id);return v===''||v==null?null:parseInt(v)}
+
 function collectData(){
-  const d = JSON.parse(JSON.stringify(currentData));
+  const d=JSON.parse(JSON.stringify(currentData)); // deep clone
 
   // Meta
-  d.meta.week = g('m_week')||d.meta.week;
-  d.meta.prepared_by = g('m_prepared_by')||d.meta.prepared_by;
-  d.meta.verified_by = g('m_verified_by')||'';
-  d.meta.source_file = g('m_source_file')||d.meta.source_file;
-  d.meta.file_location = g('m_file_location')||'';
-  d.meta.last_updated = new Date().toISOString();
-  d.meta.last_updated_by = currentUser.username;
+  d.meta.week=g('m_week')||d.meta.week;
+  d.meta.prepared_by=g('m_prepared_by')||d.meta.prepared_by;
+  d.meta.verified_by=g('m_verified_by')||'';
+  d.meta.source_file=g('m_source_file')||d.meta.source_file;
+  d.meta.file_location=g('m_file_location')||'';
+  d.meta.last_updated=new Date().toISOString();
 
-  // Projects — only update fields the current user can edit
-  d.projects = d.projects.map((p,i)=>{
-    if(!canEditProject(p.code)) return p; // return unchanged
-    return {
-      ...p,
-      progress: gn(`p${i}_progress`)??p.progress,
-      schedule_status: g(`p${i}_schedule_status`)||p.schedule_status,
-      schedule_variance_days: gni(`p${i}_schedule_variance_days`)??p.schedule_variance_days,
-      cost_status: g(`p${i}_cost_status`)||p.cost_status,
-      health: g(`p${i}_health`)||p.health,
-      planned_finish: g(`p${i}_planned_finish`)||p.planned_finish,
-      forecast_finish: g(`p${i}_forecast_finish`)||p.forecast_finish,
-      critical_activities: g(`s${i}_critical_activities`)||p.critical_activities,
-      schedule_recommendation: g(`s${i}_schedule_recommendation`)||p.schedule_recommendation,
-      budget: gn(`c${i}_budget`)??p.budget,
-      actual_cost: gn(`c${i}_actual_cost`)??p.actual_cost,
-      forecast_at_completion: gn(`c${i}_forecast_at_completion`)??p.forecast_at_completion,
-      cpi: gn(`c${i}_cpi`)??p.cpi,
-      pa_budget: gn(`c${i}_pa_budget`)??p.pa_budget,
-      pa_actual: gn(`c${i}_pa_actual`)??p.pa_actual,
-      safe_manhours: gn(`sf${i}_safe_manhours`)??p.safe_manhours,
-      inspections_due: gni(`sf${i}_inspections_due`)??p.inspections_due,
-      inspections_done: gni(`sf${i}_inspections_done`)??p.inspections_done,
-      ncr_open: gni(`sf${i}_ncr_open`)??p.ncr_open,
-      incidents: gni(`sf${i}_incidents`)??p.incidents,
-      near_miss: gni(`sf${i}_near_miss`)??p.near_miss,
-      ddi: gn(`sf${i}_ddi`),
-      ot_rate: gn(`sf${i}_ot_rate`),
-      olc_alc: gn(`sf${i}_olc_alc`),
-      last_toolbox: g(`sf${i}_last_toolbox`)||p.last_toolbox,
-      safety_action: g(`sf${i}_safety_action`)||p.safety_action,
-    };
-  });
+  // Projects
+  d.projects=d.projects.map((p,i)=>({
+    ...p,
+    progress:gn(`p${i}_progress`)??p.progress,
+    schedule_status:g(`p${i}_schedule_status`)||p.schedule_status,
+    schedule_variance_days:gni(`p${i}_schedule_variance_days`)??p.schedule_variance_days,
+    cost_status:g(`p${i}_cost_status`)||p.cost_status,
+    health:g(`p${i}_health`)||p.health,
+    planned_finish:g(`p${i}_planned_finish`)||p.planned_finish,
+    forecast_finish:g(`p${i}_forecast_finish`)||p.forecast_finish,
+    critical_activities:g(`s${i}_critical_activities`)||p.critical_activities,
+    schedule_recommendation:g(`s${i}_schedule_recommendation`)||p.schedule_recommendation,
+    budget:gn(`c${i}_budget`)??p.budget,
+    actual_cost:gn(`c${i}_actual_cost`)??p.actual_cost,
+    forecast_at_completion:gn(`c${i}_forecast_at_completion`)??p.forecast_at_completion,
+    cpi:gn(`c${i}_cpi`)??p.cpi,
+    pa_budget:gn(`c${i}_pa_budget`)??p.pa_budget,
+    pa_actual:gn(`c${i}_pa_actual`)??p.pa_actual,
+    safe_manhours:gn(`sf${i}_safe_manhours`)??p.safe_manhours,
+    inspections_due:gni(`sf${i}_inspections_due`)??p.inspections_due,
+    inspections_done:gni(`sf${i}_inspections_done`)??p.inspections_done,
+    ncr_open:gni(`sf${i}_ncr_open`)??p.ncr_open,
+    incidents:gni(`sf${i}_incidents`)??p.incidents,
+    near_miss:gni(`sf${i}_near_miss`)??p.near_miss,
+    ddi:gn(`sf${i}_ddi`),
+    ot_rate:gn(`sf${i}_ot_rate`),
+    olc_alc:gn(`sf${i}_olc_alc`),
+    last_toolbox:g(`sf${i}_last_toolbox`)||p.last_toolbox,
+    safety_action:g(`sf${i}_safety_action`)||p.safety_action,
+  }));
 
-  // Portfolio sections — collect all visible rows
-  d.procurement = [...document.getElementById('procForms').querySelectorAll('.repeat-row')].map(row=>{
+  // Procurement (read all visible rows)
+  d.procurement=[...document.getElementById('procForms').querySelectorAll('.repeat-row')].map(row=>{
     const id=row.id.replace('proc-row-','');
     return{project:g(`pr${id}_project`)||'',item:g(`pr${id}_item`)||'',vendor:g(`pr${id}_vendor`)||'',
       required_date:g(`pr${id}_required_date`)||'',delivery_date:g(`pr${id}_delivery_date`)||'',
       status:g(`pr${id}_status`)||'In Progress',buffer:g(`pr${id}_buffer`)||'',action:g(`pr${id}_action`)||''};
   }).filter(r=>r.item);
 
-  d.change_orders = [...document.getElementById('coForms').querySelectorAll('.repeat-row')].map(row=>{
+  // Change orders
+  d.change_orders=[...document.getElementById('coForms').querySelectorAll('.repeat-row')].map(row=>{
     const id=row.id.replace('co-row-','');
     return{project:g(`co${id}_project`)||'',co_no:g(`co${id}_co_no`)||'',
       description:g(`co${id}_description`)||'',amount:gn(`co${id}_amount`)||0,status:g(`co${id}_status`)||'Ongoing'};
   }).filter(r=>r.description);
 
-  d.risks = [...document.getElementById('riskForms').querySelectorAll('.repeat-row')].map(row=>{
+  // Risks
+  d.risks=[...document.getElementById('riskForms').querySelectorAll('.repeat-row')].map(row=>{
     const id=row.id.replace('risk-row-','');
     return{project:g(`ri${id}_project`)||'',risk:g(`ri${id}_risk`)||'',impact:g(`ri${id}_impact`)||'Medium',
       status:g(`ri${id}_status`)||'Ongoing',owner:g(`ri${id}_owner`)||'',
       due_date:g(`ri${id}_due_date`)||'',mitigation:g(`ri${id}_mitigation`)||''};
   }).filter(r=>r.risk);
 
-  d.action_items = [...document.getElementById('actionForms').querySelectorAll('.repeat-row')].map(row=>{
+  // Actions
+  d.action_items=[...document.getElementById('actionForms').querySelectorAll('.repeat-row')].map(row=>{
     const id=row.id.replace('action-row-','');
     return{project:g(`ai${id}_project`)||'',item:g(`ai${id}_item`)||'',priority:g(`ai${id}_priority`)||'Normal',
       action:g(`ai${id}_action`)||'',responsible:g(`ai${id}_responsible`)||'',
@@ -990,41 +584,22 @@ function collectData(){
   return d;
 }
 
-// ══════════════════════════════════════════════════════
-// SAVE TO GITHUB (admin) or notify (PM)
-// ══════════════════════════════════════════════════════
-async function saveAll(){
+// ── SAVE TO GITHUB ──
+function saveAll(){
   if(!isAdmin()){
-    showStatus('✓ Update saved locally. Ask admin to publish to GitHub.','success');
+    showStatus('✓ Update ready. Notify Admin to Save & Download and publish.','success');
     return;
   }
-
-  showStatus('Publishing to GitHub…','loading');
   const newData = collectData();
-  const content = JSON.stringify(newData, null, 2);
-  const encoded = btoa(unescape(encodeURIComponent(content)));
-
-  try {
-    const shaRes = await fetch(`${API_BASE}/data.json`,
-      {headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}});
-    const shaData = await shaRes.json();
-    const sha = shaData.sha;
-
-    const res = await fetch(`${API_BASE}/data.json`,{
-      method:'PUT',
-      headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body: JSON.stringify({
-        message:`Weekly update — ${newData.meta.week} by ${currentUser.username}`,
-        content: encoded, sha
-      })
-    });
-
-    if(!res.ok){const e=await res.json(); throw new Error(e.message||'GitHub API error');}
-    currentData = newData;
-    showStatus('✓ Published successfully! Dashboard is live.','success');
-  } catch(e){
-    showStatus('Error: '+e.message,'error');
-  }
+  const blob = new Blob([JSON.stringify(newData,null,2)],{type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='data.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  currentData = newData;
+  document.getElementById('uploadBanner').classList.add('show');
+  showStatus('✓ data.json downloaded — upload to GitHub to go live','success');
 }
 </script>
 </body>
