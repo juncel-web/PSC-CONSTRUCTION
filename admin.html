@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSC Construction — Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0d14;--surface:#111520;--surface2:#161c2e;--border:#1e2840;--accent:#f0b429;--accent2:#3b82f6;--accent3:#10b981;--danger:#ef4444;--warn:#f97316;--text:#e8ecf4;--muted:#6b7a99;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-height:100vh}
+  /* Login */
+  .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:24px}
+  .login-logo{font-family:'Bebas Neue';font-size:48px;color:var(--accent);letter-spacing:4px}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:340px;text-align:center}
+  .login-title{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;margin-bottom:6px}
+  .login-sub{font-size:12px;color:var(--muted);margin-bottom:24px}
+  /* Topbar */
+  .topbar{background:rgba(10,13,20,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;position:sticky;top:0;z-index:50}
+  .topbar-title{font-family:'Bebas Neue';font-size:18px;letter-spacing:1px}
+  .topbar-sub{font-size:11px;color:var(--muted)}
+  /* Layout */
+  .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+  .sidebar-item{display:block;padding:10px 20px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .2s;background:none;border-top:none;border-bottom:none;border-right:none;text-align:left;width:100%}
+  .sidebar-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+  .sidebar-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(240,180,41,.05)}
+  .content{padding:28px;overflow-y:auto}
+  /* Panels */
+  .admin-panel{display:none}
+  .admin-panel.active{display:block;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .panel-title{font-family:'Bebas Neue';font-size:24px;letter-spacing:1px;margin-bottom:4px}
+  .panel-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+  /* Cards */
+  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px}
+  .form-card-title{font-family:'Bebas Neue';font-size:15px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group.full{grid-column:1/-1}
+  label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'DM Sans';font-size:12px;transition:border-color .2s;outline:none;width:100%}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  input[type=password]{font-family:'JetBrains Mono';letter-spacing:3px}
+  textarea{resize:vertical;min-height:60px}
+  /* Buttons */
+  .btn{padding:8px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans';font-size:12px;font-weight:700;letter-spacing:.5px;transition:all .2s}
+  .btn-primary{background:var(--accent);color:#000}
+  .btn-primary:hover{background:#ffd166}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-danger{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+  .btn-sm{padding:5px 12px;font-size:11px}
+  /* Status */
+  .status-bar{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 20px;font-size:12px;display:flex;align-items:center;gap:10px;z-index:200;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  .status-bar.show{display:flex}
+  .status-bar.success{border-color:var(--accent3);color:var(--accent3)}
+  .status-bar.error{border-color:var(--danger);color:var(--danger)}
+  .status-bar.loading{border-color:var(--accent);color:var(--accent)}
+  /* Repeat section rows */
+  .repeat-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+  .repeat-row .row-fields{flex:1;display:grid;gap:8px}
+  .repeat-row .btn-remove{flex-shrink:0;margin-top:2px}
+  /* Config note */
+  .config-note{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.3);border-radius:8px;padding:14px;font-size:12px;color:var(--muted);margin-bottom:20px}
+  .config-note code{background:rgba(240,180,41,.15);color:var(--accent);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono';font-size:11px}
+  @media(max-width:700px){
+    .admin-layout{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .form-grid,.form-grid-3{grid-template-columns:1fr}
+  }
+
+.upload-banner{display:none;background:#0a2010;border-bottom:1px solid rgba(16,185,129,.35);padding:10px 24px;align-items:center;gap:14px}
+.upload-banner.show{display:flex}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-logo">PSC</div>
+  <div class="login-card">
+    <div class="login-title">Dashboard Portal</div>
+    <div class="login-sub">PSC Construction Operations<br><span style="font-size:10px">Project Managers &amp; Administrators</span></div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Username</label>
+      <input id="lUser" placeholder="e.g. dbitol" autocomplete="username"/>
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <label>Password</label>
+      <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div id="lErr" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Sign In →</button>
+    <div style="margin-top:14px;font-size:10px;color:var(--muted);text-align:center">Contact your administrator to reset your password.</div>
+  </div>
+</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="adminTopbar" style="display:none">
+  <div>
+    <div class="topbar-title">PSC Construction — Dashboard Admin</div>
+    <div class="topbar-sub">Weekly Data Entry Panel</div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">↗ View Dashboard</a>
+    <button class="btn btn-primary btn-sm" onclick="saveAll()">💾 Save & Download</button>
+    <button class="btn btn-secondary btn-sm" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- ADMIN LAYOUT -->
+
+<!-- UPLOAD BANNER -->
+<div class="upload-banner" id="uploadBanner">
+  <span style="font-size:20px">✅</span>
+  <div style="flex:1;color:#a0d8b0;font-size:11px;line-height:1.7">
+    <strong style="color:#fff">data.json downloaded!</strong>
+    &nbsp;Upload to GitHub:&nbsp;
+    <strong>github.com/juncel-web/PSC-CONSTRUCTION</strong>
+    → click <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono';font-size:10px">data.json</code>
+    → <strong>Add file → Upload files</strong> → replace → <strong>Commit changes</strong>
+  </div>
+  <button onclick="document.getElementById('uploadBanner').classList.remove('show')"
+    style="background:none;border:1px solid rgba(16,185,129,.4);color:var(--accent3);border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">
+    ✕ Dismiss
+  </button>
+</div>
+
+<div class="admin-layout" id="adminLayout" style="display:none">
+  <div class="sidebar">
+    <button class="sidebar-item active" onclick="showPanel('meta',this)">📋 Report Meta</button>
+    <button class="sidebar-item" onclick="showPanel('projects',this)">🏗 Project Status</button>
+    <button class="sidebar-item" onclick="showPanel('schedule',this)">📅 Schedule</button>
+    <button class="sidebar-item" onclick="showPanel('cost',this)">💰 Cost & CPI</button>
+    <button class="sidebar-item" onclick="showPanel('procurement',this)">📦 Procurement</button>
+    <button class="sidebar-item" onclick="showPanel('changeorders',this)">🔄 Change Orders</button>
+    <button class="sidebar-item" onclick="showPanel('safety',this)">🦺 Safety</button>
+    <button class="sidebar-item" onclick="showPanel('risks',this)">⚠️ Risks</button>
+    <button class="sidebar-item" onclick="showPanel('actions',this)">✅ Action Items</button>
+    <div style="padding:16px 20px;border-top:1px solid var(--border);margin-top:8px">
+      <button class="btn btn-primary" style="width:100%" onclick="saveAll()">💾 Save & Download</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- CONFIG NOTE -->
+    <div class="config-note" id="configNote">
+      ⚙️ <strong style="color:var(--accent)">First-time setup:</strong> Open <code>admin.html</code> and <code>index.html</code> and replace <code>YOUR_GITHUB_USERNAME</code> and <code>YOUR_REPO_NAME</code> with your actual values. Your  (PAT) needs <code>repo</code> scope.
+    </div>
+
+    <!-- PANEL: META -->
+    <div class="admin-panel active" id="panel-meta">
+      <div class="panel-title">Report Meta & Data Sources</div>
+      <div class="panel-sub">Update these fields every week before publishing.</div>
+      <div class="form-card">
+        <div class="form-card-title">Weekly Report Info</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Week Of (e.g. May 13, 2026)</label><input id="m_week" /></div>
+          <div class="form-group"><label>Prepared By</label><input id="m_prepared_by" /></div>
+          <div class="form-group"><label>Verified By</label><input id="m_verified_by" /></div>
+          <div class="form-group"><label>Source File Name</label><input id="m_source_file" /></div>
+          <div class="form-group full"><label>File Location / Path (SharePoint URL, Drive link, etc.)</label><input id="m_file_location" /></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: PROJECTS -->
+    <div class="admin-panel" id="panel-projects">
+      <div class="panel-title">Project Status</div>
+      <div class="panel-sub">Update general status per project. Schedule and cost details are in their own panels.</div>
+      <div id="projectForms"></div>
+    </div>
+
+    <!-- PANEL: SCHEDULE -->
+    <div class="admin-panel" id="panel-schedule">
+      <div class="panel-title">Schedule Control</div>
+      <div id="scheduleForms"></div>
+    </div>
+
+    <!-- PANEL: COST -->
+    <div class="admin-panel" id="panel-cost">
+      <div class="panel-title">Cost & CPI</div>
+      <div id="costForms"></div>
+    </div>
+
+    <!-- PANEL: PROCUREMENT -->
+    <div class="admin-panel" id="panel-procurement">
+      <div class="panel-title">Procurement Status</div>
+      <div class="panel-sub">Track critical material deliveries.</div>
+      <div id="procForms"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addProcRow()">+ Add Item</button>
+    </div>
+
+    <!-- PANEL: CHANGE ORDERS -->
+    <div class="admin-panel" id="panel-changeorders">
+      <div class="panel-title">Change Orders</div>
+      <div id="coForms"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addCORow()">+ Add Change Order</button>
+    </div>
+
+    <!-- PANEL: SAFETY -->
+    <div class="admin-panel" id="panel-safety">
+      <div class="panel-title">Safety & Quality</div>
+      <div id="safetyForms"></div>
+    </div>
+
+    <!-- PANEL: RISKS -->
+    <div class="admin-panel" id="panel-risks">
+      <div class="panel-title">Risk Register</div>
+      <div id="riskForms"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addRiskRow()">+ Add Risk</button>
+    </div>
+
+    <!-- PANEL: ACTIONS -->
+    <div class="admin-panel" id="panel-actions">
+      <div class="panel-title">Action Items</div>
+      <div id="actionForms"></div>
+      <button class="btn btn-secondary btn-sm" onclick="addActionRow()">+ Add Action Item</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar" id="statusBar"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — match exactly what's in index.html
+// ══════════════════════════════════════════════════════
+const GITHUB_USER = 'juncel-web';
+const GITHUB_REPO = 'PSC-CONSTRUCTION';
+const RAW_BASE    = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main`;
+
+let currentData = null;
+
+// ── AUTH ──
+async function doLogin(){
+  const u    = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  const err  = document.getElementById('lErr');
+  err.textContent = '';
+  if(!u || !pass){ err.textContent = 'Please enter your username and password.'; return; }
+  try {
+    const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+    if(!res.ok) throw new Error(`Cannot reach data file (HTTP ${res.status}).`);
+    const data = await res.json();
+    const user = (data.users||[]).find(x=>x.username.toLowerCase()===u && x.password===pass);
+    if(!user){ err.textContent='Incorrect username or password.'; return; }
+    if(!user.active){ err.textContent='Account deactivated. Contact administrator.'; return; }
+    currentData = data; currentUser = user;
+    boot();
+  } catch(e){ err.textContent = e.message; }
+}
+
+function doLogout(){
+   location.reload();
+}
+
+// ── PANEL SWITCHING ──
+function showPanel(id, btn){
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ── STATUS ──
+function showStatus(msg, type='loading'){
+  const el=document.getElementById('statusBar');
+  el.textContent=msg; el.className='status-bar show '+type;
+  if(type!=='loading') setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+
+
+// ── POPULATE FORMS ──
+function populateForms(d){
+  // Meta
+  ['week','prepared_by','verified_by','source_file','file_location'].forEach(k=>{
+    const el=document.getElementById('m_'+k);
+    if(el) el.value=d.meta[k]||'';
+  });
+
+  // Projects (status, health)
+  document.getElementById('projectForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} (${p.code})</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Progress (%)</label><input id="p${i}_progress" type="number" step="0.01" value="${p.progress}" /></div>
+        <div class="form-group"><label>Schedule Status</label>
+          <select id="p${i}_schedule_status">
+            ${['Ahead','On Track','Delayed'].map(s=>`<option ${p.schedule_status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Schedule Variance (days, positive = ahead)</label><input id="p${i}_schedule_variance_days" type="number" value="${p.schedule_variance_days}" /></div>
+        <div class="form-group"><label>Cost Status</label>
+          <select id="p${i}_cost_status">
+            ${['Within Budget','At Risk','Over Budget'].map(s=>`<option ${p.cost_status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Overall Health</label>
+          <select id="p${i}_health">
+            ${['Good','At Risk','Critical'].map(s=>`<option ${p.health===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Planned Finish</label><input id="p${i}_planned_finish" value="${p.planned_finish}" /></div>
+        <div class="form-group"><label>Forecast Finish</label><input id="p${i}_forecast_finish" value="${p.forecast_finish}" /></div>
+      </div>
+    </div>`).join('');
+
+  // Schedule
+  document.getElementById('scheduleForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} — Schedule Details</div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Critical Activities</label><textarea id="s${i}_critical_activities">${p.critical_activities}</textarea></div>
+        <div class="form-group full"><label>Schedule Recommendation</label><textarea id="s${i}_schedule_recommendation">${p.schedule_recommendation}</textarea></div>
+      </div>
+    </div>`).join('');
+
+  // Cost
+  document.getElementById('costForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} — Cost Data</div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Approved Budget (₱)</label><input id="c${i}_budget" type="number" value="${p.budget}" /></div>
+        <div class="form-group"><label>Actual Cost to Date (₱)</label><input id="c${i}_actual_cost" type="number" value="${p.actual_cost}" /></div>
+        <div class="form-group"><label>Forecast at Completion (₱)</label><input id="c${i}_forecast_at_completion" type="number" value="${p.forecast_at_completion}" /></div>
+        <div class="form-group"><label>CPI (auto or manual)</label><input id="c${i}_cpi" type="number" step="0.01" value="${p.cpi}" /></div>
+        <div class="form-group"><label>P&A Budget (₱)</label><input id="c${i}_pa_budget" type="number" value="${p.pa_budget}" /></div>
+        <div class="form-group"><label>P&A Actual (₱)</label><input id="c${i}_pa_actual" type="number" value="${p.pa_actual}" /></div>
+      </div>
+    </div>`).join('');
+
+  // Safety
+  document.getElementById('safetyForms').innerHTML=d.projects.map((p,i)=>`
+    <div class="form-card">
+      <div class="form-card-title">${p.name} — Safety Data</div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Safe Man-Hours</label><input id="sf${i}_safe_manhours" type="number" step="0.1" value="${p.safe_manhours}" /></div>
+        <div class="form-group"><label>Inspections Due</label><input id="sf${i}_inspections_due" type="number" value="${p.inspections_due}" /></div>
+        <div class="form-group"><label>Inspections Done</label><input id="sf${i}_inspections_done" type="number" value="${p.inspections_done}" /></div>
+        <div class="form-group"><label>NCR Open</label><input id="sf${i}_ncr_open" type="number" value="${p.ncr_open}" /></div>
+        <div class="form-group"><label>Incidents</label><input id="sf${i}_incidents" type="number" value="${p.incidents}" /></div>
+        <div class="form-group"><label>Near Miss</label><input id="sf${i}_near_miss" type="number" value="${p.near_miss}" /></div>
+        <div class="form-group"><label>DDI %</label><input id="sf${i}_ddi" type="number" step="0.01" value="${p.ddi??''}" placeholder="leave blank if N/A" /></div>
+        <div class="form-group"><label>OT Rate %</label><input id="sf${i}_ot_rate" type="number" step="0.1" value="${p.ot_rate??''}" placeholder="blank = N/A" /></div>
+        <div class="form-group"><label>OLC/ALC</label><input id="sf${i}_olc_alc" type="number" step="0.001" value="${p.olc_alc??''}" placeholder="blank = N/A" /></div>
+        <div class="form-group"><label>Last Toolbox Talk</label><input id="sf${i}_last_toolbox" value="${p.last_toolbox}" /></div>
+        <div class="form-group full"><label>Safety Action / Note</label><textarea id="sf${i}_safety_action">${p.safety_action}</textarea></div>
+      </div>
+    </div>`).join('');
+
+  // Procurement
+  renderProcForms(d.procurement, d.projects);
+
+  // Change Orders
+  renderCOForms(d.change_orders, d.projects);
+
+  // Risks
+  renderRiskForms(d.risks);
+
+  // Actions
+  renderActionForms(d.action_items);
+}
+
+function renderProcForms(items, projects){
+  document.getElementById('procForms').innerHTML=items.map((p,i)=>`
+    <div class="repeat-row" id="proc-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
+        <div class="form-group"><label>Project</label>
+          <select id="pr${i}_project">${projects.map(x=>`<option value="${x.code}" ${p.project===x.code?'selected':''}>${x.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Item</label><input id="pr${i}_item" value="${p.item}" /></div>
+        <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor" value="${p.vendor}" /></div>
+        <div class="form-group"><label>Required Date</label><input id="pr${i}_required_date" value="${p.required_date}" /></div>
+        <div class="form-group"><label>Delivery Date</label><input id="pr${i}_delivery_date" value="${p.delivery_date}" /></div>
+        <div class="form-group"><label>Status</label>
+          <select id="pr${i}_status">${['Delivered','In Progress','Delayed'].map(s=>`<option ${p.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Buffer</label><input id="pr${i}_buffer" value="${p.buffer}" /></div>
+        <div class="form-group"><label>Action / Note</label><input id="pr${i}_action" value="${p.action}" /></div>
+      </div>
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>
+    </div>`).join('');
+}
+
+function renderCOForms(items, projects){
+  document.getElementById('coForms').innerHTML=items.map((c,i)=>`
+    <div class="repeat-row" id="co-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+        <div class="form-group"><label>Project</label>
+          <select id="co${i}_project">${projects.map(x=>`<option value="${x.code}" ${c.project===x.code?'selected':''}>${x.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label>CO No.</label><input id="co${i}_co_no" value="${c.co_no}" /></div>
+        <div class="form-group"><label>Description</label><input id="co${i}_description" value="${c.description}" /></div>
+        <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amount" type="number" value="${c.amount}" /></div>
+        <div class="form-group"><label>Status</label>
+          <select id="co${i}_status">${['Ongoing','For PSC Approval','Completed','Cancelled'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('co-row-${i}').remove()">✕</button>
+    </div>`).join('');
+}
+
+function renderRiskForms(items){
+  document.getElementById('riskForms').innerHTML=items.map((r,i)=>`
+    <div class="repeat-row" id="risk-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+        <div class="form-group"><label>Project Code</label><input id="ri${i}_project" value="${r.project}" /></div>
+        <div class="form-group"><label>Risk / Issue</label><input id="ri${i}_risk" value="${r.risk}" /></div>
+        <div class="form-group"><label>Impact</label>
+          <select id="ri${i}_impact">${['High','Medium','Low'].map(s=>`<option ${r.impact===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Status</label>
+          <select id="ri${i}_status">${['Overdue','Active','Ongoing','Resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Owner</label><input id="ri${i}_owner" value="${r.owner}" /></div>
+        <div class="form-group"><label>Due Date</label><input id="ri${i}_due_date" value="${r.due_date}" /></div>
+        <div class="form-group full"><label>Mitigation / Action</label><textarea id="ri${i}_mitigation">${r.mitigation}</textarea></div>
+      </div>
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>
+    </div>`).join('');
+}
+
+function renderActionForms(items){
+  document.getElementById('actionForms').innerHTML=items.map((a,i)=>`
+    <div class="repeat-row" id="action-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+        <div class="form-group"><label>Project</label><input id="ai${i}_project" value="${a.project}" /></div>
+        <div class="form-group"><label>Item / Issue</label><input id="ai${i}_item" value="${a.item}" /></div>
+        <div class="form-group"><label>Priority</label>
+          <select id="ai${i}_priority">${['Overdue','High','Medium','Normal'].map(s=>`<option ${a.priority===s?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="form-group full"><label>Recommended Action</label><textarea id="ai${i}_action">${a.action}</textarea></div>
+        <div class="form-group"><label>Responsible</label><input id="ai${i}_responsible" value="${a.responsible}" /></div>
+        <div class="form-group"><label>Due Date</label><input id="ai${i}_due_date" value="${a.due_date}" /></div>
+        <div class="form-group"><label>Status</label>
+          <select id="ai${i}_status">${['Overdue','Pending','In Progress','Done'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>
+      <button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('action-row-${i}').remove()">✕</button>
+    </div>`).join('');
+}
+
+// ── ADD ROW HELPERS ──
+let procCount=0, coCount=0, riskCount=0, actionCount=0;
+function addProcRow(){
+  procCount++;
+  const i='new'+procCount;
+  const ps=currentData.projects;
+  const div=document.createElement('div'); div.id=`proc-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
+    <div class="form-group"><label>Project</label><select id="pr${i}_project">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Item</label><input id="pr${i}_item" placeholder="e.g. Tiles" /></div>
+    <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor" /></div>
+    <div class="form-group"><label>Required Date</label><input id="pr${i}_required_date" /></div>
+    <div class="form-group"><label>Delivery Date</label><input id="pr${i}_delivery_date" /></div>
+    <div class="form-group"><label>Status</label><select id="pr${i}_status"><option>In Progress</option><option>Delivered</option><option>Delayed</option></select></div>
+    <div class="form-group"><label>Buffer</label><input id="pr${i}_buffer" /></div>
+    <div class="form-group"><label>Action</label><input id="pr${i}_action" /></div>
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`;
+  document.getElementById('procForms').appendChild(div);
+}
+function addCORow(){
+  coCount++;
+  const i='new'+coCount;
+  const ps=currentData.projects;
+  const div=document.createElement('div'); div.id=`co-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project</label><select id="co${i}_project">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>CO No.</label><input id="co${i}_co_no" /></div>
+    <div class="form-group"><label>Description</label><input id="co${i}_description" /></div>
+    <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amount" type="number" value="0" /></div>
+    <div class="form-group"><label>Status</label><select id="co${i}_status"><option>Ongoing</option><option>For PSC Approval</option><option>Completed</option><option>Cancelled</option></select></div>
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;
+  document.getElementById('coForms').appendChild(div);
+}
+function addRiskRow(){
+  riskCount++;
+  const i='new'+riskCount;
+  const div=document.createElement('div'); div.id=`risk-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project Code</label><input id="ri${i}_project" /></div>
+    <div class="form-group"><label>Risk</label><input id="ri${i}_risk" /></div>
+    <div class="form-group"><label>Impact</label><select id="ri${i}_impact"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+    <div class="form-group"><label>Status</label><select id="ri${i}_status"><option>Active</option><option>Ongoing</option><option>Overdue</option><option>Resolved</option></select></div>
+    <div class="form-group"><label>Owner</label><input id="ri${i}_owner" /></div>
+    <div class="form-group"><label>Due Date</label><input id="ri${i}_due_date" /></div>
+    <div class="form-group full"><label>Mitigation</label><textarea id="ri${i}_mitigation"></textarea></div>
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;
+  document.getElementById('riskForms').appendChild(div);
+}
+function addActionRow(){
+  actionCount++;
+  const i='new'+actionCount;
+  const div=document.createElement('div'); div.id=`action-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project</label><input id="ai${i}_project" /></div>
+    <div class="form-group"><label>Item</label><input id="ai${i}_item" /></div>
+    <div class="form-group"><label>Priority</label><select id="ai${i}_priority"><option>High</option><option selected>Medium</option><option>Normal</option><option>Overdue</option></select></div>
+    <div class="form-group full"><label>Action</label><textarea id="ai${i}_action"></textarea></div>
+    <div class="form-group"><label>Responsible</label><input id="ai${i}_responsible" /></div>
+    <div class="form-group"><label>Due Date</label><input id="ai${i}_due_date" /></div>
+    <div class="form-group"><label>Status</label><select id="ai${i}_status"><option selected>Pending</option><option>In Progress</option><option>Done</option><option>Overdue</option></select></div>
+  </div><button class="btn btn-danger btn-sm btn-remove" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;
+  document.getElementById('actionForms').appendChild(div);
+}
+
+// ── COLLECT DATA FROM FORMS ──
+function g(id){const e=document.getElementById(id);return e?e.value.trim():null}
+function gn(id){const v=g(id);return v===''||v==null?null:parseFloat(v)}
+function gni(id){const v=g(id);return v===''||v==null?null:parseInt(v)}
+
+function collectData(){
+  const d=JSON.parse(JSON.stringify(currentData)); // deep clone
+
+  // Meta
+  d.meta.week=g('m_week')||d.meta.week;
+  d.meta.prepared_by=g('m_prepared_by')||d.meta.prepared_by;
+  d.meta.verified_by=g('m_verified_by')||'';
+  d.meta.source_file=g('m_source_file')||d.meta.source_file;
+  d.meta.file_location=g('m_file_location')||'';
+  d.meta.last_updated=new Date().toISOString();
+
+  // Projects
+  d.projects=d.projects.map((p,i)=>({
+    ...p,
+    progress:gn(`p${i}_progress`)??p.progress,
+    schedule_status:g(`p${i}_schedule_status`)||p.schedule_status,
+    schedule_variance_days:gni(`p${i}_schedule_variance_days`)??p.schedule_variance_days,
+    cost_status:g(`p${i}_cost_status`)||p.cost_status,
+    health:g(`p${i}_health`)||p.health,
+    planned_finish:g(`p${i}_planned_finish`)||p.planned_finish,
+    forecast_finish:g(`p${i}_forecast_finish`)||p.forecast_finish,
+    critical_activities:g(`s${i}_critical_activities`)||p.critical_activities,
+    schedule_recommendation:g(`s${i}_schedule_recommendation`)||p.schedule_recommendation,
+    budget:gn(`c${i}_budget`)??p.budget,
+    actual_cost:gn(`c${i}_actual_cost`)??p.actual_cost,
+    forecast_at_completion:gn(`c${i}_forecast_at_completion`)??p.forecast_at_completion,
+    cpi:gn(`c${i}_cpi`)??p.cpi,
+    pa_budget:gn(`c${i}_pa_budget`)??p.pa_budget,
+    pa_actual:gn(`c${i}_pa_actual`)??p.pa_actual,
+    safe_manhours:gn(`sf${i}_safe_manhours`)??p.safe_manhours,
+    inspections_due:gni(`sf${i}_inspections_due`)??p.inspections_due,
+    inspections_done:gni(`sf${i}_inspections_done`)??p.inspections_done,
+    ncr_open:gni(`sf${i}_ncr_open`)??p.ncr_open,
+    incidents:gni(`sf${i}_incidents`)??p.incidents,
+    near_miss:gni(`sf${i}_near_miss`)??p.near_miss,
+    ddi:gn(`sf${i}_ddi`),
+    ot_rate:gn(`sf${i}_ot_rate`),
+    olc_alc:gn(`sf${i}_olc_alc`),
+    last_toolbox:g(`sf${i}_last_toolbox`)||p.last_toolbox,
+    safety_action:g(`sf${i}_safety_action`)||p.safety_action,
+  }));
+
+  // Procurement (read all visible rows)
+  d.procurement=[...document.getElementById('procForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('proc-row-','');
+    return{project:g(`pr${id}_project`)||'',item:g(`pr${id}_item`)||'',vendor:g(`pr${id}_vendor`)||'',
+      required_date:g(`pr${id}_required_date`)||'',delivery_date:g(`pr${id}_delivery_date`)||'',
+      status:g(`pr${id}_status`)||'In Progress',buffer:g(`pr${id}_buffer`)||'',action:g(`pr${id}_action`)||''};
+  }).filter(r=>r.item);
+
+  // Change orders
+  d.change_orders=[...document.getElementById('coForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('co-row-','');
+    return{project:g(`co${id}_project`)||'',co_no:g(`co${id}_co_no`)||'',
+      description:g(`co${id}_description`)||'',amount:gn(`co${id}_amount`)||0,status:g(`co${id}_status`)||'Ongoing'};
+  }).filter(r=>r.description);
+
+  // Risks
+  d.risks=[...document.getElementById('riskForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('risk-row-','');
+    return{project:g(`ri${id}_project`)||'',risk:g(`ri${id}_risk`)||'',impact:g(`ri${id}_impact`)||'Medium',
+      status:g(`ri${id}_status`)||'Ongoing',owner:g(`ri${id}_owner`)||'',
+      due_date:g(`ri${id}_due_date`)||'',mitigation:g(`ri${id}_mitigation`)||''};
+  }).filter(r=>r.risk);
+
+  // Actions
+  d.action_items=[...document.getElementById('actionForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('action-row-','');
+    return{project:g(`ai${id}_project`)||'',item:g(`ai${id}_item`)||'',priority:g(`ai${id}_priority`)||'Normal',
+      action:g(`ai${id}_action`)||'',responsible:g(`ai${id}_responsible`)||'',
+      due_date:g(`ai${id}_due_date`)||'',status:g(`ai${id}_status`)||'Pending'};
+  }).filter(r=>r.item);
+
+  return d;
+}
+
+// ── SAVE TO GITHUB ──
+function saveAll(){
+  if(!isAdmin()){
+    showStatus('✓ Update ready. Notify Admin to Save & Download and publish.','success');
+    return;
+  }
+  const newData = collectData();
+  const blob = new Blob([JSON.stringify(newData,null,2)],{type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download='data.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  currentData = newData;
+  document.getElementById('uploadBanner').classList.add('show');
+  showStatus('✓ data.json downloaded — upload to GitHub to go live','success');
+}
+
+// ══════════════════════════════════════════════
+// ADD NEW PROJECT
+// ══════════════════════════════════════════════
+function openAddProjectModal(){
+  // Pre-fill PM user select with PM users only
+  const pmUsers = (currentData.users||[]).filter(u=>u.role==='pm');
+  document.getElementById('np_pm_users').innerHTML =
+    pmUsers.map(u=>`<option value="${u.username}">${u.display_name} (@${u.username})</option>`).join('');
+  // Clear fields
+  ['np_code','np_name','np_location','np_pic','np_planned_finish','np_forecast_finish']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('np_budget').value='0';
+  document.getElementById('np_ot_baseline').value='20';
+  document.getElementById('projectModal').classList.add('show');
+}
+
+function closeProjectModal(){
+  document.getElementById('projectModal').classList.remove('show');
+}
+
+function saveNewProject(){
+  const code           = document.getElementById('np_code').value.trim();
+  const name           = document.getElementById('np_name').value.trim();
+  const location       = document.getElementById('np_location').value.trim();
+  const pic            = document.getElementById('np_pic').value.trim();
+  const budget         = parseFloat(document.getElementById('np_budget').value)||0;
+  const ot_baseline    = parseFloat(document.getElementById('np_ot_baseline').value)||20;
+  const planned_finish = document.getElementById('np_planned_finish').value.trim();
+  const forecast_finish= document.getElementById('np_forecast_finish').value.trim();
+
+  if(!code||!name||!location||!planned_finish){
+    showStatus('Please fill in Code, Name, Location, and Planned Finish.','error');
+    return;
+  }
+
+  // Check for duplicate code
+  if(currentData.projects.find(p=>p.code===code)){
+    showStatus(`Project code "${code}" already exists.`,'error');
+    return;
+  }
+
+  // Build new project object
+  const newProject = {
+    code, name, location, pic,
+    progress: 0,
+    schedule_variance_days: 0,
+    schedule_status: 'On Track',
+    cost_status: 'Within Budget',
+    health: 'Good',
+    planned_finish: planned_finish || '',
+    forecast_finish: forecast_finish || planned_finish || '',
+    critical_activities: '',
+    schedule_recommendation: '',
+    budget,
+    actual_cost: 0,
+    forecast_at_completion: budget,
+    cpi: 1.0,
+    pa_budget: 0,
+    pa_actual: 0,
+    ddi: null,
+    ot_rate: null,
+    ot_baseline,
+    olc_alc: null,
+    safe_manhours: 0,
+    inspections_due: 0,
+    inspections_done: 0,
+    ncr_open: 0,
+    incidents: 0,
+    near_miss: 0,
+    last_toolbox: '',
+    safety_action: '',
+    s_curve: []
+  };
+
+  // Add to projects array
+  currentData.projects.push(newProject);
+
+  // Assign to selected PMs
+  const sel = document.getElementById('np_pm_users');
+  const selectedPMs = [...sel.selectedOptions].map(o=>o.value);
+  if(selectedPMs.length && currentData.users){
+    currentData.users = currentData.users.map(u=>{
+      if(selectedPMs.includes(u.username)){
+        if(!u.projects.includes(code)) u.projects.push(code);
+      }
+      return u;
+    });
+  }
+
+  // Rebuild all forms with the new project included
+  sc_counts.push(0);
+  populateForms();
+  closeProjectModal();
+
+  // Rebuild user grid if admin
+  if(isAdmin() && currentData.users) buildUserGrid(currentData.users);
+
+  showStatus(`✓ Project "${name}" added. Review details then click Save & Download.`,'success');
+}
+
+</script>
+</body>
+</html>
