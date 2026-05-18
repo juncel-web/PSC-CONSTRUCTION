@@ -5,8 +5,8 @@
     "verified_by": "",
     "source_file": "Prototype_Excel_for_Dashboard.xlsx",
     "file_location": "",
-    "last_updated": "2026-05-18T05:15:56.079Z",
-    "last_updated_by": "admin"
+    "last_updated": "2026-05-18T23:57:27.297Z",
+    "last_updated_by": "jamerced"
   },
   "projects": [
     {
@@ -679,6 +679,16 @@
       "display_name": "Juncel Merced",
       "role": "admin",
       "password": "jam2026",
+      "projects": [
+        "ALL"
+      ],
+      "active": true
+    },
+    {
+      "username": "jhlatga",
+      "display_name": "Jennifer Latoga",
+      "role": "admin",
+      "password": "jhl2026",
       "projects": [
         "ALL"
       ],
