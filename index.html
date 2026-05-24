@@ -198,6 +198,7 @@
   <button class="tab-btn" onclick="showTab('risk',this)">⚠️ Risks & Actions</button>
   <button class="tab-btn" onclick="showTab('exec',this)">🎯 CEO Summary</button>
   <button class="tab-btn" onclick="showTab('scurve',this)">📈 S-Curve</button>
+  <button class="tab-btn" onclick="showTab('files',this)">📁 Files</button>
 </div>
 
 <div class="main" id="mainContent" style="display:none">
@@ -482,6 +483,70 @@
   </div>
 </div>
 
+
+<!-- ── FILES TAB ── -->
+<div class="tab-panel" id="tab-files">
+
+  <!-- Filter bar -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <select id="filesProjectFilter" onchange="renderFiles()"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+             padding:7px 12px;color:var(--text);font-family:'DM Sans';font-size:12px;outline:none">
+      <option value="all">All Projects</option>
+    </select>
+    <select id="filesSectionFilter" onchange="renderFiles()"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+             padding:7px 12px;color:var(--text);font-family:'DM Sans';font-size:12px;outline:none">
+      <option value="all">All Sections</option>
+      <option value="progress">Progress Photos</option>
+      <option value="safety">Safety</option>
+      <option value="procurement">Procurement</option>
+      <option value="change_orders">Change Orders</option>
+      <option value="general">General</option>
+    </select>
+    <select id="filesTypeFilter" onchange="renderFiles()"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+             padding:7px 12px;color:var(--text);font-family:'DM Sans';font-size:12px;outline:none">
+      <option value="all">All Types</option>
+      <option value="image">Photos</option>
+      <option value="document">Documents</option>
+    </select>
+    <div id="filesCount" style="margin-left:auto;font-size:11px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid-4 mb-16" id="filesKpiCards"></div>
+
+  <!-- Photo gallery -->
+  <div class="section-head" id="photoSectionHead" style="display:none">
+    <h2>Photos</h2><div class="section-head-line"></div>
+    <div class="section-head-tag" id="photoCount">0 PHOTOS</div>
+  </div>
+  <div id="photoGallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px"></div>
+
+  <!-- Documents list -->
+  <div class="section-head" id="docSectionHead" style="display:none">
+    <h2>Documents</h2><div class="section-head-line"></div>
+    <div class="section-head-tag" id="docCount">0 DOCS</div>
+  </div>
+  <div id="docList" style="margin-bottom:24px"></div>
+
+  <!-- Empty state -->
+  <div id="filesEmpty" style="display:none;text-align:center;padding:60px 20px;color:var(--muted)">
+    <div style="font-size:48px;margin-bottom:12px">📁</div>
+    <div style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px">No Files Found</div>
+    <div style="font-size:12px;margin-top:6px">No approved files match the selected filters.</div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;
+     align-items:center;justify-content:center;flex-direction:column;gap:12px" onclick="closeLightbox()">
+  <div style="position:absolute;top:20px;right:24px;font-size:28px;color:#fff;cursor:pointer;user-select:none">✕</div>
+  <img id="lightboxImg" src="" alt="" style="max-width:90vw;max-height:80vh;border-radius:8px;box-shadow:0 8px 48px rgba(0,0,0,.6)"/>
+  <div id="lightboxCaption" style="color:rgba(255,255,255,.7);font-size:12px;text-align:center"></div>
+</div>
+
 </div><!-- end main -->
 
 <!-- FOOTER -->
@@ -595,6 +660,7 @@ function render(){
   renderRisks();
   renderExec();
   renderSCurve();
+  renderFiles();
 }
 
 // ─────────────────────────────────
@@ -1370,6 +1436,139 @@ function renderSCurve(){
     </tr>`;
   }).join('');
 }
+
+
+// ─────────────────────────────────
+// FILES TAB
+// ─────────────────────────────────
+const SECTIONS = {
+  progress:'Progress Photos', safety:'Safety', procurement:'Procurement',
+  change_orders:'Change Orders', general:'General'
+};
+
+function renderFiles(){
+  const ps  = D.projects;
+  const all = (D.files||[]).filter(f=>f.status==='approved');
+
+  // Populate project filter
+  const pf = document.getElementById('filesProjectFilter');
+  if(pf.options.length <= 1){
+    ps.forEach(p=>{ const o=document.createElement('option'); o.value=p.code; o.textContent=p.name; pf.appendChild(o); });
+  }
+
+  const projF = document.getElementById('filesProjectFilter').value;
+  const sectF = document.getElementById('filesSectionFilter').value;
+  const typeF = document.getElementById('filesTypeFilter').value;
+
+  let filtered = all;
+  if(projF !== 'all') filtered = filtered.filter(f=>f.project_code===projF);
+  if(sectF !== 'all') filtered = filtered.filter(f=>f.section===sectF);
+  if(typeF !== 'all') filtered = filtered.filter(f=>f.file_type===typeF);
+
+  const photos = filtered.filter(f=>f.file_type==='image');
+  const docs   = filtered.filter(f=>f.file_type==='document');
+  const total  = filtered.length;
+
+  document.getElementById('filesCount').textContent =
+    `${total} file${total!==1?'s':''} found`;
+
+  // KPI cards
+  document.getElementById('filesKpiCards').innerHTML = `
+    <div class="card"><div class="card-header"><div class="card-title">Total Files</div></div>
+      <div class="stat-val">${all.length}</div><div class="stat-label">Approved & visible</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Photos</div></div>
+      <div class="stat-val" style="color:var(--accent2)">${all.filter(f=>f.file_type==='image').length}</div>
+      <div class="stat-label">Site & progress photos</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Documents</div></div>
+      <div class="stat-val" style="color:var(--accent)">${all.filter(f=>f.file_type==='document').length}</div>
+      <div class="stat-label">PDFs, Word, Excel files</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Pending Review</div>
+      <span class="card-badge badge-warn">ADMIN</span></div>
+      <div class="stat-val" style="color:var(--warn)">${(D.files||[]).filter(f=>f.status==='pending').length}</div>
+      <div class="stat-label">Awaiting admin approval</div></div>`;
+
+  // Photos
+  const photoHead = document.getElementById('photoSectionHead');
+  const photoGal  = document.getElementById('photoGallery');
+  if(photos.length){
+    photoHead.style.display='flex';
+    document.getElementById('photoCount').textContent = photos.length+' PHOTO'+(photos.length!==1?'S':'');
+    photoGal.innerHTML = photos.map(f=>{
+      const proj = ps.find(p=>p.code===f.project_code);
+      const raw  = `https://raw.githubusercontent.com/juncel-web/PSC-CONSTRUCTION/main/${f.github_path}`;
+      return `<div onclick="openLightbox('${raw}','${escHtml(f.original_name)} — ${proj?.name||f.project_code}')"
+        style="cursor:pointer;border-radius:8px;overflow:hidden;background:var(--surface);
+               border:1px solid var(--border);transition:transform .2s;position:relative"
+        onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+        <img src="${raw}" alt="${escHtml(f.original_name)}"
+          style="width:100%;height:140px;object-fit:cover;display:block"
+          onerror="this.parentElement.querySelector('.img-placeholder').style.display='flex';this.style.display='none'"/>
+        <div class="img-placeholder" style="display:none;width:100%;height:140px;align-items:center;justify-content:center;
+          background:var(--surface2);font-size:32px">🖼</div>
+        <div style="padding:8px 10px">
+          <div style="font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(f.original_name)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${proj?.name||f.project_code} · ${SECTIONS[f.section]||f.section}</div>
+          <div style="font-size:10px;color:var(--muted)">${new Date(f.upload_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+        <a href="${raw}" download="${escHtml(f.original_name)}" onclick="event.stopPropagation()"
+          style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;
+                 border-radius:4px;padding:2px 6px;font-size:10px;text-decoration:none">⬇</a>
+      </div>`;
+    }).join('');
+  } else {
+    photoHead.style.display='none';
+    photoGal.innerHTML='';
+  }
+
+  // Documents
+  const docHead = document.getElementById('docSectionHead');
+  const docList = document.getElementById('docList');
+  if(docs.length){
+    docHead.style.display='flex';
+    document.getElementById('docCount').textContent = docs.length+' DOC'+(docs.length!==1?'S':'');
+    docList.innerHTML = docs.map(f=>{
+      const proj = ps.find(p=>p.code===f.project_code);
+      const raw  = `https://raw.githubusercontent.com/juncel-web/PSC-CONSTRUCTION/main/${f.github_path}`;
+      const ext  = f.filename.split('.').pop().toUpperCase();
+      const extColor = {PDF:'var(--danger)',DOCX:'var(--accent2)',XLSX:'var(--good)',DOC:'var(--accent2)'}[ext]||'var(--muted)';
+      return `<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;
+        background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+        <div style="width:40px;height:40px;border-radius:6px;background:var(--surface2);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;
+          font-size:10px;font-weight:800;color:${extColor}">${ext}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(f.original_name)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">
+            ${proj?.name||f.project_code} · ${SECTIONS[f.section]||f.section} ·
+            Uploaded by ${f.uploader} ·
+            ${new Date(f.upload_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}
+          </div>
+          ${f.notes?`<div style="font-size:10px;color:var(--muted);margin-top:2px;font-style:italic">${escHtml(f.notes)}</div>`:''}
+        </div>
+        <a href="${raw}" target="_blank" download="${escHtml(f.original_name)}"
+          class="btn btn-secondary btn-sm" style="flex-shrink:0;text-decoration:none">⬇ Download</a>
+      </div>`;
+    }).join('');
+  } else {
+    docHead.style.display='none';
+    docList.innerHTML='';
+  }
+
+  // Empty state
+  document.getElementById('filesEmpty').style.display = (!photos.length && !docs.length)?'block':'none';
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function openLightbox(src, caption){
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxCaption').textContent = caption;
+  lb.style.display = 'flex';
+}
+function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+
 
 // ── BOOT ──
 loadData();

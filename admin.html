@@ -90,6 +90,19 @@ td{padding:8px 11px;font-size:12px;border-bottom:1px solid rgba(30,40,64,.5);ver
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(255,255,255,.02)}
 @media(max-width:700px){.admin-layout{grid-template-columns:1fr}.sidebar{display:none}.form-grid,.form-grid-3{grid-template-columns:1fr}.user-grid{grid-template-columns:1fr}}
+
+.file-item{display:flex;align-items:center;gap:12px;padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.file-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.file-icon{width:44px;height:44px;border-radius:6px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.file-info{flex:1;min-width:0}
+.file-name{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.status-pending{color:var(--warn);font-weight:700}
+.status-approved{color:var(--good);font-weight:700}
+.status-rejected{color:var(--danger);font-weight:700}
+
 </style>
 </head>
 <body>
@@ -150,6 +163,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="sidebar-item" onclick="showPanel('cost',this)">💰 Cost &amp; CPI</button>
     <button class="sidebar-item" onclick="showPanel('safety',this)">🦺 Safety</button>
     <button class="sidebar-item" onclick="showPanel('scurve',this)">📈 S-Curve Data</button>
+    <button class="sidebar-item" onclick="showPanel('files',this)">📁 Files <span class="sidebar-badge" id="pendingBadge" style="display:none">0</span></button>
     <div class="sidebar-section">Portfolio</div>
     <button class="sidebar-item" onclick="showPanel('procurement',this)">📦 Procurement</button>
     <button class="sidebar-item" onclick="showPanel('changeorders',this)">🔄 Change Orders</button>
@@ -245,6 +259,64 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="panel-title">Action Items</div>
       <div id="actionForms"></div>
       <button class="btn btn-secondary btn-sm" id="addActionBtn" style="display:none;margin-top:8px" onclick="addActionRow()">+ Add Action Item</button>
+    </div>
+
+
+    <!-- FILES -->
+    <div class="admin-panel" id="panel-files">
+      <div class="panel-title">Files — Photos &amp; Documents</div>
+      <div class="panel-sub">PMs upload files here during weekly update. Admin approves before they appear on the dashboard.</div>
+
+      <!-- Upload form -->
+      <div class="form-card" id="uploadSection">
+        <div class="form-card-title">Upload New File</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Project</label>
+            <select id="f_project"></select></div>
+          <div class="form-group"><label>Section</label>
+            <select id="f_section">
+              <option value="progress">Progress Photos</option>
+              <option value="safety">Safety</option>
+              <option value="procurement">Procurement</option>
+              <option value="change_orders">Change Orders</option>
+              <option value="general">General</option>
+            </select></div>
+          <div class="form-group full"><label>File (photos: JPG/PNG/GIF · documents: PDF/DOCX/XLSX — max 5MB)</label>
+            <input type="file" id="f_file" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx"
+              style="padding:6px 10px;cursor:pointer" onchange="previewFile()"/></div>
+          <div class="form-group full" id="filePreviewArea" style="display:none"></div>
+          <div class="form-group full"><label>Notes / Description (optional)</label>
+            <input id="f_notes" placeholder="e.g. Week 18 progress photo, north elevation"/></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="uploadFile()" id="uploadBtn">⬆ Upload File</button>
+          <div id="uploadProgress" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+          💡 Files are uploaded to GitHub and require admin approval before appearing on the dashboard.
+          Your GitHub PAT (used for Save &amp; Publish) will be requested when uploading.
+        </div>
+      </div>
+
+      <!-- Files list -->
+      <div class="form-card">
+        <div class="form-card-title">All Files
+          <div style="display:flex;gap:6px">
+            <select id="filesAdminFilter" onchange="buildFilesPanel()"
+              style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+                     padding:3px 8px;color:var(--text);font-size:11px;outline:none">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div id="filesAdminList"></div>
+        <div id="filesAdminEmpty" style="display:none;text-align:center;padding:30px;color:var(--muted);font-size:12px">
+          No files uploaded yet.
+        </div>
+      </div>
     </div>
 
     <!-- USERS -->
@@ -439,6 +511,7 @@ function showPanel(id,btn){
   document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
+  if(id==='files') initFilesPanel();
 }
 
 // ── POPULATE ALL ──
@@ -842,6 +915,220 @@ function saveNewProject(){
   populateForms();
   closeProjectModal();
   showStatus(`✓ Project "${name}" added. Review then click Save & Download.`,'success');
+}
+
+
+// ══════════════════════════════════════════════
+// FILES — UPLOAD & MANAGEMENT
+// ══════════════════════════════════════════════
+const SECTIONS_LABELS = {
+  progress:'Progress Photos', safety:'Safety', procurement:'Procurement',
+  change_orders:'Change Orders', general:'General'
+};
+const EXT_COLORS = {PDF:'var(--danger)',DOCX:'var(--accent2)',XLSX:'var(--good)',
+                    DOC:'var(--accent2)',XLS:'var(--good)',JPG:'var(--accent2)',
+                    PNG:'var(--accent2)',GIF:'var(--accent2)'};
+
+function initFilesPanel(){
+  // Populate project select based on user access
+  const ps = currentData.projects;
+  const accessible = isAdmin() ? ps : ps.filter(p=>canEdit(p.code));
+  const sel = document.getElementById('f_project');
+  if(sel) sel.innerHTML = accessible.map(p=>`<option value="${p.code}">${p.name}</option>`).join('');
+  buildFilesPanel();
+  updatePendingBadge();
+}
+
+function updatePendingBadge(){
+  const pending = (currentData.files||[]).filter(f=>f.status==='pending').length;
+  const badge = document.getElementById('pendingBadge');
+  if(badge){ badge.textContent=pending; badge.style.display=pending?'inline':'none'; }
+}
+
+function previewFile(){
+  const file = document.getElementById('f_file').files[0];
+  const area = document.getElementById('filePreviewArea');
+  if(!file){ area.style.display='none'; return; }
+  if(file.size > 5*1024*1024){
+    area.style.display='block';
+    area.innerHTML='<div style="color:var(--danger);font-size:11px">⚠ File exceeds 5MB limit.</div>';
+    return;
+  }
+  if(file.type.startsWith('image/')){
+    const reader = new FileReader();
+    reader.onload = e => {
+      area.style.display='block';
+      area.innerHTML=`<img src="${e.target.result}" style="max-height:120px;border-radius:6px;border:1px solid var(--border)"/>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">${file.name} · ${(file.size/1024).toFixed(1)}KB</div>`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    area.style.display='block';
+    area.innerHTML=`<div style="font-size:11px;color:var(--muted)">📄 ${file.name} · ${(file.size/1024).toFixed(1)}KB</div>`;
+  }
+}
+
+async function uploadFile(){
+  const fileEl   = document.getElementById('f_file');
+  const projCode = document.getElementById('f_project').value;
+  const section  = document.getElementById('f_section').value;
+  const notes    = document.getElementById('f_notes').value.trim();
+  const prog     = document.getElementById('uploadProgress');
+  const btn      = document.getElementById('uploadBtn');
+  const file     = fileEl.files[0];
+
+  if(!file){ showStatus('Please select a file to upload.','error'); return; }
+  if(file.size > 5*1024*1024){ showStatus('File exceeds 5MB limit.','error'); return; }
+
+  // Ask for PAT if admin, or just store in metadata if PM
+  let pat = '';
+  if(isAdmin()){
+    pat = prompt('Enter your GitHub PAT to upload the file:');
+    if(!pat) return;
+  }
+
+  btn.disabled=true; prog.textContent='Reading file…';
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const base64  = e.target.result.split(',')[1];
+      const isImage = file.type.startsWith('image/');
+      const ext     = file.name.split('.').pop().toLowerCase();
+      const safeName= file.name.replace(/[^a-zA-Z0-9._-]/g,'_').toLowerCase();
+      const ts      = Date.now();
+      const fname   = `${ts}_${safeName}`;
+      const ghPath  = `files/${projCode}/${section}/${fname}`;
+
+      const newFileMeta = {
+        id          : 'f'+ts,
+        project_code: projCode,
+        section,
+        filename    : fname,
+        original_name: file.name,
+        github_path : ghPath,
+        file_type   : isImage ? 'image' : 'document',
+        uploader    : currentUser.username,
+        upload_date : new Date().toISOString(),
+        status      : isAdmin() ? 'approved' : 'pending',
+        approved_by : isAdmin() ? 'admin' : '',
+        notes
+      };
+
+      if(isAdmin() && pat){
+        // Upload file bytes to GitHub
+        prog.textContent='Uploading to GitHub…';
+        const GITHUB_USER='juncel-web', GITHUB_REPO='PSC-CONSTRUCTION';
+        const apiUrl=`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghPath}`;
+        const headers={'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
+        const res = await fetch(apiUrl,{method:'PUT',headers,
+          body:JSON.stringify({message:`Upload: ${file.name} for ${projCode}`,content:base64})});
+        if(!res.ok){ const err=await res.json(); throw new Error(err.message||'Upload failed'); }
+        prog.textContent='File uploaded ✓  Saving metadata…';
+      } else {
+        // PM: just save metadata as pending, no actual file upload
+        newFileMeta.status = 'pending';
+        prog.textContent='File queued for admin upload ✓';
+      }
+
+      if(!currentData.files) currentData.files=[];
+      currentData.files.push(newFileMeta);
+
+      buildFilesPanel();
+      updatePendingBadge();
+      fileEl.value='';
+      document.getElementById('filePreviewArea').style.display='none';
+      document.getElementById('f_notes').value='';
+      showStatus(isAdmin()?`✓ "${file.name}" uploaded and approved.`:`✓ "${file.name}" submitted for admin approval.`,'success');
+      prog.textContent='';
+    } catch(err){
+      showStatus('Upload error: '+err.message,'error');
+      prog.textContent='';
+    } finally { btn.disabled=false; }
+  };
+  reader.readAsDataURL(file);
+}
+
+function buildFilesPanel(){
+  const filter  = document.getElementById('filesAdminFilter')?.value||'all';
+  const files   = (currentData.files||[]).filter(f=>
+    filter==='all' || f.status===filter
+  );
+  // PMs see only their own files
+  const visible = isAdmin() ? files : files.filter(f=>
+    f.uploader===currentUser.username || canEdit(f.project_code)
+  );
+
+  const list  = document.getElementById('filesAdminList');
+  const empty = document.getElementById('filesAdminEmpty');
+  if(!visible.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  list.innerHTML = visible.map((f,i)=>{
+    const proj  = currentData.projects.find(p=>p.code===f.project_code);
+    const raw   = `https://raw.githubusercontent.com/juncel-web/PSC-CONSTRUCTION/main/${f.github_path}`;
+    const ext   = f.filename.split('.').pop().toUpperCase();
+    const isImg = f.file_type==='image';
+    const statusCls = {pending:'status-pending',approved:'status-approved',rejected:'status-rejected'}[f.status]||'';
+    const statusLbl = {pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[f.status]||f.status;
+    const thumb = isImg
+      ? `<img src="${raw}" class="file-thumb" onerror="this.style.display='none'">`
+      : `<div class="file-icon" style="color:${EXT_COLORS[ext]||'var(--muted)'}">${ext}</div>`;
+
+    const adminBtns = isAdmin() ? `
+      ${f.status!=='approved'?`<button class="btn btn-success btn-sm" onclick="setFileStatus(${i},'approved')">✅ Approve</button>`:''}
+      ${f.status!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="setFileStatus(${i},'rejected')">❌ Reject</button>`:''}
+      <button class="btn btn-danger btn-sm" onclick="deleteFile(${i})">🗑</button>` : '';
+
+    return `<div class="file-item" id="fitem-${i}">
+      ${thumb}
+      <div class="file-info">
+        <div class="file-name">${f.original_name}</div>
+        <div class="file-meta">
+          ${proj?.name||f.project_code} · ${SECTIONS_LABELS[f.section]||f.section} ·
+          @${f.uploader} · ${new Date(f.upload_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}
+        </div>
+        ${f.notes?`<div style="font-size:10px;color:var(--muted);font-style:italic">${f.notes}</div>`:''}
+      </div>
+      <span class="${statusCls}" style="font-size:10px;white-space:nowrap">${statusLbl}</span>
+      <div style="display:flex;gap:5px;flex-shrink:0">${adminBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+function setFileStatus(idx, status){
+  const filter = document.getElementById('filesAdminFilter')?.value||'all';
+  const visible = isAdmin()
+    ? (currentData.files||[])
+    : (currentData.files||[]).filter(f=>f.uploader===currentUser.username||canEdit(f.project_code));
+  const filtered = filter==='all' ? visible : visible.filter(f=>f.status===filter);
+  if(!filtered[idx]) return;
+
+  // Find in main array
+  const fileId = filtered[idx].id;
+  const mainIdx = currentData.files.findIndex(f=>f.id===fileId);
+  if(mainIdx<0) return;
+
+  currentData.files[mainIdx].status = status;
+  currentData.files[mainIdx].approved_by = status==='approved'?currentUser.username:'';
+  buildFilesPanel();
+  updatePendingBadge();
+  showStatus(`File ${status}. Click Save & Publish to go live.`,'success');
+}
+
+function deleteFile(idx){
+  if(!confirm('Delete this file record? (The file on GitHub will remain.)')) return;
+  const filter = document.getElementById('filesAdminFilter')?.value||'all';
+  const visible = isAdmin()
+    ? (currentData.files||[])
+    : (currentData.files||[]).filter(f=>f.uploader===currentUser.username);
+  const filtered = filter==='all' ? visible : visible.filter(f=>f.status===filter);
+  if(!filtered[idx]) return;
+  const fileId = filtered[idx].id;
+  currentData.files = currentData.files.filter(f=>f.id!==fileId);
+  buildFilesPanel();
+  updatePendingBadge();
+  showStatus('File record removed. Click Save & Publish to apply.','success');
 }
 
 // ── ADD ROW HELPERS ──
