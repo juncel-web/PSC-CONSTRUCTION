@@ -5,7 +5,7 @@
     "verified_by": "",
     "source_file": "Prototype_Excel_for_Dashboard.xlsx",
     "file_location": "",
-    "last_updated": "2026-05-24T23:10:05.521Z",
+    "last_updated": "2026-05-24T23:12:19.213Z",
     "last_updated_by": "admin"
   },
   "projects": [
@@ -679,6 +679,16 @@
       "display_name": "Juncel Merced",
       "role": "admin",
       "password": "jam2026",
+      "projects": [
+        "ALL"
+      ],
+      "active": true
+    },
+    {
+      "username": "jhlatoga",
+      "display_name": "Jennifer Latoga",
+      "role": "admin",
+      "password": "jhl2026",
       "projects": [
         "ALL"
       ],
