@@ -72,6 +72,7 @@ textarea{resize:vertical;min-height:54px}
 .role-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
 .rb-admin{background:rgba(240,180,41,.2);color:var(--accent)}
 .rb-pm{background:rgba(59,130,246,.2);color:var(--accent2)}
+.rb-viewer{background:rgba(16,185,129,.2);color:var(--good)}
 .proj-tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:9px;padding:1px 5px;margin:1px;font-family:'JetBrains Mono'}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
@@ -322,7 +323,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <!-- USERS -->
     <div class="admin-panel" id="panel-users">
       <div class="panel-title">User Access Management</div>
-      <div class="panel-sub">Add, edit, or deactivate users. Changes take effect after Save &amp; Download + GitHub upload.</div>
+      <div class="panel-sub">Add, edit, or deactivate users. Roles: <strong>Admin</strong> (full access), <strong>PM</strong> (scoped edit), <strong>Viewer</strong> (dashboard only — no admin portal access). Changes take effect after Save &amp; Publish.</div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
         <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Add User</button>
       </div>
@@ -370,6 +371,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <select id="mu_role" onchange="toggleRoleUI()">
           <option value="pm">Project Manager</option>
           <option value="admin">Administrator</option>
+          <option value="viewer">Viewer (Dashboard Only)</option>
         </select>
       </div>
       <div class="form-group full" id="mu_proj_grp">
@@ -457,6 +459,11 @@ async function doLogin(){
     if(!user){ err.textContent='Incorrect username or password.'; return; }
     if(!user.active){ err.textContent='Account deactivated. Contact administrator.'; return; }
     currentData=data; currentUser=user;
+    // Viewer role → redirect directly to the dashboard
+    if(user.role==='viewer'){
+      window.location.href='index.html';
+      return;
+    }
     boot();
   } catch(e){ err.textContent=e.message; }
 }
@@ -789,7 +796,7 @@ function buildUserGrid(users){
       <div class="user-card-header">
         <div class="user-card-avatar ${u.role==='admin'?'av-admin':'av-pm'}">${u.display_name.charAt(0).toUpperCase()}</div>
         <div><div class="user-card-name">${u.display_name}</div><div class="user-card-un">@${u.username}</div></div>
-        <span class="role-badge rb-${u.role}" style="margin-left:auto">${u.role}</span>
+        <span class="role-badge rb-${u.role==="viewer"?'viewer':u.role}" style="margin-left:auto">${u.role}</span>
       </div>
       <div class="user-card-row"><span class="text-muted">Status</span>
         <span style="color:${u.active?'var(--accent3)':'var(--danger)'}">${u.active?'● Active':'○ Inactive'}</span></div>
@@ -833,8 +840,9 @@ function populateProjSelect(sel){
 }
 
 function toggleRoleUI(){
+  const role=document.getElementById('mu_role').value;
   document.getElementById('mu_proj_grp').style.display=
-    document.getElementById('mu_role').value==='admin'?'none':'block';
+    (role==='admin'||role==='viewer')?'none':'block';
 }
 
 function closeUserModal(){ document.getElementById('userModal').classList.remove('show'); }
@@ -849,6 +857,7 @@ function saveUser(){
     projects=[...sel.selectedOptions].map(o=>o.value);
     if(!projects.length){ showStatus('Select at least one project','error'); return; }
   }
+  // viewer gets ALL but no edit access (handled by role check)
   const obj={username:username.toLowerCase(),display_name:name,role,password,projects,active};
   if(!currentData.users) currentData.users=[];
   if(editUserIdx!==null) currentData.users[editUserIdx]=obj;
