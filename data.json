@@ -5,8 +5,7 @@
     "verified_by": "",
     "source_file": "Prototype_Excel_for_Dashboard.xlsx",
     "file_location": "",
-    "last_updated": "2026-05-25T00:44:53.617Z",
-    "last_updated_by": "admin"
+    "last_updated": "2026-05-13T00:00:00"
   },
   "projects": [
     {
@@ -44,7 +43,7 @@
       "s_curve": [
         {
           "period": "Jun 2023",
-          "planned_progress": 1,
+          "planned_progress": 1.0,
           "actual_progress": 0.8,
           "planned_cost": 14450000,
           "actual_cost": 12200000,
@@ -61,14 +60,14 @@
         {
           "period": "Aug 2023",
           "planned_progress": 4.5,
-          "actual_progress": 4,
+          "actual_progress": 4.0,
           "planned_cost": 65025000,
           "actual_cost": 58000000,
           "eac": 1445000000
         },
         {
           "period": "Sep 2023",
-          "planned_progress": 7,
+          "planned_progress": 7.0,
           "actual_progress": 6.5,
           "planned_cost": 101150000,
           "actual_cost": 93875000,
@@ -76,7 +75,7 @@
         },
         {
           "period": "Oct 2023",
-          "planned_progress": 10,
+          "planned_progress": 10.0,
           "actual_progress": 9.8,
           "planned_cost": 144500000,
           "actual_cost": 141625000,
@@ -92,7 +91,7 @@
         },
         {
           "period": "Dec 2023",
-          "planned_progress": 17,
+          "planned_progress": 17.0,
           "actual_progress": 17.5,
           "planned_cost": 245650000,
           "actual_cost": 252875000,
@@ -108,8 +107,8 @@
         },
         {
           "period": "Feb 2024",
-          "planned_progress": 24,
-          "actual_progress": 25,
+          "planned_progress": 24.0,
+          "actual_progress": 25.0,
           "planned_cost": 346800000,
           "actual_cost": 361250000,
           "eac": 1445000000
@@ -124,8 +123,8 @@
         },
         {
           "period": "Apr 2024",
-          "planned_progress": 31,
-          "actual_progress": 33,
+          "planned_progress": 31.0,
+          "actual_progress": 33.0,
           "planned_cost": 447950000,
           "actual_cost": 476850000,
           "eac": 1445000000
@@ -140,7 +139,7 @@
         },
         {
           "period": "Jun 2024",
-          "planned_progress": 38,
+          "planned_progress": 38.0,
           "actual_progress": 39.8,
           "planned_cost": 549100000,
           "actual_cost": 575110000,
@@ -148,7 +147,7 @@
         },
         {
           "period": "Jul 2024",
-          "planned_progress": 40,
+          "planned_progress": 40.0,
           "actual_progress": 42.57,
           "planned_cost": 578000000,
           "actual_cost": 552680639,
@@ -231,7 +230,7 @@
         },
         {
           "period": "Nov 2024",
-          "planned_progress": 6,
+          "planned_progress": 6.0,
           "actual_progress": 5.8,
           "planned_cost": 42627960,
           "actual_cost": 41209000,
@@ -255,7 +254,7 @@
         },
         {
           "period": "Feb 2025",
-          "planned_progress": 11,
+          "planned_progress": 11.0,
           "actual_progress": 11.2,
           "planned_cost": 78151260,
           "actual_cost": 79572000,
@@ -299,7 +298,7 @@
       "health": "Good",
       "planned_finish": "Apr 1, 2029",
       "forecast_finish": "Apr 1, 2029",
-      "critical_activities": "Ground floor wall installation — catch-up needed",
+      "critical_activities": "Ground floor wall installation \u2014 catch-up needed",
       "schedule_recommendation": "Deploy additional masonry crew; consider managed OT within 20% baseline",
       "budget": 692791728,
       "actual_cost": 459040121,
@@ -330,7 +329,7 @@
         },
         {
           "period": "Sep 2021",
-          "planned_progress": 3,
+          "planned_progress": 3.0,
           "actual_progress": 2.8,
           "planned_cost": 20783752,
           "actual_cost": 19398902,
@@ -338,7 +337,7 @@
         },
         {
           "period": "Dec 2021",
-          "planned_progress": 7,
+          "planned_progress": 7.0,
           "actual_progress": 7.5,
           "planned_cost": 48495421,
           "actual_cost": 51959380,
@@ -346,7 +345,7 @@
         },
         {
           "period": "Mar 2022",
-          "planned_progress": 13,
+          "planned_progress": 13.0,
           "actual_progress": 13.8,
           "planned_cost": 90062924,
           "actual_cost": 95605259,
@@ -354,15 +353,15 @@
         },
         {
           "period": "Jun 2022",
-          "planned_progress": 20,
-          "actual_progress": 21,
+          "planned_progress": 20.0,
+          "actual_progress": 21.0,
           "planned_cost": 138558345,
           "actual_cost": 145486263,
           "eac": 692791728
         },
         {
           "period": "Sep 2022",
-          "planned_progress": 28,
+          "planned_progress": 28.0,
           "actual_progress": 29.5,
           "planned_cost": 193981683,
           "actual_cost": 204373560,
@@ -370,7 +369,7 @@
         },
         {
           "period": "Dec 2022",
-          "planned_progress": 37,
+          "planned_progress": 37.0,
           "actual_progress": 38.5,
           "planned_cost": 256332739,
           "actual_cost": 266724815,
@@ -378,15 +377,15 @@
         },
         {
           "period": "Mar 2023",
-          "planned_progress": 46,
-          "actual_progress": 47,
+          "planned_progress": 46.0,
+          "actual_progress": 47.0,
           "planned_cost": 318684295,
           "actual_cost": 325612112,
           "eac": 692791728
         },
         {
           "period": "Jun 2023",
-          "planned_progress": 55,
+          "planned_progress": 55.0,
           "actual_progress": 55.5,
           "planned_cost": 381035351,
           "actual_cost": 384559459,
@@ -394,15 +393,15 @@
         },
         {
           "period": "Sep 2023",
-          "planned_progress": 63,
-          "actual_progress": 63,
+          "planned_progress": 63.0,
+          "actual_progress": 63.0,
           "planned_cost": 436658588,
           "actual_cost": 436658588,
           "eac": 692791728
         },
         {
           "period": "Dec 2023",
-          "planned_progress": 70,
+          "planned_progress": 70.0,
           "actual_progress": 70.5,
           "planned_cost": 484954209,
           "actual_cost": 488197569,
@@ -410,8 +409,8 @@
         },
         {
           "period": "Mar 2024",
-          "planned_progress": 76,
-          "actual_progress": 77,
+          "planned_progress": 76.0,
+          "actual_progress": 77.0,
           "planned_cost": 526521553,
           "actual_cost": 533649431,
           "eac": 692791728
@@ -495,7 +494,7 @@
       "delivery_date": "Apr 26, 2026",
       "status": "Delivered",
       "buffer": "Early +14d",
-      "action": "No action needed — delivered early"
+      "action": "No action needed \u2014 delivered early"
     },
     {
       "project": "Y2024-06-R-01",
@@ -568,7 +567,7 @@
   "action_items": [
     {
       "project": "Y2021-06-R-01",
-      "item": "Site Security — RHB DOS",
+      "item": "Site Security \u2014 RHB DOS",
       "priority": "Overdue",
       "action": "Submit security improvement proposal to Ops Manager. Deploy additional security personnel pending formal plan.",
       "responsible": "Site Admin / PM",
@@ -577,7 +576,7 @@
     },
     {
       "project": "Y2024-06-R-01",
-      "item": "Lot Boundary Conflict — RPBohol Land",
+      "item": "Lot Boundary Conflict \u2014 RPBohol Land",
       "priority": "High",
       "action": "PSC Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.",
       "responsible": "PSC / Legal",
@@ -586,7 +585,7 @@
     },
     {
       "project": "Y2023-06-R-01",
-      "item": "Guardhouse Construction — ROPA DOS",
+      "item": "Guardhouse Construction \u2014 ROPA DOS",
       "priority": "Medium",
       "action": "Commence construction immediately. Supports site security and access control.",
       "responsible": "PIC",
@@ -604,16 +603,16 @@
     },
     {
       "project": "Y2023-06-R-01",
-      "item": "PSC Approval — ROPA DOS Amenities CO",
+      "item": "PSC Approval \u2014 ROPA DOS Amenities CO",
       "priority": "Normal",
-      "action": "Approve or reject CHO-01 (₱5.47M). Delays risk contractor standby claims.",
+      "action": "Approve or reject CHO-01 (\u20b15.47M). Delays risk contractor standby claims.",
       "responsible": "PSC Management",
       "due_date": "May 2026",
       "status": "Pending"
     },
     {
       "project": "ALL",
-      "item": "Safety Audit — All Sites",
+      "item": "Safety Audit \u2014 All Sites",
       "priority": "Medium",
       "action": "Commission formal HSE audit. RHB DOS immediate review required. Increase toolbox talks to twice-weekly at RHB DOS.",
       "responsible": "Safety Officer",
@@ -689,6 +688,16 @@
       "display_name": "Juncel Merced",
       "role": "admin",
       "password": "jam2026",
+      "projects": [
+        "ALL"
+      ],
+      "active": true
+    },
+    {
+      "username": "jhlatoga",
+      "display_name": "Jennifer Latoga",
+      "role": "viewer",
+      "password": "jhl2026",
       "projects": [
         "ALL"
       ],
