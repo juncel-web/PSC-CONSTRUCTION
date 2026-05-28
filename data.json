@@ -733,5 +733,64 @@
       "approved_by": "admin",
       "notes": "Incident RCA document"
     }
-  ]
+  ],
+  "scoreboard": {
+    "period": "May 18-23, 2026",
+    "report_date": "May 25, 2026",
+    "project_label": "Operations Management Division",
+    "subject": "Housing Projects & LBH Project - Progress Scoreboard",
+    "projects": [
+      {
+        "name": "ROPA2",
+        "project_pr": 89,
+        "accomplishment": 42.57,
+        "variance_days": 20,
+        "ddi": 6,
+        "ind": 7,
+        "ot": 6,
+        "ot_ddi_ind_baseline": 20,
+        "pr_baseline": 90,
+        "ranks_cost": 372000,
+        "staff_cost": 55200,
+        "output_labor_cost": 307581,
+        "olc_alc": 83
+      },
+      {
+        "name": "RHBDOS",
+        "project_pr": 92,
+        "accomplishment": 82.54,
+        "variance_days": 12,
+        "ddi": 20,
+        "ind": 27,
+        "ot": 33,
+        "ot_ddi_ind_baseline": 20,
+        "pr_baseline": 90,
+        "ranks_cost": 248641,
+        "staff_cost": 24000,
+        "output_labor_cost": 166611,
+        "olc_alc": 67
+      },
+      {
+        "name": "RPB",
+        "project_pr": 72,
+        "accomplishment": 13.98,
+        "variance_days": 1,
+        "ddi": 21,
+        "ind": 30,
+        "ot": 8,
+        "ot_ddi_ind_baseline": 20,
+        "pr_baseline": 90,
+        "ranks_cost": 151688,
+        "staff_cost": 182025000,
+        "output_labor_cost": 89909,
+        "olc_alc": 59
+      }
+    ],
+    "totals": {
+      "ranks_cost": 772328.13,
+      "staff_cost": 182104200,
+      "output_labor_cost": 564101.6,
+      "olc_alc": 73
+    }
+  }
 }
