@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSC Construction — Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0d14;--surface:#111520;--surface2:#161c2e;--border:#1e2840;--accent:#f0b429;--accent2:#3b82f6;--accent3:#10b981;--danger:#ef4444;--warn:#f97316;--text:#e8ecf4;--muted:#6b7a99}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;min-height:100vh}
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:20px}
+.login-logo{font-family:'Bebas Neue';font-size:52px;color:var(--accent);letter-spacing:6px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:380px}
+.login-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:4px;text-align:center}
+.login-sub{font-size:11px;color:var(--muted);margin-bottom:24px;text-align:center;line-height:1.6}
+.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:50}
+.topbar-logo{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;color:#000}
+.topbar-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:1px}
+.topbar-sub{font-size:10px;color:var(--muted)}
+.user-chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 5px}
+.user-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:12px;color:#000}
+.upload-banner{display:none;background:#0a2010;border-bottom:1px solid rgba(16,185,129,.35);padding:10px 24px;align-items:center;gap:14px}
+.upload-banner.show{display:flex}
+.admin-layout{display:grid;grid-template-columns:196px 1fr;min-height:calc(100vh - 54px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:10px 0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-section{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:10px 14px 4px}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .15s;background:none;border-top:none;border-bottom:none;border-right:none;text-align:left;width:100%}
+.sidebar-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.sidebar-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(240,180,41,.05)}
+.sidebar-badge{margin-left:auto;font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px;background:var(--accent);color:#000}
+.sidebar-footer{margin-top:auto;padding:12px 14px;border-top:1px solid var(--border)}
+.content{padding:22px;overflow-y:auto}
+.scope-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:12px}
+.scope-admin{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.25)}
+.scope-pm{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25)}
+.admin-panel{display:none}
+.admin-panel.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:2px}
+.panel-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:12px}
+.form-card-title{font-family:'Bebas Neue';font-size:13px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+label{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Sans';font-size:12px;transition:border-color .2s;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input:disabled,select:disabled,textarea:disabled{opacity:.35;cursor:not-allowed}
+textarea{resize:vertical;min-height:54px}
+.btn{padding:7px 16px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans';font-size:12px;font-weight:700;letter-spacing:.3px;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:#ffd166}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+.btn-sm{padding:4px 11px;font-size:11px}
+.repeat-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+.repeat-row .row-fields{flex:1;display:grid;gap:8px}
+.user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-bottom:14px}
+.user-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px;transition:border-color .2s}
+.user-card:hover{border-color:var(--accent)}
+.user-card-header{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.user-card-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;flex-shrink:0}
+.av-admin{background:linear-gradient(135deg,var(--accent),#e67e00);color:#000}
+.av-pm{background:linear-gradient(135deg,var(--accent2),#1d4ed8);color:#fff}
+.user-card-name{font-weight:700;font-size:13px}
+.user-card-un{font-family:'JetBrains Mono';font-size:10px;color:var(--muted)}
+.user-card-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px}
+.user-card-row:last-child{border-bottom:none}
+.user-card-actions{display:flex;gap:6px;margin-top:11px}
+.role-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.rb-admin{background:rgba(240,180,41,.2);color:var(--accent)}
+.rb-pm{background:rgba(59,130,246,.2);color:var(--accent2)}
+.rb-viewer{background:rgba(16,185,129,.2);color:var(--good)}
+.proj-tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:9px;padding:1px 5px;margin:1px;font-family:'JetBrains Mono'}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:26px;width:500px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Bebas Neue';font-size:19px;letter-spacing:1px;margin-bottom:14px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.status-bar{position:fixed;bottom:18px;right:18px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:12px;display:none;align-items:center;gap:8px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.status-bar.show{display:flex}
+.status-bar.success{border-color:var(--accent3);color:var(--accent3)}
+.status-bar.error{border-color:var(--danger);color:var(--danger)}
+.status-bar.info{border-color:var(--accent);color:var(--accent)}
+.text-muted{color:var(--muted)}.fw-bold{font-weight:700}.mb-12{margin-bottom:12px}.mt-10{margin-top:10px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:7px 11px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:8px 11px;font-size:12px;border-bottom:1px solid rgba(30,40,64,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+@media(max-width:700px){.admin-layout{grid-template-columns:1fr}.sidebar{display:none}.form-grid,.form-grid-3{grid-template-columns:1fr}.user-grid{grid-template-columns:1fr}}
+
+.file-item{display:flex;align-items:center;gap:12px;padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.file-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.file-icon{width:44px;height:44px;border-radius:6px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.file-info{flex:1;min-width:0}
+.file-name{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.status-pending{color:var(--warn);font-weight:700}
+.status-approved{color:var(--good);font-weight:700}
+.status-rejected{color:var(--danger);font-weight:700}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-logo">PSC</div>
+  <div class="login-card">
+    <div class="login-title">Dashboard Portal</div>
+    <div class="login-sub">PSC Construction Operations<br><span style="font-size:10px">Project Managers &amp; Administrators</span></div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Username</label>
+      <input id="lUser" placeholder="e.g. dbitol" autocomplete="username"/>
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <label>Password</label>
+      <input type="password" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div id="lErr" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:10px"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Sign In →</button>
+    <div style="margin-top:14px;font-size:10px;color:var(--muted);text-align:center">Contact your administrator to reset your password.</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="adminTopbar" style="display:none">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="topbar-logo">PSC</div>
+    <div>
+      <div class="topbar-title">PSC Construction — Admin Portal</div>
+      <div class="topbar-sub" id="tSub">Loading…</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px">
+    <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">↗ Dashboard</a>
+    <button class="btn btn-primary btn-sm" id="pubBtn" onclick="saveAll()">💾 Save &amp; Publish</button>
+    <div class="user-chip">
+      <div class="user-avatar" id="uAvatar">?</div>
+      <div>
+        <div style="font-size:11px;font-weight:600" id="uName">—</div>
+        <div style="font-size:10px;color:var(--muted)" id="uRole">—</div>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+
+
+<!-- LAYOUT -->
+<div class="admin-layout" id="adminLayout" style="display:none">
+  <div class="sidebar">
+    <div class="sidebar-section">Report</div>
+    <button class="sidebar-item active" onclick="showPanel('meta',this)">📋 Report Meta</button>
+    <div class="sidebar-section">Projects</div>
+    <button class="sidebar-item" onclick="showPanel('projects',this)">🏗 Status &amp; Progress</button>
+    <button class="sidebar-item" onclick="showPanel('schedule',this)">📅 Schedule</button>
+    <button class="sidebar-item" onclick="showPanel('cost',this)">💰 Cost &amp; CPI</button>
+    <button class="sidebar-item" onclick="showPanel('safety',this)">🦺 Safety</button>
+    <button class="sidebar-item" onclick="showPanel('scurve',this)">📈 S-Curve Data</button>
+    <button class="sidebar-item" onclick="showPanel('scoreboard',this)">📊 Scoreboard</button>
+    <button class="sidebar-item" onclick="showPanel('files',this)">📁 Files <span class="sidebar-badge" id="pendingBadge" style="display:none">0</span></button>
+    <div class="sidebar-section">Portfolio</div>
+    <button class="sidebar-item" onclick="showPanel('procurement',this)">📦 Procurement</button>
+    <button class="sidebar-item" onclick="showPanel('changeorders',this)">🔄 Change Orders</button>
+    <button class="sidebar-item" onclick="showPanel('risks',this)">⚠️ Risks</button>
+    <button class="sidebar-item" onclick="showPanel('actions',this)">✅ Action Items</button>
+    <div class="sidebar-section" id="adminNavSection" style="display:none">Admin Only</div>
+    <button class="sidebar-item" id="navUsers" style="display:none" onclick="showPanel('users',this)">
+      👥 User Access <span class="sidebar-badge" id="uCount">0</span>
+    </button>
+    <div class="sidebar-footer">
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveAll()">💾 Save &amp; Publish</button>
+      <div style="font-size:9px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.5">Publishes directly to GitHub — dashboard goes live instantly</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="scope-banner" id="scopeBanner"></div>
+
+    <!-- META -->
+    <div class="admin-panel active" id="panel-meta">
+      <div class="panel-title">Report Meta</div>
+      <div class="panel-sub">Update before downloading and publishing each week.</div>
+      <div class="form-card">
+        <div class="form-card-title">Weekly Report Info</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Week Of</label><input id="m_week" placeholder="e.g. May 20, 2026"/></div>
+          <div class="form-group"><label>Prepared By</label><input id="m_prepared_by"/></div>
+          <div class="form-group"><label>Verified By</label><input id="m_verified_by"/></div>
+          <div class="form-group"><label>Source File</label><input id="m_source_file"/></div>
+          <div class="form-group full"><label>File Location / Path</label><input id="m_file_location" placeholder="SharePoint URL, Drive link…"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="admin-panel" id="panel-projects">
+      <div class="panel-title">Status &amp; Progress</div>
+      <div class="panel-sub">Your project fields are editable. Other projects are view-only (grayed out).</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" id="addProjectBtn" style="display:none" onclick="openAddProjectModal()">+ Add New Project</button>
+      </div>
+      <div id="projectForms"></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="admin-panel" id="panel-schedule">
+      <div class="panel-title">Schedule Control</div>
+      <div id="scheduleForms"></div>
+    </div>
+
+    <!-- COST -->
+    <div class="admin-panel" id="panel-cost">
+      <div class="panel-title">Cost &amp; CPI</div>
+      <div id="costForms"></div>
+    </div>
+
+    <!-- SAFETY -->
+    <div class="admin-panel" id="panel-safety">
+      <div class="panel-title">Safety &amp; Quality</div>
+      <div id="safetyForms"></div>
+    </div>
+
+    <!-- S-CURVE -->
+    <div class="admin-panel" id="panel-scurve">
+      <div class="panel-title">S-Curve Data Entry</div>
+      <div class="panel-sub">Add one new row per reporting period. Values must be cumulative (not weekly increments).</div>
+      <div id="scurveForms"></div>
+    </div>
+
+    <!-- PROCUREMENT -->
+    <div class="admin-panel" id="panel-procurement">
+      <div class="panel-title">Procurement</div>
+      <div id="procForms"></div>
+      <button class="btn btn-secondary btn-sm" id="addProcBtn" style="display:none;margin-top:8px" onclick="addProcRow()">+ Add Item</button>
+    </div>
+
+    <!-- CHANGE ORDERS -->
+    <div class="admin-panel" id="panel-changeorders">
+      <div class="panel-title">Change Orders</div>
+      <div id="coForms"></div>
+      <button class="btn btn-secondary btn-sm" id="addCOBtn" style="display:none;margin-top:8px" onclick="addCORow()">+ Add Change Order</button>
+    </div>
+
+    <!-- RISKS -->
+    <div class="admin-panel" id="panel-risks">
+      <div class="panel-title">Risk Register</div>
+      <div id="riskForms"></div>
+      <button class="btn btn-secondary btn-sm" id="addRiskBtn" style="display:none;margin-top:8px" onclick="addRiskRow()">+ Add Risk</button>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="admin-panel" id="panel-actions">
+      <div class="panel-title">Action Items</div>
+      <div id="actionForms"></div>
+      <button class="btn btn-secondary btn-sm" id="addActionBtn" style="display:none;margin-top:8px" onclick="addActionRow()">+ Add Action Item</button>
+    </div>
+
+
+
+    <!-- SCOREBOARD -->
+    <div class="admin-panel" id="panel-scoreboard">
+      <div class="panel-title">Project Scoreboard</div>
+      <div class="panel-sub">Update weekly scoreboard data. Covers: PROJECT PR, DDI%, IND%, OT, and labor costs per project.</div>
+      <div class="form-card">
+        <div class="form-card-title">Period & Header</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Covering Period</label>
+            <input id="sb_period" placeholder="e.g. May 18-23, 2026"/></div>
+          <div class="form-group"><label>Report Date</label>
+            <input id="sb_report_date" placeholder="e.g. May 25, 2026"/></div>
+        </div>
+      </div>
+      <div id="sbProjectForms"></div>
+      <div class="form-card" style="background:rgba(240,180,41,.05);border-color:rgba(240,180,41,.3)">
+        <div class="form-card-title" style="color:var(--accent)">Totals Row</div>
+        <div class="form-grid-3">
+          <div class="form-group"><label>Total Ranks Cost (₱)</label>
+            <input id="sb_total_ranks" type="number" step="0.01"/></div>
+          <div class="form-group"><label>Total Staff Cost (₱)</label>
+            <input id="sb_total_staff" type="number"/></div>
+          <div class="form-group"><label>Total Output Labor Cost (₱)</label>
+            <input id="sb_total_olc" type="number" step="0.01"/></div>
+          <div class="form-group"><label>Portfolio OLC/ALC (%)</label>
+            <input id="sb_total_olc_alc" type="number"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILES -->
+    <div class="admin-panel" id="panel-files">
+      <div class="panel-title">Files — Photos &amp; Documents</div>
+      <div class="panel-sub">PMs upload files here during weekly update. Admin approves before they appear on the dashboard.</div>
+
+      <!-- Upload form -->
+      <div class="form-card" id="uploadSection">
+        <div class="form-card-title">Upload New File</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Project</label>
+            <select id="f_project"></select></div>
+          <div class="form-group"><label>Section</label>
+            <select id="f_section">
+              <option value="progress">Progress Photos</option>
+              <option value="safety">Safety</option>
+              <option value="procurement">Procurement</option>
+              <option value="change_orders">Change Orders</option>
+              <option value="general">General</option>
+            </select></div>
+          <div class="form-group full"><label>File (photos: JPG/PNG/GIF · documents: PDF/DOCX/XLSX — max 5MB)</label>
+            <input type="file" id="f_file" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx"
+              style="padding:6px 10px;cursor:pointer" onchange="previewFile()"/></div>
+          <div class="form-group full" id="filePreviewArea" style="display:none"></div>
+          <div class="form-group full"><label>Notes / Description (optional)</label>
+            <input id="f_notes" placeholder="e.g. Week 18 progress photo, north elevation"/></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="uploadFile()" id="uploadBtn">⬆ Upload File</button>
+          <div id="uploadProgress" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;padding:8px 10px;background:var(--surface2);border-radius:6px">
+          💡 Files are uploaded to GitHub and require admin approval before appearing on the dashboard.
+          Your GitHub PAT (used for Save &amp; Publish) will be requested when uploading.
+        </div>
+      </div>
+
+      <!-- Files list -->
+      <div class="form-card">
+        <div class="form-card-title">All Files
+          <div style="display:flex;gap:6px">
+            <select id="filesAdminFilter" onchange="buildFilesPanel()"
+              style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;
+                     padding:3px 8px;color:var(--text);font-size:11px;outline:none">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div id="filesAdminList"></div>
+        <div id="filesAdminEmpty" style="display:none;text-align:center;padding:30px;color:var(--muted);font-size:12px">
+          No files uploaded yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="admin-panel" id="panel-users">
+      <div class="panel-title">User Access Management</div>
+      <div class="panel-sub">Add, edit, or deactivate users. Roles: <strong>Admin</strong> (full access), <strong>PM</strong> (scoped edit), <strong>Viewer</strong> (dashboard only — no admin portal access). Changes take effect after Save &amp; Publish.</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Add User</button>
+      </div>
+      <div class="user-grid" id="userGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-title">Add New Project</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Project Code</label><input id="np_code" placeholder="e.g. Y2025-06-R-01"/></div>
+      <div class="form-group"><label>Project Name</label><input id="np_name" placeholder="e.g. New Development"/></div>
+      <div class="form-group"><label>Location</label><input id="np_location" placeholder="e.g. Dauis, Bohol"/></div>
+      <div class="form-group"><label>PIC (Person in Charge)</label><input id="np_pic" placeholder="e.g. Juan Dela Cruz"/></div>
+      <div class="form-group"><label>Approved Budget (₱)</label><input id="np_budget" type="number" placeholder="0"/></div>
+      <div class="form-group"><label>OT Baseline (%)</label><input id="np_ot_baseline" type="number" value="20"/></div>
+      <div class="form-group"><label>Planned Finish Date</label><input id="np_planned_finish" placeholder="e.g. Dec 1, 2028"/></div>
+      <div class="form-group"><label>Forecast Finish Date</label><input id="np_forecast_finish" placeholder="e.g. Dec 1, 2028"/></div>
+      <div class="form-group full"><label>Assign PM Users (hold Ctrl/Cmd for multiple)</label>
+        <select id="np_pm_users" multiple style="height:80px"></select>
+      </div>
+    </div>
+    <div style="padding:10px 12px;background:var(--surface2);border-radius:6px;margin-top:10px;font-size:11px;color:var(--muted)">
+      💡 All other fields (progress, cost, safety, S-Curve) start at zero and will be updated by the assigned PM.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewProject()">Add Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Add New User</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Display Name</label><input id="mu_name" placeholder="Full Name"/></div>
+      <div class="form-group"><label>Username</label><input id="mu_username" placeholder="e.g. jdelacruz"/></div>
+      <div class="form-group"><label>Password</label><input id="mu_password" placeholder="Temporary password"/></div>
+      <div class="form-group"><label>Role</label>
+        <select id="mu_role" onchange="toggleRoleUI()">
+          <option value="pm">Project Manager</option>
+          <option value="admin">Administrator</option>
+          <option value="viewer">Viewer (Dashboard Only)</option>
+        </select>
+      </div>
+      <div class="form-group full" id="mu_proj_grp">
+        <label>Assigned Projects (hold Ctrl/Cmd for multiple)</label>
+        <select id="mu_projects" multiple style="height:84px"></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="mu_active"><option value="true">Active</option><option value="false">Inactive</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- PAT MODAL — shown only when Admin clicks Save & Publish -->
+<div class="modal-overlay" id="patModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">🔑 Publish to GitHub</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+      Enter your GitHub Personal Access Token to push the update live.
+      The token is used only for this action and never stored.
+    </p>
+    <div class="form-group" style="margin-bottom:6px">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="patInput" placeholder="ghp_xxxxxxxxxxxx"
+        onkeydown="if(event.key==='Enter')confirmPublish()"/>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">
+      Need a token? GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → <strong>repo</strong> scope.
+    </div>
+    <div id="patErr" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closePatModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPublish()" id="publishConfirmBtn">🚀 Publish Live</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar" id="statusBar"></div>
+
+<script>
+// ── CONFIG ──
+const GITHUB_USER = 'juncel-web';
+const GITHUB_REPO = 'PSC-CONSTRUCTION';
+const RAW_BASE    = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main`;
+
+// ── STATE ──
+let currentData = null;
+let currentUser = null;
+let editUserIdx = null;
+let sc_counts   = [];
+let pc=0, cc=0, rc=0, ac=0;
+
+// ── HELPERS ──
+const isAdmin  = () => currentUser?.role === 'admin';
+const canEdit  = code => isAdmin() || (currentUser?.projects||[]).includes(code);
+const g        = id => { const e=document.getElementById(id); return e?e.value.trim():null; };
+const gn       = id => { const v=g(id); return v===''||v==null?null:parseFloat(v); };
+const gni      = id => { const v=g(id); return v===''||v==null?null:parseInt(v); };
+const voLabel  = ok  => ok ? '' : '<span style="font-size:10px;color:var(--muted);margin-left:6px">👁 View Only</span>';
+
+function showStatus(msg, type='info'){
+  const el=document.getElementById('statusBar');
+  el.textContent=msg; el.className='status-bar show '+type;
+  if(type!=='info') setTimeout(()=>el.classList.remove('show'),4500);
+}
+
+// ── AUTH ──
+async function doLogin(){
+  const u    = document.getElementById('lUser').value.trim().toLowerCase();
+  const pass = document.getElementById('lPass').value;
+  const err  = document.getElementById('lErr');
+  err.textContent = '';
+  if(!u||!pass){ err.textContent='Please enter your username and password.'; return; }
+  try{
+    const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+    if(!res.ok) throw new Error(`Cannot reach data file (HTTP ${res.status}).`);
+    const data = await res.json();
+    const user = (data.users||[]).find(x=>x.username.toLowerCase()===u && x.password===pass);
+    if(!user){ err.textContent='Incorrect username or password.'; return; }
+    if(!user.active){ err.textContent='Account deactivated. Contact administrator.'; return; }
+    currentData=data; currentUser=user;
+    // Viewer role → redirect directly to the dashboard
+    if(user.role==='viewer'){
+      window.location.href='index.html';
+      return;
+    }
+    boot();
+  } catch(e){ err.textContent=e.message; }
+}
+
+function doLogout(){ currentUser=null; currentData=null; location.reload(); }
+
+// ── BOOT ──
+function boot(){
+  document.getElementById('loginScreen').style.display  = 'none';
+  document.getElementById('adminTopbar').style.display  = 'flex';
+  document.getElementById('adminLayout').style.display  = 'grid';
+
+  document.getElementById('uAvatar').textContent = currentUser.display_name.charAt(0).toUpperCase();
+  document.getElementById('uName').textContent   = currentUser.display_name;
+  document.getElementById('uRole').textContent   = isAdmin() ? 'Administrator' : 'Project Manager';
+  document.getElementById('tSub').textContent    =
+    `${isAdmin()?'Full Access':'Scoped Access'} · Week of ${currentData.meta.week}`;
+
+  const b = document.getElementById('scopeBanner');
+  if(isAdmin()){
+    b.className='scope-banner scope-admin';
+    b.innerHTML=`<span style="font-size:18px">⚙️</span><div>
+      <strong style="color:var(--accent)">Administrator</strong> — Full access to all projects and user management.
+      After editing, click <strong>💾 Save &amp; Publish</strong> → upload
+      dashboard goes live instantly.</div>`;
+    document.getElementById('navUsers').style.display        = 'flex';
+    document.getElementById('adminNavSection').style.display = 'block';
+    document.getElementById('uCount').textContent = (currentData.users||[]).length;
+    ['addProcBtn','addCOBtn','addRiskBtn','addActionBtn','addProjectBtn'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.style.display='inline-flex';
+    });
+  } else {
+    const names = currentUser.projects.map(code=>{
+      const p=currentData.projects.find(x=>x.code===code);
+      return p?p.name:code;
+    }).join(', ');
+    b.className='scope-banner scope-pm';
+    b.innerHTML=`<span style="font-size:18px">👷</span><div>
+      <strong style="color:var(--accent2)">${currentUser.display_name}</strong> —
+      Edit access for: <strong>${names}</strong>.
+      Other projects are view-only. Click <strong>💾 Submit Update</strong> when done.</div>`;
+    document.getElementById('pubBtn').textContent='💾 Submit Update';
+  }
+
+  sc_counts = new Array(currentData.projects.length).fill(0);
+  populateForms();
+}
+
+// ── PANEL SWITCH ──
+function showPanel(id,btn){
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='files') initFilesPanel();
+  if(id==='scoreboard') buildScoreboardForms();
+}
+
+// ── POPULATE ALL ──
+function populateForms(){
+  const d=currentData;
+  document.getElementById('m_week').value         = d.meta.week||'';
+  document.getElementById('m_prepared_by').value  = d.meta.prepared_by||'';
+  document.getElementById('m_verified_by').value  = d.meta.verified_by||'';
+  if(!isAdmin()) document.getElementById('m_verified_by').disabled=true;
+  document.getElementById('m_source_file').value  = d.meta.source_file||'';
+  document.getElementById('m_file_location').value= d.meta.file_location||'';
+  buildProjectForms(d.projects);
+  buildScheduleForms(d.projects);
+  buildCostForms(d.projects);
+  buildSafetyForms(d.projects);
+  buildSCurveForms(d.projects);
+  buildProcForms(d.procurement,d.projects);
+  buildCOForms(d.change_orders,d.projects);
+  buildRiskForms(d.risks);
+  buildActionForms(d.action_items);
+  if(isAdmin()) buildUserGrid(d.users||[]);
+  // Scoreboard auto-populates on login
+  buildScoreboardForms();
+}
+
+// ── FORM BUILDERS ──
+function buildProjectForms(projects){
+  document.getElementById('projectForms').innerHTML=projects.map((p,i)=>{
+    const e=canEdit(p.code);
+    return `<div class="form-card">
+      <div class="form-card-title">${p.name}
+        <small style="font-family:'JetBrains Mono';font-size:10px;color:var(--muted)">${p.code}</small>
+        ${voLabel(e)}
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Progress (%)</label>
+          <input id="p${i}_progress" type="number" step="0.01" value="${p.progress}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Schedule Status</label>
+          <select id="p${i}_schedule_status" ${e?'':'disabled'}>
+            ${['Ahead','On Track','Delayed'].map(s=>`<option ${p.schedule_status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Variance (days, + = ahead)</label>
+          <input id="p${i}_variance" type="number" value="${p.schedule_variance_days}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Cost Status</label>
+          <select id="p${i}_cost_status" ${e?'':'disabled'}>
+            ${['Within Budget','At Risk','Over Budget'].map(s=>`<option ${p.cost_status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Overall Health</label>
+          <select id="p${i}_health" ${e?'':'disabled'}>
+            ${['Good','At Risk','Critical'].map(s=>`<option ${p.health===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Planned Finish</label>
+          <input id="p${i}_planned_finish" value="${p.planned_finish}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Forecast Finish</label>
+          <input id="p${i}_forecast_finish" value="${p.forecast_finish}" ${e?'':'disabled'}/></div>
+      </div></div>`;
+  }).join('');
+}
+
+function buildScheduleForms(projects){
+  document.getElementById('scheduleForms').innerHTML=projects.map((p,i)=>{
+    const e=canEdit(p.code);
+    return `<div class="form-card">
+      <div class="form-card-title">${p.name} ${voLabel(e)}</div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Critical Activities</label>
+          <textarea id="s${i}_crit" ${e?'':'disabled'}>${p.critical_activities}</textarea></div>
+        <div class="form-group full"><label>Schedule Recommendation</label>
+          <textarea id="s${i}_rec" ${e?'':'disabled'}>${p.schedule_recommendation}</textarea></div>
+      </div></div>`;
+  }).join('');
+}
+
+function buildCostForms(projects){
+  document.getElementById('costForms').innerHTML=projects.map((p,i)=>{
+    const e=canEdit(p.code);
+    return `<div class="form-card">
+      <div class="form-card-title">${p.name} ${voLabel(e)}</div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Approved Budget (₱)</label>
+          <input id="c${i}_budget" type="number" value="${p.budget}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Actual Cost (₱)</label>
+          <input id="c${i}_actual" type="number" value="${p.actual_cost}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Forecast at Completion (₱)</label>
+          <input id="c${i}_fac" type="number" value="${p.forecast_at_completion}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>CPI</label>
+          <input id="c${i}_cpi" type="number" step="0.01" value="${p.cpi}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>P&amp;A Budget (₱)</label>
+          <input id="c${i}_pab" type="number" value="${p.pa_budget}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>P&amp;A Actual (₱)</label>
+          <input id="c${i}_paa" type="number" value="${p.pa_actual}" ${e?'':'disabled'}/></div>
+      </div></div>`;
+  }).join('');
+}
+
+function buildSafetyForms(projects){
+  document.getElementById('safetyForms').innerHTML=projects.map((p,i)=>{
+    const e=canEdit(p.code);
+    return `<div class="form-card">
+      <div class="form-card-title">${p.name} ${voLabel(e)}</div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Safe Man-Hours</label>
+          <input id="sf${i}_mh" type="number" step="0.1" value="${p.safe_manhours}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Inspections Due</label>
+          <input id="sf${i}_id" type="number" value="${p.inspections_due}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Inspections Done</label>
+          <input id="sf${i}_ion" type="number" value="${p.inspections_done}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>NCR Open</label>
+          <input id="sf${i}_ncr" type="number" value="${p.ncr_open}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Incidents</label>
+          <input id="sf${i}_inc" type="number" value="${p.incidents}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Near Miss</label>
+          <input id="sf${i}_nm" type="number" value="${p.near_miss}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>DDI %</label>
+          <input id="sf${i}_ddi" type="number" step="0.01" value="${p.ddi??''}" placeholder="N/A if blank" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>OT Rate %</label>
+          <input id="sf${i}_ot" type="number" step="0.1" value="${p.ot_rate??''}" placeholder="N/A if blank" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>OLC/ALC</label>
+          <input id="sf${i}_olc" type="number" step="0.001" value="${p.olc_alc??''}" placeholder="N/A if blank" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Last Toolbox Talk</label>
+          <input id="sf${i}_tb" value="${p.last_toolbox}" ${e?'':'disabled'}/></div>
+        <div class="form-group full"><label>Safety Action / Note</label>
+          <textarea id="sf${i}_sa" ${e?'':'disabled'}>${p.safety_action}</textarea></div>
+      </div></div>`;
+  }).join('');
+}
+
+function buildSCurveForms(projects){
+  document.getElementById('scurveForms').innerHTML=projects.map((p,i)=>{
+    const e=canEdit(p.code);
+    const sc=p.s_curve||[];
+    const rows=sc.map((d,j)=>`
+      <div class="repeat-row" id="sc${i}-row-${j}">
+        <div class="row-fields" style="grid-template-columns:repeat(6,1fr)">
+          <div class="form-group"><label>Period</label>
+            <input id="sc${i}_${j}_period" value="${d.period}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Planned %</label>
+            <input id="sc${i}_${j}_pp" type="number" step="0.01" value="${d.planned_progress}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Actual %</label>
+            <input id="sc${i}_${j}_ap" type="number" step="0.01" value="${d.actual_progress}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Planned Cost (₱)</label>
+            <input id="sc${i}_${j}_pc" type="number" value="${d.planned_cost}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>Actual Cost (₱)</label>
+            <input id="sc${i}_${j}_ac" type="number" value="${d.actual_cost}" ${e?'':'disabled'}/></div>
+          <div class="form-group"><label>EAC (₱)</label>
+            <input id="sc${i}_${j}_eac" type="number" value="${d.eac}" ${e?'':'disabled'}/></div>
+        </div>
+        ${e?`<button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px"
+          onclick="document.getElementById('sc${i}-row-${j}').remove()">✕</button>`:''}
+      </div>`).join('');
+    return `<div class="form-card">
+      <div class="form-card-title">${p.name} ${voLabel(e)}
+        ${e?`<button class="btn btn-secondary btn-sm" onclick="addSCurveRow(${i})">+ Add Period</button>`:''}
+      </div>
+      <div id="sc${i}-rows">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildProcForms(items,projects){
+  document.getElementById('procForms').innerHTML=items.map((p,i)=>{
+    const e=isAdmin()||canEdit(p.project);
+    return `<div class="repeat-row" id="proc-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
+        <div class="form-group"><label>Project</label>
+          <select id="pr${i}_p" ${isAdmin()?'':'disabled'}>
+            ${projects.map(x=>`<option value="${x.code}" ${p.project===x.code?'selected':''}>${x.name}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Item</label><input id="pr${i}_item" value="${p.item}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor" value="${p.vendor}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Required Date</label><input id="pr${i}_req" value="${p.required_date}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Delivery Date</label><input id="pr${i}_dlv" value="${p.delivery_date}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Status</label>
+          <select id="pr${i}_st" ${e?'':'disabled'}>
+            ${['Delivered','In Progress','Delayed'].map(s=>`<option ${p.status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Buffer</label><input id="pr${i}_buf" value="${p.buffer}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Action Note</label><input id="pr${i}_act" value="${p.action}" ${e?'':'disabled'}/></div>
+      </div>
+      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px;flex-shrink:0"
+        onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function buildCOForms(items,projects){
+  document.getElementById('coForms').innerHTML=items.map((c,i)=>{
+    const e=isAdmin()||canEdit(c.project);
+    return `<div class="repeat-row" id="co-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+        <div class="form-group"><label>Project</label>
+          <select id="co${i}_p" ${isAdmin()?'':'disabled'}>
+            ${projects.map(x=>`<option value="${x.code}" ${c.project===x.code?'selected':''}>${x.name}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>CO No.</label><input id="co${i}_no" value="${c.co_no}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Description</label><input id="co${i}_desc" value="${c.description}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amt" type="number" value="${c.amount}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Status</label>
+          <select id="co${i}_st" ${e?'':'disabled'}>
+            ${['Ongoing','For PSC Approval','Completed','Cancelled'].map(s=>`<option ${c.status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+      </div>
+      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px;flex-shrink:0"
+        onclick="document.getElementById('co-row-${i}').remove()">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function buildRiskForms(items){
+  document.getElementById('riskForms').innerHTML=items.map((r,i)=>{
+    const e=isAdmin()||canEdit(r.project);
+    return `<div class="repeat-row" id="risk-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+        <div class="form-group"><label>Project Code</label>
+          <input id="ri${i}_p" value="${r.project}" ${isAdmin()?'':'disabled'}/></div>
+        <div class="form-group"><label>Risk / Issue</label>
+          <input id="ri${i}_risk" value="${r.risk}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Impact</label>
+          <select id="ri${i}_imp" ${e?'':'disabled'}>
+            ${['High','Medium','Low'].map(s=>`<option ${r.impact===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Status</label>
+          <select id="ri${i}_st" ${e?'':'disabled'}>
+            ${['Overdue','Active','Ongoing','Resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Owner</label><input id="ri${i}_own" value="${r.owner}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Due Date</label><input id="ri${i}_due" value="${r.due_date}" ${e?'':'disabled'}/></div>
+        <div class="form-group full"><label>Mitigation</label>
+          <textarea id="ri${i}_mit" ${e?'':'disabled'}>${r.mitigation}</textarea></div>
+      </div>
+      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px;flex-shrink:0"
+        onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function buildActionForms(items){
+  document.getElementById('actionForms').innerHTML=items.map((a,i)=>{
+    const e=isAdmin()||canEdit(a.project);
+    return `<div class="repeat-row" id="action-row-${i}">
+      <div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+        <div class="form-group"><label>Project</label>
+          <input id="ai${i}_p" value="${a.project}" ${isAdmin()?'':'disabled'}/></div>
+        <div class="form-group"><label>Item</label>
+          <input id="ai${i}_item" value="${a.item}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Priority</label>
+          <select id="ai${i}_pri" ${e?'':'disabled'}>
+            ${['Overdue','High','Medium','Normal'].map(s=>`<option ${a.priority===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+        <div class="form-group full"><label>Action</label>
+          <textarea id="ai${i}_act" ${e?'':'disabled'}>${a.action}</textarea></div>
+        <div class="form-group"><label>Responsible</label>
+          <input id="ai${i}_resp" value="${a.responsible}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Due Date</label>
+          <input id="ai${i}_due" value="${a.due_date}" ${e?'':'disabled'}/></div>
+        <div class="form-group"><label>Status</label>
+          <select id="ai${i}_st" ${e?'':'disabled'}>
+            ${['Overdue','Pending','In Progress','Done'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+      </div>
+      ${isAdmin()?`<button class="btn btn-danger btn-sm" style="margin-top:2px;flex-shrink:0"
+        onclick="document.getElementById('action-row-${i}').remove()">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── USER GRID ──
+function buildUserGrid(users){
+  document.getElementById('userGrid').innerHTML=users.map((u,i)=>{
+    const projs=u.projects.includes('ALL')
+      ?'<span class="proj-tag">ALL PROJECTS</span>'
+      :u.projects.map(code=>{
+          const p=currentData.projects.find(x=>x.code===code);
+          return `<span class="proj-tag">${p?p.name:code}</span>`;
+        }).join('');
+    return `<div class="user-card">
+      <div class="user-card-header">
+        <div class="user-card-avatar ${u.role==='admin'?'av-admin':'av-pm'}">${u.display_name.charAt(0).toUpperCase()}</div>
+        <div><div class="user-card-name">${u.display_name}</div><div class="user-card-un">@${u.username}</div></div>
+        <span class="role-badge rb-${u.role==="viewer"?'viewer':u.role}" style="margin-left:auto">${u.role}</span>
+      </div>
+      <div class="user-card-row"><span class="text-muted">Status</span>
+        <span style="color:${u.active?'var(--accent3)':'var(--danger)'}">${u.active?'● Active':'○ Inactive'}</span></div>
+      <div class="user-card-row"><span class="text-muted">Projects</span><span>${projs}</span></div>
+      <div class="user-card-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openEditUser(${i})">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="toggleActive(${i})">${u.active?'Deactivate':'Activate'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddUser(){
+  editUserIdx=null;
+  document.getElementById('modalTitle').textContent='Add New User';
+  ['mu_name','mu_username','mu_password'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mu_role').value='pm';
+  document.getElementById('mu_active').value='true';
+  populateProjSelect([]);
+  toggleRoleUI();
+  document.getElementById('userModal').classList.add('show');
+}
+
+function openEditUser(i){
+  editUserIdx=i;
+  const u=currentData.users[i];
+  document.getElementById('modalTitle').textContent='Edit — '+u.display_name;
+  document.getElementById('mu_name').value=u.display_name;
+  document.getElementById('mu_username').value=u.username;
+  document.getElementById('mu_password').value=u.password;
+  document.getElementById('mu_role').value=u.role;
+  document.getElementById('mu_active').value=String(u.active);
+  populateProjSelect(u.projects);
+  toggleRoleUI();
+  document.getElementById('userModal').classList.add('show');
+}
+
+function populateProjSelect(sel){
+  document.getElementById('mu_projects').innerHTML=
+    currentData.projects.map(p=>`<option value="${p.code}" ${sel.includes(p.code)?'selected':''}>${p.name}</option>`).join('');
+}
+
+function toggleRoleUI(){
+  const role=document.getElementById('mu_role').value;
+  document.getElementById('mu_proj_grp').style.display=
+    (role==='admin'||role==='viewer')?'none':'block';
+}
+
+function closeUserModal(){ document.getElementById('userModal').classList.remove('show'); }
+
+function saveUser(){
+  const name=g('mu_name'), username=g('mu_username'), password=g('mu_password');
+  const role=g('mu_role'), active=g('mu_active')==='true';
+  if(!name||!username||!password){ showStatus('Fill in all required fields','error'); return; }
+  let projects=['ALL'];
+  if(role==='pm'){
+    const sel=document.getElementById('mu_projects');
+    projects=[...sel.selectedOptions].map(o=>o.value);
+    if(!projects.length){ showStatus('Select at least one project','error'); return; }
+  }
+  // viewer gets ALL but no edit access (handled by role check)
+  const obj={username:username.toLowerCase(),display_name:name,role,password,projects,active};
+  if(!currentData.users) currentData.users=[];
+  if(editUserIdx!==null) currentData.users[editUserIdx]=obj;
+  else currentData.users.push(obj);
+  buildUserGrid(currentData.users);
+  document.getElementById('uCount').textContent=currentData.users.length;
+  closeUserModal();
+  showStatus('User saved — click Save & Download to apply','success');
+}
+
+function toggleActive(i){
+  currentData.users[i].active=!currentData.users[i].active;
+  buildUserGrid(currentData.users);
+  showStatus('Status updated — click Save & Download to apply','success');
+}
+
+// ── ADD NEW PROJECT ──
+function openAddProjectModal(){
+  const pmUsers=(currentData.users||[]).filter(u=>u.role==='pm');
+  document.getElementById('np_pm_users').innerHTML=
+    pmUsers.map(u=>`<option value="${u.username}">${u.display_name} (@${u.username})</option>`).join('');
+  ['np_code','np_name','np_location','np_pic','np_planned_finish','np_forecast_finish']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('np_budget').value='0';
+  document.getElementById('np_ot_baseline').value='20';
+  document.getElementById('projectModal').classList.add('show');
+}
+
+function closeProjectModal(){ document.getElementById('projectModal').classList.remove('show'); }
+
+function saveNewProject(){
+  const code=g('np_code'), name=g('np_name'), location=g('np_location');
+  const pic=g('np_pic'), budget=gn('np_budget')||0;
+  const ot_baseline=gn('np_ot_baseline')||20;
+  const planned_finish=g('np_planned_finish'), forecast_finish=g('np_forecast_finish');
+  if(!code||!name||!location||!planned_finish){
+    showStatus('Fill in Code, Name, Location and Planned Finish.','error'); return;
+  }
+  if(currentData.projects.find(p=>p.code===code)){
+    showStatus(`Project code "${code}" already exists.`,'error'); return;
+  }
+  const newProj={
+    code,name,location,pic:pic||'',
+    progress:0,schedule_variance_days:0,schedule_status:'On Track',
+    cost_status:'Within Budget',health:'Good',
+    planned_finish,forecast_finish:forecast_finish||planned_finish,
+    critical_activities:'',schedule_recommendation:'',
+    budget,actual_cost:0,forecast_at_completion:budget,cpi:1.0,
+    pa_budget:0,pa_actual:0,ddi:null,ot_rate:null,ot_baseline,olc_alc:null,
+    safe_manhours:0,inspections_due:0,inspections_done:0,
+    ncr_open:0,incidents:0,near_miss:0,last_toolbox:'',safety_action:'',s_curve:[]
+  };
+  currentData.projects.push(newProj);
+  // Assign selected PMs
+  const sel=document.getElementById('np_pm_users');
+  const selectedPMs=[...sel.selectedOptions].map(o=>o.value);
+  if(selectedPMs.length && currentData.users){
+    currentData.users=currentData.users.map(u=>{
+      if(selectedPMs.includes(u.username)&&!u.projects.includes(code)) u.projects.push(code);
+      return u;
+    });
+  }
+  sc_counts.push(0);
+  populateForms();
+  closeProjectModal();
+  showStatus(`✓ Project "${name}" added. Review then click Save & Download.`,'success');
+}
+
+
+// ══════════════════════════════════════════════
+// FILES — UPLOAD & MANAGEMENT
+// ══════════════════════════════════════════════
+const SECTIONS_LABELS = {
+  progress:'Progress Photos', safety:'Safety', procurement:'Procurement',
+  change_orders:'Change Orders', general:'General'
+};
+const EXT_COLORS = {PDF:'var(--danger)',DOCX:'var(--accent2)',XLSX:'var(--good)',
+                    DOC:'var(--accent2)',XLS:'var(--good)',JPG:'var(--accent2)',
+                    PNG:'var(--accent2)',GIF:'var(--accent2)'};
+
+function initFilesPanel(){
+  // Populate project select based on user access
+  const ps = currentData.projects;
+  const accessible = isAdmin() ? ps : ps.filter(p=>canEdit(p.code));
+  const sel = document.getElementById('f_project');
+  if(sel) sel.innerHTML = accessible.map(p=>`<option value="${p.code}">${p.name}</option>`).join('');
+  buildFilesPanel();
+  updatePendingBadge();
+}
+
+function updatePendingBadge(){
+  const pending = (currentData.files||[]).filter(f=>f.status==='pending').length;
+  const badge = document.getElementById('pendingBadge');
+  if(badge){ badge.textContent=pending; badge.style.display=pending?'inline':'none'; }
+}
+
+function previewFile(){
+  const file = document.getElementById('f_file').files[0];
+  const area = document.getElementById('filePreviewArea');
+  if(!file){ area.style.display='none'; return; }
+  if(file.size > 5*1024*1024){
+    area.style.display='block';
+    area.innerHTML='<div style="color:var(--danger);font-size:11px">⚠ File exceeds 5MB limit.</div>';
+    return;
+  }
+  if(file.type.startsWith('image/')){
+    const reader = new FileReader();
+    reader.onload = e => {
+      area.style.display='block';
+      area.innerHTML=`<img src="${e.target.result}" style="max-height:120px;border-radius:6px;border:1px solid var(--border)"/>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">${file.name} · ${(file.size/1024).toFixed(1)}KB</div>`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    area.style.display='block';
+    area.innerHTML=`<div style="font-size:11px;color:var(--muted)">📄 ${file.name} · ${(file.size/1024).toFixed(1)}KB</div>`;
+  }
+}
+
+async function uploadFile(){
+  const fileEl   = document.getElementById('f_file');
+  const projCode = document.getElementById('f_project').value;
+  const section  = document.getElementById('f_section').value;
+  const notes    = document.getElementById('f_notes').value.trim();
+  const prog     = document.getElementById('uploadProgress');
+  const btn      = document.getElementById('uploadBtn');
+  const file     = fileEl.files[0];
+
+  if(!file){ showStatus('Please select a file to upload.','error'); return; }
+  if(file.size > 5*1024*1024){ showStatus('File exceeds 5MB limit.','error'); return; }
+
+  // Ask for PAT if admin, or just store in metadata if PM
+  let pat = '';
+  if(isAdmin()){
+    pat = prompt('Enter your GitHub PAT to upload the file:');
+    if(!pat) return;
+  }
+
+  btn.disabled=true; prog.textContent='Reading file…';
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const base64  = e.target.result.split(',')[1];
+      const isImage = file.type.startsWith('image/');
+      const ext     = file.name.split('.').pop().toLowerCase();
+      const safeName= file.name.replace(/[^a-zA-Z0-9._-]/g,'_').toLowerCase();
+      const ts      = Date.now();
+      const fname   = `${ts}_${safeName}`;
+      const ghPath  = `files/${projCode}/${section}/${fname}`;
+
+      const newFileMeta = {
+        id          : 'f'+ts,
+        project_code: projCode,
+        section,
+        filename    : fname,
+        original_name: file.name,
+        github_path : ghPath,
+        file_type   : isImage ? 'image' : 'document',
+        uploader    : currentUser.username,
+        upload_date : new Date().toISOString(),
+        status      : isAdmin() ? 'approved' : 'pending',
+        approved_by : isAdmin() ? 'admin' : '',
+        notes
+      };
+
+      if(isAdmin() && pat){
+        // Upload file bytes to GitHub
+        prog.textContent='Uploading to GitHub…';
+        const GITHUB_USER='juncel-web', GITHUB_REPO='PSC-CONSTRUCTION';
+        const apiUrl=`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghPath}`;
+        const headers={'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
+        const res = await fetch(apiUrl,{method:'PUT',headers,
+          body:JSON.stringify({message:`Upload: ${file.name} for ${projCode}`,content:base64})});
+        if(!res.ok){ const err=await res.json(); throw new Error(err.message||'Upload failed'); }
+        prog.textContent='File uploaded ✓  Saving metadata…';
+      } else {
+        // PM: just save metadata as pending, no actual file upload
+        newFileMeta.status = 'pending';
+        prog.textContent='File queued for admin upload ✓';
+      }
+
+      if(!currentData.files) currentData.files=[];
+      currentData.files.push(newFileMeta);
+
+      buildFilesPanel();
+      updatePendingBadge();
+      fileEl.value='';
+      document.getElementById('filePreviewArea').style.display='none';
+      document.getElementById('f_notes').value='';
+      showStatus(isAdmin()?`✓ "${file.name}" uploaded and approved.`:`✓ "${file.name}" submitted for admin approval.`,'success');
+      prog.textContent='';
+    } catch(err){
+      showStatus('Upload error: '+err.message,'error');
+      prog.textContent='';
+    } finally { btn.disabled=false; }
+  };
+  reader.readAsDataURL(file);
+}
+
+function buildFilesPanel(){
+  const filter  = document.getElementById('filesAdminFilter')?.value||'all';
+  const files   = (currentData.files||[]).filter(f=>
+    filter==='all' || f.status===filter
+  );
+  // PMs see only their own files
+  const visible = isAdmin() ? files : files.filter(f=>
+    f.uploader===currentUser.username || canEdit(f.project_code)
+  );
+
+  const list  = document.getElementById('filesAdminList');
+  const empty = document.getElementById('filesAdminEmpty');
+  if(!visible.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  list.innerHTML = visible.map((f,i)=>{
+    const proj  = currentData.projects.find(p=>p.code===f.project_code);
+    const raw   = `https://raw.githubusercontent.com/juncel-web/PSC-CONSTRUCTION/main/${f.github_path}`;
+    const ext   = f.filename.split('.').pop().toUpperCase();
+    const isImg = f.file_type==='image';
+    const statusCls = {pending:'status-pending',approved:'status-approved',rejected:'status-rejected'}[f.status]||'';
+    const statusLbl = {pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[f.status]||f.status;
+    const thumb = isImg
+      ? `<img src="${raw}" class="file-thumb" onerror="this.style.display='none'">`
+      : `<div class="file-icon" style="color:${EXT_COLORS[ext]||'var(--muted)'}">${ext}</div>`;
+
+    const adminBtns = isAdmin() ? `
+      ${f.status!=='approved'?`<button class="btn btn-success btn-sm" onclick="setFileStatus(${i},'approved')">✅ Approve</button>`:''}
+      ${f.status!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="setFileStatus(${i},'rejected')">❌ Reject</button>`:''}
+      <button class="btn btn-danger btn-sm" onclick="deleteFile(${i})">🗑</button>` : '';
+
+    return `<div class="file-item" id="fitem-${i}">
+      ${thumb}
+      <div class="file-info">
+        <div class="file-name">${f.original_name}</div>
+        <div class="file-meta">
+          ${proj?.name||f.project_code} · ${SECTIONS_LABELS[f.section]||f.section} ·
+          @${f.uploader} · ${new Date(f.upload_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}
+        </div>
+        ${f.notes?`<div style="font-size:10px;color:var(--muted);font-style:italic">${f.notes}</div>`:''}
+      </div>
+      <span class="${statusCls}" style="font-size:10px;white-space:nowrap">${statusLbl}</span>
+      <div style="display:flex;gap:5px;flex-shrink:0">${adminBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+function setFileStatus(idx, status){
+  const filter = document.getElementById('filesAdminFilter')?.value||'all';
+  const visible = isAdmin()
+    ? (currentData.files||[])
+    : (currentData.files||[]).filter(f=>f.uploader===currentUser.username||canEdit(f.project_code));
+  const filtered = filter==='all' ? visible : visible.filter(f=>f.status===filter);
+  if(!filtered[idx]) return;
+
+  // Find in main array
+  const fileId = filtered[idx].id;
+  const mainIdx = currentData.files.findIndex(f=>f.id===fileId);
+  if(mainIdx<0) return;
+
+  currentData.files[mainIdx].status = status;
+  currentData.files[mainIdx].approved_by = status==='approved'?currentUser.username:'';
+  buildFilesPanel();
+  updatePendingBadge();
+  showStatus(`File ${status}. Click Save & Publish to go live.`,'success');
+}
+
+function deleteFile(idx){
+  if(!confirm('Delete this file record? (The file on GitHub will remain.)')) return;
+  const filter = document.getElementById('filesAdminFilter')?.value||'all';
+  const visible = isAdmin()
+    ? (currentData.files||[])
+    : (currentData.files||[]).filter(f=>f.uploader===currentUser.username);
+  const filtered = filter==='all' ? visible : visible.filter(f=>f.status===filter);
+  if(!filtered[idx]) return;
+  const fileId = filtered[idx].id;
+  currentData.files = currentData.files.filter(f=>f.id!==fileId);
+  buildFilesPanel();
+  updatePendingBadge();
+  showStatus('File record removed. Click Save & Publish to apply.','success');
+}
+
+
+// ══════════════════════════════════════════════
+// SCOREBOARD FORMS
+// ══════════════════════════════════════════════
+function buildScoreboardForms(){
+  const sb = currentData.scoreboard || {};
+  const sbp = sb.projects || [];
+
+  document.getElementById('sb_period').value      = sb.period || '';
+  document.getElementById('sb_report_date').value = sb.report_date || '';
+  document.getElementById('sb_total_ranks').value = sb.totals?.ranks_cost || '';
+  document.getElementById('sb_total_staff').value = sb.totals?.staff_cost || '';
+  document.getElementById('sb_total_olc').value   = sb.totals?.output_labor_cost || '';
+  document.getElementById('sb_total_olc_alc').value = sb.totals?.olc_alc || '';
+
+  // Build per-project forms from the projects in scoreboard
+  // Use scoreboard.projects names (ROPA2, RHBDOS, RPB) which may differ from project codes
+  const projectNames = sbp.length
+    ? sbp.map(p=>p.name)
+    : currentData.projects.map(p=>p.name);
+
+  document.getElementById('sbProjectForms').innerHTML = projectNames.map((name,i)=>{
+    const p = sbp[i] || {};
+    return `<div class="form-card">
+      <div class="form-card-title">${name}</div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Project Name/Code</label>
+          <input id="sbp${i}_name" value="${p.name||name}"/></div>
+        <div class="form-group"><label>Project PR (%)</label>
+          <input id="sbp${i}_project_pr" type="number" value="${p.project_pr||''}"/></div>
+        <div class="form-group"><label>Accomplishment to Date (%)</label>
+          <input id="sbp${i}_accomplishment" type="number" step="0.01" value="${p.accomplishment||''}"/></div>
+        <div class="form-group"><label>Variance in Days</label>
+          <input id="sbp${i}_variance_days" type="number" value="${p.variance_days||''}"/></div>
+        <div class="form-group"><label>DDI %</label>
+          <input id="sbp${i}_ddi" type="number" value="${p.ddi||''}"/></div>
+        <div class="form-group"><label>IND %</label>
+          <input id="sbp${i}_ind" type="number" value="${p.ind||''}"/></div>
+        <div class="form-group"><label>OT %</label>
+          <input id="sbp${i}_ot" type="number" value="${p.ot||''}"/></div>
+        <div class="form-group"><label>OT/DDI/IND Baseline (%)</label>
+          <input id="sbp${i}_ot_baseline" type="number" value="${p.ot_ddi_ind_baseline||20}"/></div>
+        <div class="form-group"><label>PR Baseline (%)</label>
+          <input id="sbp${i}_pr_baseline" type="number" value="${p.pr_baseline||90}"/></div>
+        <div class="form-group"><label>Ranks Cost (₱)</label>
+          <input id="sbp${i}_ranks_cost" type="number" value="${p.ranks_cost||''}"/></div>
+        <div class="form-group"><label>Staff Cost (₱)</label>
+          <input id="sbp${i}_staff_cost" type="number" value="${p.staff_cost||''}"/></div>
+        <div class="form-group"><label>Output Labor Cost (₱)</label>
+          <input id="sbp${i}_output_labor_cost" type="number" value="${p.output_labor_cost||''}"/></div>
+        <div class="form-group"><label>OLC/ALC (%)</label>
+          <input id="sbp${i}_olc_alc" type="number" value="${p.olc_alc||''}"/></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function collectScoreboardData(d){
+  const sb = d.scoreboard || { projects:[], totals:{} };
+  sb.period      = g('sb_period')      || sb.period;
+  sb.report_date = g('sb_report_date') || sb.report_date;
+  sb.totals = {
+    ranks_cost          : gn('sb_total_ranks')   ?? sb.totals?.ranks_cost,
+    staff_cost          : gn('sb_total_staff')   ?? sb.totals?.staff_cost,
+    output_labor_cost   : gn('sb_total_olc')     ?? sb.totals?.output_labor_cost,
+    olc_alc             : gni('sb_total_olc_alc')?? sb.totals?.olc_alc,
+  };
+  const count = document.getElementById('sbProjectForms').querySelectorAll('.form-card').length;
+  sb.projects = Array.from({length:count},(_,i)=>({
+    name                : g(`sbp${i}_name`)               || '',
+    project_pr          : gn(`sbp${i}_project_pr`)        ?? 0,
+    accomplishment      : gn(`sbp${i}_accomplishment`)    ?? 0,
+    variance_days       : gni(`sbp${i}_variance_days`)    ?? 0,
+    ddi                 : gni(`sbp${i}_ddi`)              ?? 0,
+    ind                 : gni(`sbp${i}_ind`)              ?? 0,
+    ot                  : gni(`sbp${i}_ot`)               ?? 0,
+    ot_ddi_ind_baseline : gni(`sbp${i}_ot_baseline`)      ?? 20,
+    pr_baseline         : gni(`sbp${i}_pr_baseline`)      ?? 90,
+    ranks_cost          : gn(`sbp${i}_ranks_cost`)        ?? 0,
+    staff_cost          : gn(`sbp${i}_staff_cost`)        ?? 0,
+    output_labor_cost   : gn(`sbp${i}_output_labor_cost`) ?? 0,
+    olc_alc             : gni(`sbp${i}_olc_alc`)          ?? 0,
+  })).filter(p=>p.name);
+  d.scoreboard = sb;
+  // Scoreboard
+  if(document.getElementById("sbProjectForms").innerHTML) collectScoreboardData(d);
+  return d;
+}
+
+// ── ADD ROW HELPERS ──
+function addSCurveRow(idx){
+  sc_counts[idx]=(sc_counts[idx]||0)+1;
+  const j='n'+sc_counts[idx];
+  const div=document.createElement('div');
+  div.id=`sc${idx}-row-${j}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(6,1fr)">
+    <div class="form-group"><label>Period</label><input id="sc${idx}_${j}_period" placeholder="e.g. May 20, 2026"/></div>
+    <div class="form-group"><label>Planned %</label><input id="sc${idx}_${j}_pp" type="number" step="0.01" placeholder="0.00"/></div>
+    <div class="form-group"><label>Actual %</label><input id="sc${idx}_${j}_ap" type="number" step="0.01" placeholder="0.00"/></div>
+    <div class="form-group"><label>Planned Cost (₱)</label><input id="sc${idx}_${j}_pc" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>Actual Cost (₱)</label><input id="sc${idx}_${j}_ac" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>EAC (₱)</label><input id="sc${idx}_${j}_eac" type="number" placeholder="0"/></div>
+  </div>
+  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px"
+    onclick="document.getElementById('sc${idx}-row-${j}').remove()">✕</button>`;
+  document.getElementById(`sc${idx}-rows`).appendChild(div);
+}
+
+function addProcRow(){
+  pc++; const i='n'+pc; const ps=currentData.projects;
+  const div=document.createElement('div'); div.id=`proc-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
+    <div class="form-group"><label>Project</label><select id="pr${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Item</label><input id="pr${i}_item"/></div>
+    <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor"/></div>
+    <div class="form-group"><label>Required Date</label><input id="pr${i}_req"/></div>
+    <div class="form-group"><label>Delivery Date</label><input id="pr${i}_dlv"/></div>
+    <div class="form-group"><label>Status</label><select id="pr${i}_st"><option>In Progress</option><option>Delivered</option><option>Delayed</option></select></div>
+    <div class="form-group"><label>Buffer</label><input id="pr${i}_buf"/></div>
+    <div class="form-group"><label>Action Note</label><input id="pr${i}_act"/></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`;
+  document.getElementById('procForms').appendChild(div);
+}
+
+function addCORow(){
+  cc++; const i='n'+cc; const ps=currentData.projects;
+  const div=document.createElement('div'); div.id=`co-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project</label><select id="co${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>CO No.</label><input id="co${i}_no"/></div>
+    <div class="form-group"><label>Description</label><input id="co${i}_desc"/></div>
+    <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amt" type="number" value="0"/></div>
+    <div class="form-group"><label>Status</label><select id="co${i}_st"><option>Ongoing</option><option>For PSC Approval</option><option>Completed</option><option>Cancelled</option></select></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;
+  document.getElementById('coForms').appendChild(div);
+}
+
+function addRiskRow(){
+  rc++; const i='n'+rc;
+  const div=document.createElement('div'); div.id=`risk-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project Code</label><input id="ri${i}_p"/></div>
+    <div class="form-group"><label>Risk</label><input id="ri${i}_risk"/></div>
+    <div class="form-group"><label>Impact</label><select id="ri${i}_imp"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+    <div class="form-group"><label>Status</label><select id="ri${i}_st"><option>Active</option><option>Ongoing</option><option>Overdue</option><option>Resolved</option></select></div>
+    <div class="form-group"><label>Owner</label><input id="ri${i}_own"/></div>
+    <div class="form-group"><label>Due Date</label><input id="ri${i}_due"/></div>
+    <div class="form-group full"><label>Mitigation</label><textarea id="ri${i}_mit"></textarea></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;
+  document.getElementById('riskForms').appendChild(div);
+}
+
+function addActionRow(){
+  ac++; const i='n'+ac;
+  const div=document.createElement('div'); div.id=`action-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project</label><input id="ai${i}_p"/></div>
+    <div class="form-group"><label>Item</label><input id="ai${i}_item"/></div>
+    <div class="form-group"><label>Priority</label><select id="ai${i}_pri"><option>High</option><option selected>Medium</option><option>Normal</option><option>Overdue</option></select></div>
+    <div class="form-group full"><label>Action</label><textarea id="ai${i}_act"></textarea></div>
+    <div class="form-group"><label>Responsible</label><input id="ai${i}_resp"/></div>
+    <div class="form-group"><label>Due Date</label><input id="ai${i}_due"/></div>
+    <div class="form-group"><label>Status</label><select id="ai${i}_st"><option selected>Pending</option><option>In Progress</option><option>Done</option><option>Overdue</option></select></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;
+  document.getElementById('actionForms').appendChild(div);
+}
+
+// ── COLLECT DATA ──
+function collectData(){
+  const d=JSON.parse(JSON.stringify(currentData));
+  d.meta.week          = g('m_week')         || d.meta.week;
+  d.meta.prepared_by   = g('m_prepared_by')  || d.meta.prepared_by;
+  d.meta.verified_by   = g('m_verified_by')  || '';
+  d.meta.source_file   = g('m_source_file')  || d.meta.source_file;
+  d.meta.file_location = g('m_file_location')|| '';
+  d.meta.last_updated  = new Date().toISOString();
+  d.meta.last_updated_by = currentUser.username;
+
+  d.projects=d.projects.map((p,i)=>{
+    if(!canEdit(p.code)) return p;
+    const scRows=[...(document.getElementById(`sc${i}-rows`)?.querySelectorAll('.repeat-row')||[])];
+    const sc=scRows.map(row=>{
+      const id=row.id.replace(`sc${i}-row-`,'');
+      const period=g(`sc${i}_${id}_period`);
+      if(!period) return null;
+      return{period,
+        planned_progress:gn(`sc${i}_${id}_pp`)||0,actual_progress:gn(`sc${i}_${id}_ap`)||0,
+        planned_cost:gn(`sc${i}_${id}_pc`)||0,actual_cost:gn(`sc${i}_${id}_ac`)||0,
+        eac:gn(`sc${i}_${id}_eac`)||p.budget};
+    }).filter(Boolean);
+    return{...p,
+      progress:gn(`p${i}_progress`)??p.progress,
+      schedule_status:g(`p${i}_schedule_status`)||p.schedule_status,
+      schedule_variance_days:gni(`p${i}_variance`)??p.schedule_variance_days,
+      cost_status:g(`p${i}_cost_status`)||p.cost_status,
+      health:g(`p${i}_health`)||p.health,
+      planned_finish:g(`p${i}_planned_finish`)||p.planned_finish,
+      forecast_finish:g(`p${i}_forecast_finish`)||p.forecast_finish,
+      critical_activities:g(`s${i}_crit`)||p.critical_activities,
+      schedule_recommendation:g(`s${i}_rec`)||p.schedule_recommendation,
+      budget:gn(`c${i}_budget`)??p.budget,actual_cost:gn(`c${i}_actual`)??p.actual_cost,
+      forecast_at_completion:gn(`c${i}_fac`)??p.forecast_at_completion,
+      cpi:gn(`c${i}_cpi`)??p.cpi,pa_budget:gn(`c${i}_pab`)??p.pa_budget,
+      pa_actual:gn(`c${i}_paa`)??p.pa_actual,
+      safe_manhours:gn(`sf${i}_mh`)??p.safe_manhours,
+      inspections_due:gni(`sf${i}_id`)??p.inspections_due,
+      inspections_done:gni(`sf${i}_ion`)??p.inspections_done,
+      ncr_open:gni(`sf${i}_ncr`)??p.ncr_open,incidents:gni(`sf${i}_inc`)??p.incidents,
+      near_miss:gni(`sf${i}_nm`)??p.near_miss,
+      ddi:gn(`sf${i}_ddi`),ot_rate:gn(`sf${i}_ot`),olc_alc:gn(`sf${i}_olc`),
+      last_toolbox:g(`sf${i}_tb`)||p.last_toolbox,
+      safety_action:g(`sf${i}_sa`)||p.safety_action,
+      s_curve:sc.length?sc:p.s_curve,
+    };
+  });
+
+  d.procurement=[...document.getElementById('procForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('proc-row-','');
+    return{project:g(`pr${id}_p`)||'',item:g(`pr${id}_item`)||'',vendor:g(`pr${id}_vendor`)||'',
+      required_date:g(`pr${id}_req`)||'',delivery_date:g(`pr${id}_dlv`)||'',
+      status:g(`pr${id}_st`)||'In Progress',buffer:g(`pr${id}_buf`)||'',action:g(`pr${id}_act`)||''};
+  }).filter(r=>r.item);
+
+  d.change_orders=[...document.getElementById('coForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('co-row-','');
+    return{project:g(`co${id}_p`)||'',co_no:g(`co${id}_no`)||'',
+      description:g(`co${id}_desc`)||'',amount:gn(`co${id}_amt`)||0,status:g(`co${id}_st`)||'Ongoing'};
+  }).filter(r=>r.description);
+
+  d.risks=[...document.getElementById('riskForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('risk-row-','');
+    return{project:g(`ri${id}_p`)||'',risk:g(`ri${id}_risk`)||'',impact:g(`ri${id}_imp`)||'Medium',
+      status:g(`ri${id}_st`)||'Ongoing',owner:g(`ri${id}_own`)||'',
+      due_date:g(`ri${id}_due`)||'',mitigation:g(`ri${id}_mit`)||''};
+  }).filter(r=>r.risk);
+
+  d.action_items=[...document.getElementById('actionForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('action-row-','');
+    return{project:g(`ai${id}_p`)||'',item:g(`ai${id}_item`)||'',priority:g(`ai${id}_pri`)||'Normal',
+      action:g(`ai${id}_act`)||'',responsible:g(`ai${id}_resp`)||'',
+      due_date:g(`ai${id}_due`)||'',status:g(`ai${id}_st`)||'Pending'};
+  }).filter(r=>r.item);
+
+  return d;
+}
+
+// ── SAVE & PUBLISH ──
+let _pendingData = null;
+
+function saveAll(){
+  if(!isAdmin()){
+    showStatus('✓ Update ready. Notify Admin to publish.','success');
+    return;
+  }
+  // Collect data first, then ask for PAT
+  _pendingData = collectData();
+  document.getElementById('patInput').value = '';
+  document.getElementById('patErr').textContent = '';
+  document.getElementById('patModal').classList.add('show');
+  setTimeout(()=>document.getElementById('patInput').focus(), 100);
+}
+
+function closePatModal(){
+  document.getElementById('patModal').classList.remove('show');
+  _pendingData = null;
+}
+
+async function confirmPublish(){
+  const pat = document.getElementById('patInput').value.trim();
+  const err = document.getElementById('patErr');
+  err.textContent = '';
+  if(!pat || (!pat.startsWith('ghp_') && !pat.startsWith('github_pat_'))){
+    err.textContent = 'Please enter a valid GitHub Personal Access Token.';
+    return;
+  }
+  const btn = document.getElementById('publishConfirmBtn');
+  btn.textContent = 'Publishing…'; btn.disabled = true;
+  showStatus('Publishing to GitHub…','info');
+
+  const GITHUB_USER = 'juncel-web';
+  const GITHUB_REPO = 'PSC-CONSTRUCTION';
+  const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data.json`;
+  const headers = {
+    'Authorization': `token ${pat}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    // Get current file SHA
+    const shaRes = await fetch(API_URL, { headers });
+    if(!shaRes.ok) throw new Error(`GitHub auth failed (${shaRes.status}). Check your PAT has repo scope.`);
+    const shaData = await shaRes.json();
+
+    // Push updated data.json
+    const content = JSON.stringify(_pendingData, null, 2);
+    const encoded = btoa(unescape(encodeURIComponent(content)));
+    const res = await fetch(API_URL, {
+      method: 'PUT', headers,
+      body: JSON.stringify({
+        message: `Weekly update — ${_pendingData.meta.week} by ${currentUser.username}`,
+        content: encoded,
+        sha: shaData.sha
+      })
+    });
+    if(!res.ok){
+      const e = await res.json();
+      throw new Error(e.message || 'GitHub API error');
+    }
+    currentData = _pendingData;
+    closePatModal();
+    showStatus('✅ Published! Dashboard is live at juncel-web.github.io/PSC-CONSTRUCTION/','success');
+  } catch(e){
+    err.textContent = e.message;
+  } finally {
+    btn.textContent = '🚀 Publish Live'; btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
