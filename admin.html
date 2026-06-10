@@ -480,11 +480,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- NOTIFICATION PANEL -->
 <div class="notif-panel" id="notifPanel">
   <div class="notif-header">
-    <div class="notif-header-title">PM Notifications</div>
-    <div style="display:flex;gap:6px">
-      <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Mark All Read</button>
+    <div>
+      <div class="notif-header-title">PM Submissions</div>
+      <div style="font-size:10px;color:var(--muted)">Updates pending your review &amp; publish</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="markAllRead()">✓ All Read</button>
       <button onclick="toggleNotifPanel()"
-        style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)">✕</button>
+        style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0 4px">✕</button>
     </div>
   </div>
   <div id="notifList">
@@ -574,7 +577,10 @@ async function doLogin(){
   } catch(e){ err.textContent=e.message; }
 }
 
-function doLogout(){ currentUser=null; currentData=null; location.reload(); }
+function doLogout(){
+  if(_notifPollTimer){ clearInterval(_notifPollTimer); _notifPollTimer=null; }
+  currentUser=null; currentData=null; location.reload();
+}
 
 // ── BOOT ──
 function boot(){
@@ -617,6 +623,24 @@ function boot(){
   sc_counts = new Array(currentData.projects.length).fill(0);
   populateForms();
   initNotifications();
+
+  // If admin: silently refresh data.json to catch any PM submissions since last publish
+  if(isAdmin()){
+    fetch(`${RAW_BASE}/data.json?t=${Date.now()}`)
+      .then(r=>r.ok?r.json():null)
+      .then(fresh=>{
+        if(!fresh) return;
+        // Merge fresh notifications into currentData
+        const freshNotifs = fresh.notifications || [];
+        const myNotifs    = currentData.notifications || [];
+        // Use fresh if it has more/newer notifications
+        if(freshNotifs.length >= myNotifs.length){
+          currentData.notifications = freshNotifs;
+          renderNotifications();
+        }
+      })
+      .catch(()=>{});
+  }
 }
 
 // ── PANEL SWITCH ──
@@ -1351,15 +1375,36 @@ const GITHUB_REPO_N = 'PSC-CONSTRUCTION';
 const API_DATA_URL  = `https://api.github.com/repos/${GITHUB_USER_N}/${GITHUB_REPO_N}/contents/data.json`;
 
 function initNotifications(){
-  // Show bell for all users — admin sees all, PM sees own
-  document.getElementById('notifBellWrap').style.display = 'block';
-  // Admin: show scope banner note about sharing PAT with PMs
   if(isAdmin()){
-    const note = document.createElement('div');
-    note.style.cssText='font-size:10px;color:var(--muted);padding:4px 0 0';
-    note.id='patShareNote';
+    // Only Admin sees the notification bell
+    document.getElementById('notifBellWrap').style.display = 'block';
+    renderNotifications();
+    startNotifPolling();
   }
-  renderNotifications();
+  // PMs do not see the bell — they get success message after submit
+}
+
+let _notifPollTimer = null;
+function startNotifPolling(){
+  if(_notifPollTimer) clearInterval(_notifPollTimer);
+  _notifPollTimer = setInterval(async ()=>{
+    try {
+      const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+      if(!res.ok) return;
+      const fresh = await res.json();
+      const freshNotifs  = fresh.notifications || [];
+      const freshUnread  = freshNotifs.filter(n=>!n.read).length;
+      const currentUnread = (currentData.notifications||[]).filter(n=>!n.read).length;
+      if(freshUnread > currentUnread){
+        currentData.notifications = freshNotifs;
+        renderNotifications();
+        const bell = document.getElementById('notifBell');
+        if(bell){ bell.style.background='var(--danger)'; bell.style.color='#fff';
+          setTimeout(()=>{ bell.style.background=''; bell.style.color=''; },2500); }
+        showStatus(`🔔 New PM submission — ${freshUnread} update(s) pending review`,'info');
+      }
+    } catch(e){}
+  }, 60000);
 }
 
 function renderNotifications(){
@@ -1389,7 +1434,7 @@ function renderNotifications(){
         </div>
         ${n.notes?`<div style="font-size:10px;color:var(--muted);margin-top:3px;font-style:italic">"${n.notes}"</div>`:''}
       </div>
-      ${isAdmin()&&!n.read?`<button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="markRead(${notifs.length-1-i})">✓ Read</button>`:''}
+      ${isAdmin()&&!n.read?`<button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="markRead('${n.id}')">✓ Read</button>`:''}
     </div>`).join('');
 }
 
@@ -1398,11 +1443,11 @@ function toggleNotifPanel(){
   panel.classList.toggle('show');
 }
 
-async function markRead(idx){
-  if(!currentData.notifications || !currentData.notifications[idx]) return;
-  currentData.notifications[idx].read = true;
+async function markRead(notifId){
+  const n = (currentData.notifications||[]).find(x=>x.id===notifId);
+  if(!n) return;
+  n.read = true;
   renderNotifications();
-  // Persist to GitHub if admin has PAT cached
   const cachedPAT = sessionStorage.getItem('psc_pat');
   if(cachedPAT && isAdmin()) await pushNotificationsToGitHub(cachedPAT);
 }
