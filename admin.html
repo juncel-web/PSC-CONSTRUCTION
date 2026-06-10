@@ -130,19 +130,19 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 
 /* REVIEW DIFF */
-.diff-section{margin-bottom:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.diff-section-head{background:var(--surface2);padding:8px 12px;font-family:'Bebas Neue';font-size:13px;letter-spacing:.8px;display:flex;align-items:center;justify-content:space-between}
 .diff-table{width:100%;border-collapse:collapse;font-size:11px}
-.diff-table th{padding:5px 10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left}
-.diff-table td{padding:6px 10px;border-bottom:1px solid rgba(30,40,64,.4);vertical-align:top}
+.diff-table th{padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;background:var(--surface2)}
+.diff-table td{padding:7px 10px;border-bottom:1px solid rgba(30,40,64,.4);vertical-align:middle}
 .diff-table tr:last-child td{border-bottom:none}
 .diff-old{color:var(--danger);text-decoration:line-through;opacity:.7;font-family:'JetBrains Mono';font-size:10px}
 .diff-new{color:var(--accent3);font-weight:700;font-family:'JetBrains Mono';font-size:10px}
 .diff-same{color:var(--muted);font-family:'JetBrains Mono';font-size:10px}
-.diff-changed td{background:rgba(16,185,129,.04)}
-.diff-badge-changed{background:rgba(16,185,129,.15);color:var(--accent3);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px}
-.diff-badge-same{background:var(--surface2);color:var(--muted);font-size:9px;padding:1px 6px;border-radius:3px}
+.diff-badge-changed{background:rgba(240,180,41,.2);color:var(--accent);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px}
 .diff-badge-new{background:rgba(59,130,246,.15);color:var(--accent2);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px}
+.diff-tab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 14px;font-family:'DM Sans';font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s}
+.diff-tab:hover{color:var(--text)}
+.diff-tab-active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(240,180,41,.04)}
+.diff-tab-panel{padding:0}
 
 </style>
 </head>
@@ -1676,106 +1676,238 @@ function closeReviewModal(){
 }
 
 function buildDiffHTML(sub, live){
-  let html = '';
+  // ── Helpers ──
+  const fmt  = v => v==null||v===''?'—':String(v);
+  const fmtP = v => v==null||v===''?'—':v+'%';
+  const fmtM = v => v==null||v===''?'—':'₱'+Number(v).toLocaleString();
+  const changed = (a,b) => String(a??'') !== String(b??'');
 
-  // ── Per-project diffs ──
-  (sub.projects || []).forEach(subProj => {
+  // ── Classify all changes per project ──
+  const FIELD_GROUPS = {
+    progress: [
+      {key:'progress',             label:'Progress %',            fmt:'pct'},
+      {key:'health',               label:'Overall Health',         fmt:'str', flag: v=>v==='Critical'||v==='At Risk'},
+    ],
+    schedule: [
+      {key:'schedule_status',      label:'Schedule Status',        fmt:'str', flag: v=>v==='Delayed'},
+      {key:'schedule_variance_days',label:'Variance (days)',        fmt:'num'},
+      {key:'planned_finish',       label:'Planned Finish',         fmt:'str'},
+      {key:'forecast_finish',      label:'Forecast Finish',        fmt:'str', flag:(v,old)=>v!==old},
+      {key:'critical_activities',  label:'Critical Activities',    fmt:'str'},
+      {key:'schedule_recommendation',label:'Recommendation',       fmt:'str'},
+    ],
+    cost: [
+      {key:'cost_status',          label:'Cost Status',            fmt:'str', flag: v=>v==='Over Budget'||v==='At Risk'},
+      {key:'actual_cost',          label:'Actual Cost (₱)',        fmt:'money'},
+      {key:'forecast_at_completion',label:'Forecast at Completion (₱)',fmt:'money'},
+      {key:'cpi',                  label:'CPI',                    fmt:'num',  flag: v=>parseFloat(v)<1},
+      {key:'pa_actual',            label:'P&A Actual (₱)',         fmt:'money'},
+    ],
+    safety: [
+      {key:'safe_manhours',        label:'Safe Man-Hours',         fmt:'num'},
+      {key:'incidents',            label:'Incidents',              fmt:'num',  flag: v=>parseInt(v)>0},
+      {key:'near_miss',            label:'Near Miss',              fmt:'num',  flag: v=>parseInt(v)>0},
+      {key:'ncr_open',             label:'NCR Open',               fmt:'num',  flag: v=>parseInt(v)>0},
+      {key:'inspections_due',      label:'Inspections Due',        fmt:'num'},
+      {key:'inspections_done',     label:'Inspections Done',       fmt:'num'},
+      {key:'ddi',                  label:'DDI %',                  fmt:'pct'},
+      {key:'ot_rate',              label:'OT Rate %',              fmt:'pct',  flag: v=>parseFloat(v)>20},
+      {key:'olc_alc',              label:'OLC/ALC',                fmt:'pct'},
+      {key:'last_toolbox',         label:'Last Toolbox Talk',      fmt:'str'},
+      {key:'safety_action',        label:'Safety Action/Note',     fmt:'str'},
+    ],
+  };
+
+  const GROUP_META = {
+    progress: {icon:'🏗', label:'Status & Progress'},
+    schedule: {icon:'📅', label:'Schedule'},
+    cost:     {icon:'💰', label:'Cost & CPI'},
+    safety:   {icon:'🦺', label:'Safety'},
+    scurve:   {icon:'📈', label:'S-Curve Data'},
+  };
+
+  // ── Collect changes per project per group ──
+  const allProjectChanges = (sub.projects||[]).map(subProj=>{
     const liveProj = (live.projects||[]).find(p=>p.code===subProj.code);
-    if(!liveProj) return;
+    if(!liveProj) return null;
 
-    const fields = [
-      {key:'progress',            label:'Progress %'},
-      {key:'schedule_status',     label:'Schedule Status'},
-      {key:'schedule_variance_days',label:'Variance (days)'},
-      {key:'cost_status',         label:'Cost Status'},
-      {key:'health',              label:'Overall Health'},
-      {key:'actual_cost',         label:'Actual Cost (₱)'},
-      {key:'forecast_at_completion',label:'Forecast at Completion (₱)'},
-      {key:'cpi',                 label:'CPI'},
-      {key:'pa_actual',           label:'P&A Actual (₱)'},
-      {key:'safe_manhours',       label:'Safe Man-Hours'},
-      {key:'inspections_due',     label:'Inspections Due'},
-      {key:'inspections_done',    label:'Inspections Done'},
-      {key:'ncr_open',            label:'NCR Open'},
-      {key:'incidents',           label:'Incidents'},
-      {key:'near_miss',           label:'Near Miss'},
-      {key:'ddi',                 label:'DDI %'},
-      {key:'ot_rate',             label:'OT Rate %'},
-      {key:'olc_alc',             label:'OLC/ALC'},
-      {key:'last_toolbox',        label:'Last Toolbox'},
-      {key:'safety_action',       label:'Safety Action'},
-      {key:'critical_activities', label:'Critical Activities'},
-      {key:'schedule_recommendation',label:'Schedule Recommendation'},
-    ];
+    const groupChanges = {};
+    let totalChanges=0, totalFlags=0;
 
-    const changes = fields.filter(f=> String(subProj[f.key]??'') !== String(liveProj[f.key]??''));
-    const badge = changes.length > 0
-      ? `<span class="diff-badge-changed">${changes.length} change${changes.length>1?'s':''}</span>`
-      : `<span class="diff-badge-same">No changes</span>`;
-
-    if(changes.length === 0) return; // skip unchanged projects
-
-    html += `<div class="diff-section">
-      <div class="diff-section-head">
-        ${subProj.name} <small style="font-family:'JetBrains Mono';font-size:10px;color:var(--muted)">${subProj.code}</small>
-        ${badge}
-      </div>
-      <table class="diff-table">
-        <tr><th>Field</th><th>Current (Live)</th><th>PM Submitted</th></tr>
-        ${changes.map(f=>`<tr class="diff-changed">
-          <td>${f.label}</td>
-          <td><span class="diff-old">${liveProj[f.key]??'—'}</span></td>
-          <td><span class="diff-new">${subProj[f.key]??'—'}</span></td>
-        </tr>`).join('')}
-      </table>
-    </div>`;
-
-    // S-Curve changes
-    const liveSC   = liveProj.s_curve || [];
-    const subSC    = subProj.s_curve  || [];
-    const newRows  = subSC.filter(sr => !liveSC.find(lr=>lr.period===sr.period));
-    const modRows  = subSC.filter(sr => {
-      const lr = liveSC.find(x=>x.period===sr.period);
-      return lr && JSON.stringify(lr) !== JSON.stringify(sr);
+    Object.entries(FIELD_GROUPS).forEach(([group, fields])=>{
+      const changes = fields.filter(f=>changed(subProj[f.key], liveProj[f.key]));
+      const flags   = changes.filter(f=>f.flag && f.flag(subProj[f.key], liveProj[f.key]));
+      if(changes.length){
+        groupChanges[group] = {changes, flags};
+        totalChanges += changes.length;
+        totalFlags   += flags.length;
+      }
     });
 
-    if(newRows.length || modRows.length){
-      html += `<div class="diff-section">
-        <div class="diff-section-head">
-          ${subProj.name} — S-Curve Data
-          <span class="diff-badge-new">${newRows.length} new · ${modRows.length} modified</span>
-        </div>
-        <table class="diff-table">
-          <tr><th>Period</th><th>Type</th><th>Planned %</th><th>Actual %</th><th>Planned Cost</th><th>Actual Cost</th><th>EAC</th></tr>
-          ${newRows.map(r=>`<tr class="diff-changed">
-            <td class="diff-new">${r.period}</td>
-            <td><span class="diff-badge-new">NEW</span></td>
-            <td class="diff-new">${r.planned_progress}%</td>
-            <td class="diff-new">${r.actual_progress}%</td>
-            <td class="diff-new">₱${Number(r.planned_cost).toLocaleString()}</td>
-            <td class="diff-new">₱${Number(r.actual_cost).toLocaleString()}</td>
-            <td class="diff-new">₱${Number(r.eac).toLocaleString()}</td>
-          </tr>`).join('')}
-          ${modRows.map(r=>{
-            const lr=liveSC.find(x=>x.period===r.period)||{};
-            return `<tr class="diff-changed">
-              <td class="diff-new">${r.period}</td>
-              <td><span class="diff-badge-changed">MODIFIED</span></td>
-              <td>${lr.planned_progress!==r.planned_progress?`<span class="diff-old">${lr.planned_progress}%</span> <span class="diff-new">${r.planned_progress}%</span>`:`<span class="diff-same">${r.planned_progress}%</span>`}</td>
-              <td>${lr.actual_progress!==r.actual_progress?`<span class="diff-old">${lr.actual_progress}%</span> <span class="diff-new">${r.actual_progress}%</span>`:`<span class="diff-same">${r.actual_progress}%</span>`}</td>
-              <td class="diff-same">₱${Number(r.planned_cost).toLocaleString()}</td>
-              <td>${lr.actual_cost!==r.actual_cost?`<span class="diff-old">₱${Number(lr.actual_cost).toLocaleString()}</span> <span class="diff-new">₱${Number(r.actual_cost).toLocaleString()}</span>`:`<span class="diff-same">₱${Number(r.actual_cost).toLocaleString()}</span>`}</td>
-              <td class="diff-same">₱${Number(r.eac).toLocaleString()}</td>
-            </tr>`;
-          }).join('')}
-        </table>
-      </div>`;
+    // S-Curve changes
+    const liveSC  = liveProj.s_curve || [];
+    const subSC   = subProj.s_curve  || [];
+    const scNew   = subSC.filter(r=>!liveSC.find(lr=>lr.period===r.period));
+    const scMod   = subSC.filter(r=>{
+      const lr=liveSC.find(x=>x.period===r.period);
+      return lr && JSON.stringify(lr)!==JSON.stringify(r);
+    });
+    if(scNew.length||scMod.length){
+      groupChanges['scurve'] = {scNew, scMod, changes:[...scNew,...scMod], flags:[]};
+      totalChanges += scNew.length + scMod.length;
     }
+
+    return {subProj, liveProj, groupChanges, totalChanges, totalFlags};
+  }).filter(Boolean).filter(p=>p.totalChanges>0);
+
+  if(!allProjectChanges.length)
+    return `<div style="text-align:center;padding:30px;color:var(--muted)">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-family:'Bebas Neue';font-size:16px;letter-spacing:1px">No Changes Detected</div>
+      <div style="font-size:11px;margin-top:4px">All values match the current live data.</div>
+    </div>`;
+
+  // ── Build summary header ──
+  const totalC = allProjectChanges.reduce((a,p)=>a+p.totalChanges,0);
+  const totalF = allProjectChanges.reduce((a,p)=>a+p.totalFlags,0);
+
+  let html = `
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;
+    background:${totalF>0?'rgba(239,68,68,.07)':'rgba(16,185,129,.07)'};
+    border-radius:8px;margin-bottom:14px;border:1px solid ${totalF>0?'rgba(239,68,68,.25)':'rgba(16,185,129,.25)'}">
+    <span style="font-size:20px">${totalF>0?'🚨':'✅'}</span>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:12px">
+        ${totalC} field${totalC>1?'s':''} changed across ${allProjectChanges.length} project${allProjectChanges.length>1?'s':''}
+        ${totalF>0?`&nbsp;·&nbsp;<span style="color:var(--danger)">${totalF} red flag${totalF>1?'s':''} require attention</span>`:''}
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">
+        Review each section below. Accept applies all changes — Reject discards them all.
+      </div>
+    </div>
+  </div>`;
+
+  // ── Per-project tabbed sections ──
+  allProjectChanges.forEach(({subProj, liveProj, groupChanges, totalChanges, totalFlags}, pi)=>{
+    const groupKeys = Object.keys(groupChanges);
+
+    // Tab bar
+    const tabBar = groupKeys.map((g,gi)=>{
+      const meta   = GROUP_META[g];
+      const gdata  = groupChanges[g];
+      const isFlag = gdata.flags && gdata.flags.length>0;
+      return `<button onclick="switchDiffTab('${pi}_${g}',this)"
+        class="diff-tab${gi===0?' diff-tab-active':''}"
+        style="${isFlag?'border-color:var(--danger);color:var(--danger)':''}">
+        ${meta.icon} ${meta.label}
+        <span style="margin-left:5px;font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;
+          background:${isFlag?'rgba(239,68,68,.2)':'rgba(16,185,129,.15)'};
+          color:${isFlag?'var(--danger)':'var(--accent3)'}">
+          ${gdata.changes.length}${isFlag?` 🚨`:''}
+        </span>
+      </button>`;
+    }).join('');
+
+    // Project header
+    html += `<div style="margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <span style="font-family:'Bebas Neue';font-size:15px;letter-spacing:.8px">${subProj.name}</span>
+          <span style="font-family:'JetBrains Mono';font-size:9px;color:var(--muted);margin-left:8px">${subProj.code}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${totalFlags>0?`<span style="background:rgba(239,68,68,.15);color:var(--danger);font-size:9px;font-weight:800;padding:2px 7px;border-radius:3px">🚨 ${totalFlags} FLAG${totalFlags>1?'S':''}</span>`:''}
+          <span style="background:rgba(16,185,129,.12);color:var(--accent3);font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px">${totalChanges} CHANGE${totalChanges>1?'S':''}</span>
+        </div>
+      </div>
+
+      <!-- Tab buttons -->
+      <div style="display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto">
+        ${tabBar}
+      </div>
+
+      <!-- Tab content panels -->
+      ${groupKeys.map((g,gi)=>{
+        const meta  = GROUP_META[g];
+        const gdata = groupChanges[g];
+
+        let panelContent = '';
+        if(g==='scurve'){
+          // S-Curve diff table
+          panelContent = `<table class="diff-table">
+            <tr><th>Period</th><th>Type</th><th>Planned %</th><th>Actual %</th><th>Planned Cost (₱)</th><th>Actual Cost (₱)</th><th>EAC (₱)</th></tr>
+            ${gdata.scNew.map(r=>`<tr>
+              <td><strong style="color:var(--accent2)">${r.period}</strong></td>
+              <td><span class="diff-badge-new">NEW ROW</span></td>
+              <td class="diff-new">${r.planned_progress}%</td>
+              <td class="diff-new">${r.actual_progress}%</td>
+              <td class="diff-new">₱${Number(r.planned_cost).toLocaleString()}</td>
+              <td class="diff-new">₱${Number(r.actual_cost).toLocaleString()}</td>
+              <td class="diff-new">₱${Number(r.eac).toLocaleString()}</td>
+            </tr>`).join('')}
+            ${gdata.scMod.map(r=>{
+              const lr = (liveProj.s_curve||[]).find(x=>x.period===r.period)||{};
+              const cell=(newV,oldV,isMoney)=>{
+                const n=isMoney?'₱'+Number(newV).toLocaleString():newV;
+                const o=isMoney?'₱'+Number(oldV).toLocaleString():oldV;
+                return newV!==oldV
+                  ?`<span class="diff-old">${o}</span>&nbsp;<span class="diff-new">${n}</span>`
+                  :`<span class="diff-same">${n}</span>`;
+              };
+              return `<tr>
+                <td><strong style="color:var(--accent)">${r.period}</strong></td>
+                <td><span class="diff-badge-changed">MODIFIED</span></td>
+                <td>${cell(r.planned_progress+'%',lr.planned_progress+'%',false)}</td>
+                <td>${cell(r.actual_progress+'%',lr.actual_progress+'%',false)}</td>
+                <td>${cell(r.planned_cost,lr.planned_cost,true)}</td>
+                <td>${cell(r.actual_cost,lr.actual_cost,true)}</td>
+                <td>${cell(r.eac,lr.eac,true)}</td>
+              </tr>`;
+            }).join('')}
+          </table>`;
+        } else {
+          // Regular field diff table
+          panelContent = `<table class="diff-table">
+            <tr><th>Field</th><th>Current Live Value</th><th>PM Submitted Value</th><th>Status</th></tr>
+            ${gdata.changes.map(f=>{
+              const isFlag = f.flag && f.flag(subProj[f.key], liveProj[f.key]);
+              const oldVal = f.fmt==='money'?fmtM(liveProj[f.key]):f.fmt==='pct'?fmtP(liveProj[f.key]):fmt(liveProj[f.key]);
+              const newVal = f.fmt==='money'?fmtM(subProj[f.key]):f.fmt==='pct'?fmtP(subProj[f.key]):fmt(subProj[f.key]);
+              return `<tr style="${isFlag?'background:rgba(239,68,68,.05)':''}">
+                <td style="font-weight:600">${isFlag?'🚨 ':''}${f.label}</td>
+                <td><span class="diff-old">${oldVal}</span></td>
+                <td><span class="diff-new">${newVal}</span></td>
+                <td>${isFlag
+                  ?`<span style="color:var(--danger);font-size:10px;font-weight:700">⚠ Review Required</span>`
+                  :`<span style="color:var(--accent3);font-size:10px">✓ Updated</span>`
+                }</td>
+              </tr>`;
+            }).join('')}
+          </table>`;
+        }
+
+        return `<div id="difftab_${pi}_${g}" class="diff-tab-panel" style="display:${gi===0?'block':'none'}">
+          ${panelContent}
+        </div>`;
+      }).join('')}
+    </div>`;
   });
 
-  if(!html) html = '<div style="padding:20px;text-align:center;color:var(--muted)">No changes detected in this submission.</div>';
   return html;
 }
+
+function switchDiffTab(tabKey, btn){
+  // Find all tab buttons and panels within the same project block
+  const container = btn.closest('[style*="margin-bottom:14px"]');
+  if(!container) return;
+  container.querySelectorAll('.diff-tab').forEach(b=>b.classList.remove('diff-tab-active'));
+  container.querySelectorAll('.diff-tab-panel').forEach(p=>p.style.display='none');
+  btn.classList.add('diff-tab-active');
+  const [pi, g] = tabKey.split('_');
+  const panel = document.getElementById(`difftab_${pi}_${g}`);
+  if(panel) panel.style.display='block';
+}
+
 
 function acceptSubmission(){
   if(!_reviewSubmission) return;
