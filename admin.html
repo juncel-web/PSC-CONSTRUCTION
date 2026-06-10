@@ -104,6 +104,30 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .status-approved{color:var(--good);font-weight:700}
 .status-rejected{color:var(--danger);font-weight:700}
 
+
+/* NOTIFICATIONS */
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;
+  border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;pointer-events:none}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);flex-shrink:0}
+.notif-item{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;
+  border-bottom:1px solid var(--border);transition:background .15s;cursor:default}
+.notif-item:hover{background:rgba(255,255,255,.03)}
+.notif-item.unread{background:rgba(239,68,68,.05);border-left:3px solid var(--danger)}
+.notif-item.read{opacity:.6}
+.notif-body{flex:1}
+.notif-title{font-weight:700;font-size:12px}
+.notif-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.notif-panel{position:fixed;top:54px;right:16px;width:360px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.5);
+  z-index:300;display:none;max-height:480px;overflow-y:auto}
+.notif-panel.show{display:block;animation:fadeIn .2s ease}
+.notif-header{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px 10px;border-bottom:1px solid var(--border)}
+.notif-header-title{font-family:'Bebas Neue';font-size:16px;letter-spacing:1px}
+.submit-token-banner{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);
+  border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px}
+
 </style>
 </head>
 <body>
@@ -139,6 +163,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
   <div style="display:flex;align-items:center;gap:9px">
     <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">↗ Dashboard</a>
+    <div style="position:relative" id="notifBellWrap" style="display:none">
+      <button class="btn btn-secondary btn-sm" onclick="toggleNotifPanel()" id="notifBell"
+        style="position:relative;padding:7px 10px">
+        🔔
+        <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+      </button>
+    </div>
     <button class="btn btn-primary btn-sm" id="pubBtn" onclick="saveAll()">💾 Save &amp; Publish</button>
     <div class="user-chip">
       <div class="user-avatar" id="uAvatar">?</div>
@@ -445,6 +476,50 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <div class="notif-header-title">PM Notifications</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Mark All Read</button>
+      <button onclick="toggleNotifPanel()"
+        style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted)">✕</button>
+    </div>
+  </div>
+  <div id="notifList">
+    <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">
+      No notifications yet.<br>PM submissions will appear here.
+    </div>
+  </div>
+</div>
+
+<!-- SUBMIT TOKEN SETUP (Admin sets once) -->
+<div class="modal-overlay" id="tokenSetupModal">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">🔑 Setup PM Submit Token</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      PMs need a GitHub token to submit notifications. Create a token with
+      <strong>contents:write</strong> scope and share it with all PMs.
+      They only need to enter it once — it's saved in their browser.
+    </p>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Submit Token (GitHub PAT with repo/contents scope)</label>
+      <input type="password" id="submitTokenInput" placeholder="ghp_xxxxxxxxxxxx"/>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:12px;padding:8px 10px;
+      background:var(--surface2);border-radius:6px;line-height:1.6">
+      How to create: github.com → Settings → Developer settings → Personal access tokens → 
+      Tokens (classic) → Generate new token → note: <em>PSC Submit Token</em> → 
+      check <strong>repo</strong> scope → Generate → Copy and share with all PMs
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeTokenSetup()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubmitToken()">Save &amp; Share with PMs</button>
+    </div>
+  </div>
+</div>
+
 <!-- STATUS BAR -->
 <div class="status-bar" id="statusBar"></div>
 
@@ -541,6 +616,7 @@ function boot(){
 
   sc_counts = new Array(currentData.projects.length).fill(0);
   populateForms();
+  initNotifications();
 }
 
 // ── PANEL SWITCH ──
@@ -1266,6 +1342,186 @@ function collectScoreboardData(d){
   return d;
 }
 
+
+// ══════════════════════════════════════════════
+// NOTIFICATIONS SYSTEM
+// ══════════════════════════════════════════════
+const GITHUB_USER_N = 'juncel-web';
+const GITHUB_REPO_N = 'PSC-CONSTRUCTION';
+const API_DATA_URL  = `https://api.github.com/repos/${GITHUB_USER_N}/${GITHUB_REPO_N}/contents/data.json`;
+
+function initNotifications(){
+  // Show bell for all users — admin sees all, PM sees own
+  document.getElementById('notifBellWrap').style.display = 'block';
+  if(isAdmin()){
+    // Add token setup button to topbar
+    const setupBtn = document.createElement('button');
+    setupBtn.className = 'btn btn-secondary btn-sm';
+    setupBtn.title = 'Setup PM Submit Token';
+    setupBtn.textContent = '🔑 Submit Token';
+    setupBtn.onclick = openTokenSetup;
+    document.getElementById('notifBellWrap').parentNode.insertBefore(setupBtn, document.getElementById('notifBellWrap'));
+  }
+  renderNotifications();
+}
+
+function renderNotifications(){
+  const notifs = (currentData.notifications || []).slice().reverse();
+  const unread = notifs.filter(n => !n.read).length;
+
+  // Badge
+  const badge = document.getElementById('notifBadge');
+  badge.textContent = unread;
+  badge.style.display = unread > 0 ? 'flex' : 'none';
+
+  if(!notifs.length){
+    document.getElementById('notifList').innerHTML =
+      '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">No notifications yet.<br>PM submissions will appear here.</div>';
+    return;
+  }
+
+  document.getElementById('notifList').innerHTML = notifs.map((n,i)=>`
+    <div class="notif-item ${n.read?'read':'unread'}" id="notif-${i}">
+      <div class="notif-dot" style="${n.read?'background:var(--muted)':''}"></div>
+      <div class="notif-body">
+        <div class="notif-title">${n.read?'':'🔴 '}${n.title}</div>
+        <div class="notif-meta">
+          👷 ${n.submitter_name} &nbsp;·&nbsp;
+          🏗 ${n.projects_updated ? n.projects_updated.join(', ') : n.project||'—'} &nbsp;·&nbsp;
+          🕐 ${new Date(n.timestamp).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+        </div>
+        ${n.notes?`<div style="font-size:10px;color:var(--muted);margin-top:3px;font-style:italic">"${n.notes}"</div>`:''}
+      </div>
+      ${isAdmin()&&!n.read?`<button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="markRead(${notifs.length-1-i})">✓ Read</button>`:''}
+    </div>`).join('');
+}
+
+function toggleNotifPanel(){
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('show');
+}
+
+async function markRead(idx){
+  if(!currentData.notifications || !currentData.notifications[idx]) return;
+  currentData.notifications[idx].read = true;
+  renderNotifications();
+  // Persist to GitHub if admin has PAT cached
+  const cachedPAT = sessionStorage.getItem('psc_pat');
+  if(cachedPAT && isAdmin()) await pushNotificationsToGitHub(cachedPAT);
+}
+
+async function markAllRead(){
+  (currentData.notifications||[]).forEach(n=>n.read=true);
+  renderNotifications();
+  const cachedPAT = sessionStorage.getItem('psc_pat');
+  if(cachedPAT && isAdmin()) await pushNotificationsToGitHub(cachedPAT);
+  document.getElementById('notifPanel').classList.remove('show');
+}
+
+async function pushNotificationsToGitHub(pat){
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(currentData, null, 2))));
+    const shaRes  = await fetch(API_DATA_URL, {headers:{'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json'}});
+    const sha     = (await shaRes.json()).sha;
+    await fetch(API_DATA_URL, {
+      method:'PUT',
+      headers:{'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body: JSON.stringify({message:'Mark notifications read', content:encoded, sha})
+    });
+  } catch(e){ console.warn('Could not persist notification read state:', e.message); }
+}
+
+// ── PM SUBMIT NOTIFICATION ──
+async function pmSubmitNotification(){
+  // Get submit token from localStorage
+  let token = localStorage.getItem('psc_submit_token');
+  if(!token){
+    // Prompt PM to enter token once
+    token = prompt(
+      'Enter the Submit Token provided by your Administrator.\n' +
+      'This is needed to notify the Admin of your update.\n' +
+      'You will only need to enter this once.'
+    );
+    if(!token || token.trim()==='') {
+      showStatus('Submit token required for notifications. Contact Admin.','error');
+      return false;
+    }
+    token = token.trim();
+    localStorage.setItem('psc_submit_token', token);
+  }
+
+  // Build notification entry
+  const projNames = currentUser.projects.includes('ALL')
+    ? currentData.projects.map(p=>p.name)
+    : currentData.projects.filter(p=>currentUser.projects.includes(p.code)).map(p=>p.name);
+
+  const notification = {
+    id          : 'n' + Date.now(),
+    title       : `${currentUser.display_name} submitted weekly update`,
+    submitter   : currentUser.username,
+    submitter_name : currentUser.display_name,
+    projects_updated : projNames,
+    timestamp   : new Date().toISOString(),
+    week        : currentData.meta.week,
+    read        : false,
+    notes       : ''
+  };
+
+  try {
+    showStatus('Sending notification to Admin…','info');
+    // Fetch current data.json
+    const res   = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+    const liveData = await res.json();
+    if(!liveData.notifications) liveData.notifications = [];
+
+    // Remove previous unread notification from same PM for same week (avoid duplicates)
+    liveData.notifications = liveData.notifications.filter(
+      n => !(n.submitter === currentUser.username && n.week === notification.week && !n.read)
+    );
+    liveData.notifications.push(notification);
+
+    // Push to GitHub
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(liveData, null, 2))));
+    const shaRes  = await fetch(API_DATA_URL, {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    if(!shaRes.ok) throw new Error('Invalid submit token or no access. Ask Admin for correct token.');
+    const sha = (await shaRes.json()).sha;
+
+    const pushRes = await fetch(API_DATA_URL, {
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body: JSON.stringify({message:`PM notification: ${currentUser.username} submitted update`,content:encoded,sha})
+    });
+    if(!pushRes.ok){
+      const err = await pushRes.json();
+      throw new Error(err.message || 'Failed to send notification');
+    }
+
+    currentData.notifications = liveData.notifications;
+    showStatus(`✓ Update submitted! Admin has been notified.`,'success');
+    return true;
+  } catch(e){
+    // If token is wrong, clear it so PM can re-enter
+    if(e.message.includes('Invalid') || e.message.includes('401')){
+      localStorage.removeItem('psc_submit_token');
+    }
+    showStatus('Notification error: ' + e.message,'error');
+    return false;
+  }
+}
+
+// ── ADMIN: Setup submit token for PMs ──
+function openTokenSetup(){ document.getElementById('tokenSetupModal').classList.add('show'); }
+function closeTokenSetup(){ document.getElementById('tokenSetupModal').classList.remove('show'); }
+function saveSubmitToken(){
+  const t = document.getElementById('submitTokenInput').value.trim();
+  if(!t){ showStatus('Enter a valid token','error'); return; }
+  // Show token to share with PMs
+  closeTokenSetup();
+  const msg = `Submit Token for PMs:\n\n${t}\n\nShare this with all Project Managers.\nThey enter it once when they first click Submit Update.`;
+  alert(msg);
+  showStatus('Submit token ready to share with PMs','success');
+}
+
 // ── ADD ROW HELPERS ──
 function addSCurveRow(idx){
   sc_counts[idx]=(sc_counts[idx]||0)+1;
@@ -1428,7 +1684,7 @@ let _pendingData = null;
 
 function saveAll(){
   if(!isAdmin()){
-    showStatus('✓ Update ready. Notify Admin to publish.','success');
+    pmSubmitNotification();
     return;
   }
   // Collect data first, then ask for PAT
@@ -1523,6 +1779,9 @@ async function confirmPublish(){
       throw new Error(e.message || 'GitHub API error');
     }
     currentData = _pendingData;
+    sessionStorage.setItem('psc_pat', pat); // cache for notification read state
+    // Mark all notifications as read on publish
+    if(_pendingData.notifications) _pendingData.notifications.forEach(n=>n.read=true);
     closePatModal();
     showStatus('✅ Published! Dashboard is live at juncel-web.github.io/PSC-CONSTRUCTION/','success');
   } catch(e){
