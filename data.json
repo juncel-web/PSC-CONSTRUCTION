@@ -934,5 +934,21 @@
       }
     }
   ],
-  "notifications": []
+  "notifications": [
+    {
+      "id": "n1781074961961",
+      "title": "Ariel M. Canino submitted weekly update",
+      "submitter": "acanino",
+      "submitter_name": "Ariel M. Canino",
+      "projects_updated": [
+        "ROPA DOS",
+        "RPBohol Land Devt",
+        "RHB DOS"
+      ],
+      "timestamp": "2026-06-10T07:02:41.961Z",
+      "week": "May 13, 2026",
+      "read": false,
+      "notes": ""
+    }
+  ]
 }
