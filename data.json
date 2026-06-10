@@ -5,7 +5,7 @@
     "verified_by": "",
     "source_file": "Portal",
     "file_location": "",
-    "last_updated": "2026-06-10T07:08:31.711Z",
+    "last_updated": "2026-06-10T07:29:13.132Z",
     "last_updated_by": "admin"
   },
   "projects": [
@@ -935,7 +935,7 @@
     },
     {
       "week": "June 1-6",
-      "snapshot_date": "2026-06-10T07:08:39.894Z",
+      "snapshot_date": "2026-06-10T07:29:29.293Z",
       "prepared_by": "Ariel M. Canino",
       "projects": [
         {
@@ -1074,7 +1074,7 @@
   ],
   "notifications": [
     {
-      "id": "n1781076485413",
+      "id": "n1781076147217",
       "title": "Ariel M. Canino submitted weekly update",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1083,9 +1083,9 @@
         "RPBohol Land Devt",
         "RHB DOS"
       ],
-      "timestamp": "2026-06-10T07:28:05.413Z",
+      "timestamp": "2026-06-10T07:22:27.217Z",
       "week": "June 1-6",
-      "read": false,
+      "read": true,
       "notes": ""
     }
   ]
