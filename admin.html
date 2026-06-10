@@ -128,6 +128,22 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .submit-token-banner{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);
   border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:11px}
 
+
+/* REVIEW DIFF */
+.diff-section{margin-bottom:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.diff-section-head{background:var(--surface2);padding:8px 12px;font-family:'Bebas Neue';font-size:13px;letter-spacing:.8px;display:flex;align-items:center;justify-content:space-between}
+.diff-table{width:100%;border-collapse:collapse;font-size:11px}
+.diff-table th{padding:5px 10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left}
+.diff-table td{padding:6px 10px;border-bottom:1px solid rgba(30,40,64,.4);vertical-align:top}
+.diff-table tr:last-child td{border-bottom:none}
+.diff-old{color:var(--danger);text-decoration:line-through;opacity:.7;font-family:'JetBrains Mono';font-size:10px}
+.diff-new{color:var(--accent3);font-weight:700;font-family:'JetBrains Mono';font-size:10px}
+.diff-same{color:var(--muted);font-family:'JetBrains Mono';font-size:10px}
+.diff-changed td{background:rgba(16,185,129,.04)}
+.diff-badge-changed{background:rgba(16,185,129,.15);color:var(--accent3);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px}
+.diff-badge-same{background:var(--surface2);color:var(--muted);font-size:9px;padding:1px 6px;border-radius:3px}
+.diff-badge-new{background:rgba(59,130,246,.15);color:var(--accent2);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px}
+
 </style>
 </head>
 <body>
@@ -519,6 +535,25 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-primary" onclick="confirmPMSubmit()" id="pmSubmitConfirmBtn">
         📨 Submit &amp; Notify Admin
       </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- REVIEW SUBMISSION MODAL -->
+<div class="modal-overlay" id="reviewModal" style="align-items:flex-start;padding:20px;overflow-y:auto">
+  <div class="modal" style="width:720px;max-width:96vw;margin:auto">
+    <div class="modal-title" id="reviewModalTitle">Review PM Submission</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px" id="reviewModalSub"></div>
+
+    <!-- Diff sections -->
+    <div id="reviewDiffContent"></div>
+
+    <div class="modal-actions" style="position:sticky;bottom:0;background:var(--surface);padding:12px 0 0;border-top:1px solid var(--border)">
+      <button class="btn btn-danger" onclick="rejectSubmission()">❌ Reject Changes</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-secondary" onclick="closeReviewModal()">Close</button>
+      <button class="btn btn-primary" onclick="acceptSubmission()">✅ Accept &amp; Apply Changes</button>
     </div>
   </div>
 </div>
@@ -1434,7 +1469,10 @@ function renderNotifications(){
         </div>
         ${n.notes?`<div style="font-size:10px;color:var(--muted);margin-top:3px;font-style:italic">"${n.notes}"</div>`:''}
       </div>
-      ${isAdmin()&&!n.read?`<button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="markRead('${n.id}')">✓ Read</button>`:''}
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+      ${isAdmin()&&n.has_submission?`<button class="btn btn-primary btn-sm" onclick="openReviewModal('${n.submitter}')">🔍 Review</button>`:''}
+      ${isAdmin()&&!n.read?`<button class="btn btn-secondary btn-sm" onclick="markRead('${n.id}')">✓ Read</button>`:''}
+    </div>
     </div>`).join('');
 }
 
@@ -1514,34 +1552,51 @@ async function confirmPMSubmit(){
 }
 
 async function _doSubmitNotification(token){
-  const projNames = currentUser.projects.includes('ALL')
-    ? currentData.projects.map(p=>p.name)
-    : currentData.projects.filter(p=>currentUser.projects.includes(p.code)).map(p=>p.name);
+  const projCodes = currentUser.projects.includes('ALL')
+    ? currentData.projects.map(p=>p.code)
+    : currentUser.projects;
+  const projNames = currentData.projects.filter(p=>projCodes.includes(p.code)).map(p=>p.name);
 
-  const notification = {
-    id             : 'n' + Date.now(),
-    title          : `${currentUser.display_name} submitted weekly update`,
+  // Collect full PM edits (same as collectData but only for PM's projects)
+  const pmData = collectData();
+  const pmProjects = pmData.projects.filter(p=>projCodes.includes(p.code));
+
+  const submission = {
+    submitted_at   : new Date().toISOString(),
+    week           : currentData.meta.week,
     submitter      : currentUser.username,
     submitter_name : currentUser.display_name,
+    projects       : pmProjects,  // full project snapshots with all edits
+  };
+
+  const notification = {
+    id              : 'n' + Date.now(),
+    title           : `${currentUser.display_name} submitted weekly update`,
+    submitter       : currentUser.username,
+    submitter_name  : currentUser.display_name,
     projects_updated: projNames,
-    timestamp      : new Date().toISOString(),
-    week           : currentData.meta.week,
-    read           : false,
-    notes          : ''
+    timestamp       : new Date().toISOString(),
+    week            : currentData.meta.week,
+    read            : false,
+    has_submission  : true,   // tells Admin there's a reviewable diff
+    notes           : ''
   };
 
   try {
-    showStatus('Sending notification to Admin…','info');
+    showStatus('Submitting update to Admin…','info');
 
-    // Fetch live data.json from GitHub
     const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
     if(!res.ok) throw new Error('Cannot reach data file. Check internet connection.');
     const liveData = await res.json();
-    if(!liveData.notifications) liveData.notifications = [];
 
-    // Remove duplicate for same PM + same week (re-submit = update)
+    // Save pending submission
+    if(!liveData.pending_submissions) liveData.pending_submissions = {};
+    liveData.pending_submissions[currentUser.username] = submission;
+
+    // Update notification (replace same-week unread from this PM)
+    if(!liveData.notifications) liveData.notifications = [];
     liveData.notifications = liveData.notifications.filter(
-      n => !(n.submitter === currentUser.username && n.week === notification.week && !n.read)
+      n => !(n.submitter===currentUser.username && n.week===notification.week && !n.read)
     );
     liveData.notifications.push(notification);
 
@@ -1550,48 +1605,219 @@ async function _doSubmitNotification(token){
     const GITHUB_REPO_N = 'PSC-CONSTRUCTION';
     const API_URL = `https://api.github.com/repos/${GITHUB_USER_N}/${GITHUB_REPO_N}/contents/data.json`;
     const headers = {
-      'Authorization': `token ${token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
+      'Authorization' : `token ${token}`,
+      'Accept'        : 'application/vnd.github.v3+json',
+      'Content-Type'  : 'application/json'
     };
 
-    // Get SHA
     const shaRes = await fetch(API_URL, {headers});
-    if(shaRes.status === 401) {
+    if(shaRes.status===401){
       localStorage.removeItem('psc_submit_token');
-      throw new Error('Invalid token — please re-enter. Ask Admin for the correct Submit Token.');
+      throw new Error('Invalid token. Ask Admin for the correct Submit Token.');
     }
     if(!shaRes.ok) throw new Error(`GitHub error (${shaRes.status}). Check your token.`);
     const sha = (await shaRes.json()).sha;
 
-    // Push
     const pushRes = await fetch(API_URL, {
       method:'PUT', headers,
       body: JSON.stringify({
-        message: `Notification: ${currentUser.username} submitted weekly update`,
+        message: `PM submission: ${currentUser.username} — ${notification.week}`,
         content: encoded, sha
       })
     });
-    if(!pushRes.ok){
-      const e = await pushRes.json();
-      throw new Error(e.message || 'Push failed');
-    }
+    if(!pushRes.ok){ const e=await pushRes.json(); throw new Error(e.message||'Push failed'); }
 
-    currentData.notifications = liveData.notifications;
-    renderNotifications();
-    showStatus(`✅ Update submitted! Admin has been notified.`,'success');
+    currentData.notifications       = liveData.notifications;
+    currentData.pending_submissions = liveData.pending_submissions;
+    showStatus(`✅ Update submitted! Admin has been notified and can review your changes.`,'success');
     return true;
 
   } catch(e){
-    if(e.message.includes('Invalid token') || e.message.includes('401')){
+    if(e.message.includes('Invalid token')||e.message.includes('401'))
       localStorage.removeItem('psc_submit_token');
-    }
-    showStatus('Error: ' + e.message, 'error');
+    showStatus('Error: '+e.message,'error');
     return false;
   }
 }
 
 // Token setup handled via PM modal
+
+
+// ══════════════════════════════════════════════
+// PM SUBMISSION STAGING & REVIEW SYSTEM
+// ══════════════════════════════════════════════
+let _reviewingUsername = null;
+let _reviewSubmission  = null;
+
+// Called by Admin when clicking 🔍 Review on a notification
+function openReviewModal(username){
+  const sub = (currentData.pending_submissions || {})[username];
+  if(!sub){
+    showStatus('No pending submission found for this PM.','error');
+    return;
+  }
+  _reviewingUsername = username;
+  _reviewSubmission  = sub;
+  const user = (currentData.users||[]).find(u=>u.username===username);
+
+  document.getElementById('reviewModalTitle').textContent =
+    `Review Submission — ${user?.display_name || username}`;
+  document.getElementById('reviewModalSub').textContent =
+    `Submitted: ${new Date(sub.submitted_at).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'})} · Week: ${sub.week}`;
+
+  document.getElementById('reviewDiffContent').innerHTML = buildDiffHTML(sub, currentData);
+  document.getElementById('reviewModal').classList.add('show');
+}
+
+function closeReviewModal(){
+  document.getElementById('reviewModal').classList.remove('show');
+  _reviewingUsername = null;
+  _reviewSubmission  = null;
+}
+
+function buildDiffHTML(sub, live){
+  let html = '';
+
+  // ── Per-project diffs ──
+  (sub.projects || []).forEach(subProj => {
+    const liveProj = (live.projects||[]).find(p=>p.code===subProj.code);
+    if(!liveProj) return;
+
+    const fields = [
+      {key:'progress',            label:'Progress %'},
+      {key:'schedule_status',     label:'Schedule Status'},
+      {key:'schedule_variance_days',label:'Variance (days)'},
+      {key:'cost_status',         label:'Cost Status'},
+      {key:'health',              label:'Overall Health'},
+      {key:'actual_cost',         label:'Actual Cost (₱)'},
+      {key:'forecast_at_completion',label:'Forecast at Completion (₱)'},
+      {key:'cpi',                 label:'CPI'},
+      {key:'pa_actual',           label:'P&A Actual (₱)'},
+      {key:'safe_manhours',       label:'Safe Man-Hours'},
+      {key:'inspections_due',     label:'Inspections Due'},
+      {key:'inspections_done',    label:'Inspections Done'},
+      {key:'ncr_open',            label:'NCR Open'},
+      {key:'incidents',           label:'Incidents'},
+      {key:'near_miss',           label:'Near Miss'},
+      {key:'ddi',                 label:'DDI %'},
+      {key:'ot_rate',             label:'OT Rate %'},
+      {key:'olc_alc',             label:'OLC/ALC'},
+      {key:'last_toolbox',        label:'Last Toolbox'},
+      {key:'safety_action',       label:'Safety Action'},
+      {key:'critical_activities', label:'Critical Activities'},
+      {key:'schedule_recommendation',label:'Schedule Recommendation'},
+    ];
+
+    const changes = fields.filter(f=> String(subProj[f.key]??'') !== String(liveProj[f.key]??''));
+    const badge = changes.length > 0
+      ? `<span class="diff-badge-changed">${changes.length} change${changes.length>1?'s':''}</span>`
+      : `<span class="diff-badge-same">No changes</span>`;
+
+    if(changes.length === 0) return; // skip unchanged projects
+
+    html += `<div class="diff-section">
+      <div class="diff-section-head">
+        ${subProj.name} <small style="font-family:'JetBrains Mono';font-size:10px;color:var(--muted)">${subProj.code}</small>
+        ${badge}
+      </div>
+      <table class="diff-table">
+        <tr><th>Field</th><th>Current (Live)</th><th>PM Submitted</th></tr>
+        ${changes.map(f=>`<tr class="diff-changed">
+          <td>${f.label}</td>
+          <td><span class="diff-old">${liveProj[f.key]??'—'}</span></td>
+          <td><span class="diff-new">${subProj[f.key]??'—'}</span></td>
+        </tr>`).join('')}
+      </table>
+    </div>`;
+
+    // S-Curve changes
+    const liveSC   = liveProj.s_curve || [];
+    const subSC    = subProj.s_curve  || [];
+    const newRows  = subSC.filter(sr => !liveSC.find(lr=>lr.period===sr.period));
+    const modRows  = subSC.filter(sr => {
+      const lr = liveSC.find(x=>x.period===sr.period);
+      return lr && JSON.stringify(lr) !== JSON.stringify(sr);
+    });
+
+    if(newRows.length || modRows.length){
+      html += `<div class="diff-section">
+        <div class="diff-section-head">
+          ${subProj.name} — S-Curve Data
+          <span class="diff-badge-new">${newRows.length} new · ${modRows.length} modified</span>
+        </div>
+        <table class="diff-table">
+          <tr><th>Period</th><th>Type</th><th>Planned %</th><th>Actual %</th><th>Planned Cost</th><th>Actual Cost</th><th>EAC</th></tr>
+          ${newRows.map(r=>`<tr class="diff-changed">
+            <td class="diff-new">${r.period}</td>
+            <td><span class="diff-badge-new">NEW</span></td>
+            <td class="diff-new">${r.planned_progress}%</td>
+            <td class="diff-new">${r.actual_progress}%</td>
+            <td class="diff-new">₱${Number(r.planned_cost).toLocaleString()}</td>
+            <td class="diff-new">₱${Number(r.actual_cost).toLocaleString()}</td>
+            <td class="diff-new">₱${Number(r.eac).toLocaleString()}</td>
+          </tr>`).join('')}
+          ${modRows.map(r=>{
+            const lr=liveSC.find(x=>x.period===r.period)||{};
+            return `<tr class="diff-changed">
+              <td class="diff-new">${r.period}</td>
+              <td><span class="diff-badge-changed">MODIFIED</span></td>
+              <td>${lr.planned_progress!==r.planned_progress?`<span class="diff-old">${lr.planned_progress}%</span> <span class="diff-new">${r.planned_progress}%</span>`:`<span class="diff-same">${r.planned_progress}%</span>`}</td>
+              <td>${lr.actual_progress!==r.actual_progress?`<span class="diff-old">${lr.actual_progress}%</span> <span class="diff-new">${r.actual_progress}%</span>`:`<span class="diff-same">${r.actual_progress}%</span>`}</td>
+              <td class="diff-same">₱${Number(r.planned_cost).toLocaleString()}</td>
+              <td>${lr.actual_cost!==r.actual_cost?`<span class="diff-old">₱${Number(lr.actual_cost).toLocaleString()}</span> <span class="diff-new">₱${Number(r.actual_cost).toLocaleString()}</span>`:`<span class="diff-same">₱${Number(r.actual_cost).toLocaleString()}</span>`}</td>
+              <td class="diff-same">₱${Number(r.eac).toLocaleString()}</td>
+            </tr>`;
+          }).join('')}
+        </table>
+      </div>`;
+    }
+  });
+
+  if(!html) html = '<div style="padding:20px;text-align:center;color:var(--muted)">No changes detected in this submission.</div>';
+  return html;
+}
+
+function acceptSubmission(){
+  if(!_reviewSubmission) return;
+  const sub = _reviewSubmission;
+
+  // Merge PM's project data into currentData
+  (sub.projects||[]).forEach(subProj=>{
+    const idx = currentData.projects.findIndex(p=>p.code===subProj.code);
+    if(idx<0) return;
+    // Merge all editable fields
+    const fields = ['progress','schedule_status','schedule_variance_days','cost_status','health',
+      'planned_finish','forecast_finish','actual_cost','forecast_at_completion','cpi',
+      'pa_budget','pa_actual','safe_manhours','inspections_due','inspections_done',
+      'ncr_open','incidents','near_miss','ddi','ot_rate','olc_alc',
+      'last_toolbox','safety_action','critical_activities','schedule_recommendation','s_curve'];
+    fields.forEach(f=>{ if(subProj[f]!==undefined) currentData.projects[idx][f] = subProj[f]; });
+  });
+
+  // Mark notification as read and remove pending submission
+  const notif = (currentData.notifications||[]).find(n=>n.submitter===_reviewingUsername&&!n.read);
+  if(notif) notif.read = true;
+  if(currentData.pending_submissions) delete currentData.pending_submissions[_reviewingUsername];
+
+  // Rebuild all forms with the merged data
+  populateForms();
+  closeReviewModal();
+  showStatus(`✅ Changes from ${_reviewingUsername} accepted. Review all panels then Save & Publish.`,'success');
+}
+
+function rejectSubmission(){
+  if(!_reviewingUsername) return;
+  if(!confirm(`Reject all changes from ${_reviewingUsername}? Their submission will be discarded.`)) return;
+
+  // Mark notification read, remove pending submission
+  const notif = (currentData.notifications||[]).find(n=>n.submitter===_reviewingUsername&&!n.read);
+  if(notif){ notif.read=true; notif.title='[REJECTED] '+notif.title; }
+  if(currentData.pending_submissions) delete currentData.pending_submissions[_reviewingUsername];
+
+  renderNotifications();
+  closeReviewModal();
+  showStatus(`Changes from ${_reviewingUsername} rejected and discarded.`,'success');
+}
 
 // ── ADD ROW HELPERS ──
 function addSCurveRow(idx){
