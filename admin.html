@@ -494,28 +494,28 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
-<!-- SUBMIT TOKEN SETUP (Admin sets once) -->
-<div class="modal-overlay" id="tokenSetupModal">
-  <div class="modal" style="width:480px">
-    <div class="modal-title">🔑 Setup PM Submit Token</div>
+<!-- PM TOKEN ENTRY MODAL -->
+<div class="modal-overlay" id="pmTokenModal">
+  <div class="modal" style="width:440px">
+    <div class="modal-title">💾 Submit Weekly Update</div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
-      PMs need a GitHub token to submit notifications. Create a token with
-      <strong>contents:write</strong> scope and share it with all PMs.
-      They only need to enter it once — it's saved in their browser.
+      To notify the Admin, a <strong>Submit Token</strong> is required once.
+      This is provided by your Administrator — ask them for it if you don't have it yet.
     </p>
-    <div class="form-group" style="margin-bottom:10px">
-      <label>Submit Token (GitHub PAT with repo/contents scope)</label>
-      <input type="password" id="submitTokenInput" placeholder="ghp_xxxxxxxxxxxx"/>
+    <div class="form-group" style="margin-bottom:6px">
+      <label>Submit Token (provided by Admin)</label>
+      <input type="password" id="pmTokenInput" placeholder="ghp_xxxxxxxxxxxx"
+        onkeydown="if(event.key==='Enter')confirmPMSubmit()"/>
     </div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:12px;padding:8px 10px;
-      background:var(--surface2);border-radius:6px;line-height:1.6">
-      How to create: github.com → Settings → Developer settings → Personal access tokens → 
-      Tokens (classic) → Generate new token → note: <em>PSC Submit Token</em> → 
-      check <strong>repo</strong> scope → Generate → Copy and share with all PMs
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">
+      Your token is saved in this browser — you won't need to enter it again.
     </div>
+    <div id="pmTokenErr" style="font-size:11px;color:var(--danger);min-height:16px;margin-bottom:8px"></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeTokenSetup()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSubmitToken()">Save &amp; Share with PMs</button>
+      <button class="btn btn-secondary" onclick="closePMTokenModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPMSubmit()" id="pmSubmitConfirmBtn">
+        📨 Submit &amp; Notify Admin
+      </button>
     </div>
   </div>
 </div>
@@ -1353,14 +1353,11 @@ const API_DATA_URL  = `https://api.github.com/repos/${GITHUB_USER_N}/${GITHUB_RE
 function initNotifications(){
   // Show bell for all users — admin sees all, PM sees own
   document.getElementById('notifBellWrap').style.display = 'block';
+  // Admin: show scope banner note about sharing PAT with PMs
   if(isAdmin()){
-    // Add token setup button to topbar
-    const setupBtn = document.createElement('button');
-    setupBtn.className = 'btn btn-secondary btn-sm';
-    setupBtn.title = 'Setup PM Submit Token';
-    setupBtn.textContent = '🔑 Submit Token';
-    setupBtn.onclick = openTokenSetup;
-    document.getElementById('notifBellWrap').parentNode.insertBefore(setupBtn, document.getElementById('notifBellWrap'));
+    const note = document.createElement('div');
+    note.style.cssText='font-size:10px;color:var(--muted);padding:4px 0 0';
+    note.id='patShareNote';
   }
   renderNotifications();
 }
@@ -1432,95 +1429,124 @@ async function pushNotificationsToGitHub(pat){
 }
 
 // ── PM SUBMIT NOTIFICATION ──
-async function pmSubmitNotification(){
-  // Get submit token from localStorage
-  let token = localStorage.getItem('psc_submit_token');
-  if(!token){
-    // Prompt PM to enter token once
-    token = prompt(
-      'Enter the Submit Token provided by your Administrator.\n' +
-      'This is needed to notify the Admin of your update.\n' +
-      'You will only need to enter this once.'
-    );
-    if(!token || token.trim()==='') {
-      showStatus('Submit token required for notifications. Contact Admin.','error');
-      return false;
-    }
-    token = token.trim();
-    localStorage.setItem('psc_submit_token', token);
+// ── PM SUBMIT NOTIFICATION ──
+function pmSubmitNotification(){
+  // Check if token already saved
+  const saved = localStorage.getItem('psc_submit_token');
+  if(saved){
+    // Token exists — submit directly
+    _doSubmitNotification(saved);
+    return;
   }
+  // Show modal to enter token
+  document.getElementById('pmTokenInput').value = '';
+  document.getElementById('pmTokenErr').textContent = '';
+  document.getElementById('pmTokenModal').classList.add('show');
+  setTimeout(()=>document.getElementById('pmTokenInput').focus(), 100);
+}
 
-  // Build notification entry
+function closePMTokenModal(){
+  document.getElementById('pmTokenModal').classList.remove('show');
+}
+
+async function confirmPMSubmit(){
+  const token = document.getElementById('pmTokenInput').value.trim();
+  const err   = document.getElementById('pmTokenErr');
+  err.textContent = '';
+  if(!token){ err.textContent = 'Please enter the Submit Token.'; return; }
+
+  const btn = document.getElementById('pmSubmitConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  const ok = await _doSubmitNotification(token);
+  if(ok){
+    localStorage.setItem('psc_submit_token', token);
+    closePMTokenModal();
+  } else {
+    err.textContent = document.getElementById('statusBar').textContent;
+  }
+  btn.disabled = false; btn.textContent = '📨 Submit & Notify Admin';
+}
+
+async function _doSubmitNotification(token){
   const projNames = currentUser.projects.includes('ALL')
     ? currentData.projects.map(p=>p.name)
     : currentData.projects.filter(p=>currentUser.projects.includes(p.code)).map(p=>p.name);
 
   const notification = {
-    id          : 'n' + Date.now(),
-    title       : `${currentUser.display_name} submitted weekly update`,
-    submitter   : currentUser.username,
+    id             : 'n' + Date.now(),
+    title          : `${currentUser.display_name} submitted weekly update`,
+    submitter      : currentUser.username,
     submitter_name : currentUser.display_name,
-    projects_updated : projNames,
-    timestamp   : new Date().toISOString(),
-    week        : currentData.meta.week,
-    read        : false,
-    notes       : ''
+    projects_updated: projNames,
+    timestamp      : new Date().toISOString(),
+    week           : currentData.meta.week,
+    read           : false,
+    notes          : ''
   };
 
   try {
     showStatus('Sending notification to Admin…','info');
-    // Fetch current data.json
-    const res   = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+
+    // Fetch live data.json from GitHub
+    const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+    if(!res.ok) throw new Error('Cannot reach data file. Check internet connection.');
     const liveData = await res.json();
     if(!liveData.notifications) liveData.notifications = [];
 
-    // Remove previous unread notification from same PM for same week (avoid duplicates)
+    // Remove duplicate for same PM + same week (re-submit = update)
     liveData.notifications = liveData.notifications.filter(
       n => !(n.submitter === currentUser.username && n.week === notification.week && !n.read)
     );
     liveData.notifications.push(notification);
 
-    // Push to GitHub
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(liveData, null, 2))));
-    const shaRes  = await fetch(API_DATA_URL, {headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
-    if(!shaRes.ok) throw new Error('Invalid submit token or no access. Ask Admin for correct token.');
+    const GITHUB_USER_N = 'juncel-web';
+    const GITHUB_REPO_N = 'PSC-CONSTRUCTION';
+    const API_URL = `https://api.github.com/repos/${GITHUB_USER_N}/${GITHUB_REPO_N}/contents/data.json`;
+    const headers = {
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    };
+
+    // Get SHA
+    const shaRes = await fetch(API_URL, {headers});
+    if(shaRes.status === 401) {
+      localStorage.removeItem('psc_submit_token');
+      throw new Error('Invalid token — please re-enter. Ask Admin for the correct Submit Token.');
+    }
+    if(!shaRes.ok) throw new Error(`GitHub error (${shaRes.status}). Check your token.`);
     const sha = (await shaRes.json()).sha;
 
-    const pushRes = await fetch(API_DATA_URL, {
-      method:'PUT',
-      headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body: JSON.stringify({message:`PM notification: ${currentUser.username} submitted update`,content:encoded,sha})
+    // Push
+    const pushRes = await fetch(API_URL, {
+      method:'PUT', headers,
+      body: JSON.stringify({
+        message: `Notification: ${currentUser.username} submitted weekly update`,
+        content: encoded, sha
+      })
     });
     if(!pushRes.ok){
-      const err = await pushRes.json();
-      throw new Error(err.message || 'Failed to send notification');
+      const e = await pushRes.json();
+      throw new Error(e.message || 'Push failed');
     }
 
     currentData.notifications = liveData.notifications;
-    showStatus(`✓ Update submitted! Admin has been notified.`,'success');
+    renderNotifications();
+    showStatus(`✅ Update submitted! Admin has been notified.`,'success');
     return true;
+
   } catch(e){
-    // If token is wrong, clear it so PM can re-enter
-    if(e.message.includes('Invalid') || e.message.includes('401')){
+    if(e.message.includes('Invalid token') || e.message.includes('401')){
       localStorage.removeItem('psc_submit_token');
     }
-    showStatus('Notification error: ' + e.message,'error');
+    showStatus('Error: ' + e.message, 'error');
     return false;
   }
 }
 
-// ── ADMIN: Setup submit token for PMs ──
-function openTokenSetup(){ document.getElementById('tokenSetupModal').classList.add('show'); }
-function closeTokenSetup(){ document.getElementById('tokenSetupModal').classList.remove('show'); }
-function saveSubmitToken(){
-  const t = document.getElementById('submitTokenInput').value.trim();
-  if(!t){ showStatus('Enter a valid token','error'); return; }
-  // Show token to share with PMs
-  closeTokenSetup();
-  const msg = `Submit Token for PMs:\n\n${t}\n\nShare this with all Project Managers.\nThey enter it once when they first click Submit Update.`;
-  alert(msg);
-  showStatus('Submit token ready to share with PMs','success');
-}
+// Token setup handled via PM modal
 
 // ── ADD ROW HELPERS ──
 function addSCurveRow(idx){
