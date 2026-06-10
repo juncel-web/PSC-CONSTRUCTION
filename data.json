@@ -1119,7 +1119,7 @@
       "notes": ""
     },
     {
-      "id": "n1781078580893",
+      "id": "n1781078583477",
       "title": "Ariel M. Canino submitted weekly update",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1128,7 +1128,7 @@
         "RPBohol Land Devt",
         "RHB DOS"
       ],
-      "timestamp": "2026-06-10T08:03:00.893Z",
+      "timestamp": "2026-06-10T08:03:03.477Z",
       "week": "June 1-6",
       "read": false,
       "has_submission": true,
@@ -1137,7 +1137,7 @@
   ],
   "pending_submissions": {
     "acanino": {
-      "submitted_at": "2026-06-10T08:03:00.893Z",
+      "submitted_at": "2026-06-10T08:03:03.477Z",
       "week": "June 1-6",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1154,8 +1154,8 @@
           "health": "Good",
           "planned_finish": "Dec 1, 2028",
           "forecast_finish": "Dec 1, 2028",
-          "critical_activities": "Structural works Bldg C; Masonry works Bldg D",
-          "schedule_recommendation": "Maintain lead; monitor crew and material availability",
+          "critical_activities": "test",
+          "schedule_recommendation": "test",
           "budget": 1445000000,
           "actual_cost": 552680639,
           "forecast_at_completion": 1445000000,
