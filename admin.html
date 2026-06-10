@@ -1260,6 +1260,9 @@ function collectScoreboardData(d){
   d.scoreboard = sb;
   // Scoreboard
   if(document.getElementById("sbProjectForms").innerHTML) collectScoreboardData(d);
+
+  // ── Auto-snapshot on publish ──
+  // Called from saveAll after collectData — snapshot is appended in confirmPublish
   return d;
 }
 
@@ -1467,6 +1470,42 @@ async function confirmPublish(){
     const shaRes = await fetch(API_URL, { headers });
     if(!shaRes.ok) throw new Error(`GitHub auth failed (${shaRes.status}). Check your PAT has repo scope.`);
     const shaData = await shaRes.json();
+
+    // Auto-snapshot — capture full state before publishing
+    if(!_pendingData.history) _pendingData.history = [];
+    const snapshot = {
+      week: _pendingData.meta.week,
+      snapshot_date: new Date().toISOString(),
+      prepared_by: _pendingData.meta.prepared_by,
+      projects: _pendingData.projects.map(p=>({
+        code: p.code, name: p.name,
+        progress: p.progress,
+        schedule_status: p.schedule_status,
+        schedule_variance_days: p.schedule_variance_days,
+        cost_status: p.cost_status,
+        health: p.health,
+        budget: p.budget,
+        actual_cost: p.actual_cost,
+        forecast_at_completion: p.forecast_at_completion,
+        cpi: p.cpi,
+        safe_manhours: p.safe_manhours,
+        incidents: p.incidents,
+        near_miss: p.near_miss,
+        ncr_open: p.ncr_open,
+        inspections_due: p.inspections_due,
+        inspections_done: p.inspections_done,
+        ddi: p.ddi,
+        ot_rate: p.ot_rate,
+        olc_alc: p.olc_alc,
+        planned_finish: p.planned_finish,
+        forecast_finish: p.forecast_finish,
+      })),
+      scoreboard: _pendingData.scoreboard || {}
+    };
+    // Avoid duplicate snapshots for the same week
+    const dupIdx = _pendingData.history.findIndex(h=>h.week===snapshot.week);
+    if(dupIdx >= 0) _pendingData.history[dupIdx] = snapshot; // overwrite same week
+    else _pendingData.history.push(snapshot);
 
     // Push updated data.json
     const content = JSON.stringify(_pendingData, null, 2);

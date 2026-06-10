@@ -792,5 +792,145 @@
       "output_labor_cost": 564101.6,
       "olc_alc": 73
     }
-  }
+  },
+  "history": [
+    {
+      "week": "May 13, 2026",
+      "snapshot_date": "2026-05-13T08:00:00",
+      "prepared_by": "Ariel M. Canino",
+      "projects": [
+        {
+          "code": "Y2023-06-R-01",
+          "name": "ROPA DOS",
+          "progress": 42.57,
+          "schedule_status": "Ahead",
+          "schedule_variance_days": 20,
+          "cost_status": "Within Budget",
+          "health": "Good",
+          "budget": 1445000000,
+          "actual_cost": 552680639,
+          "forecast_at_completion": 1445000000,
+          "cpi": 2.61,
+          "safe_manhours": 1192973.7,
+          "incidents": 2,
+          "near_miss": 0,
+          "ncr_open": 1,
+          "inspections_due": 10,
+          "inspections_done": 6,
+          "ddi": 25.87,
+          "ot_rate": 2,
+          "olc_alc": 0.686,
+          "planned_finish": "Dec 1, 2028",
+          "forecast_finish": "Dec 1, 2028"
+        },
+        {
+          "code": "Y2024-06-R-01",
+          "name": "RPBohol Land Devt",
+          "progress": 13.98,
+          "schedule_status": "Ahead",
+          "schedule_variance_days": 14,
+          "cost_status": "Within Budget",
+          "health": "Good",
+          "budget": 710466000,
+          "actual_cost": 69446179,
+          "forecast_at_completion": 710466000,
+          "cpi": 10.23,
+          "safe_manhours": 126474,
+          "incidents": 0,
+          "near_miss": 0,
+          "ncr_open": 0,
+          "inspections_due": 4,
+          "inspections_done": 2,
+          "ddi": 12.05,
+          "ot_rate": 2,
+          "olc_alc": 1.346,
+          "planned_finish": "Oct 1, 2027",
+          "forecast_finish": "Oct 1, 2027"
+        },
+        {
+          "code": "Y2021-06-R-01",
+          "name": "RHB DOS",
+          "progress": 82.54,
+          "schedule_status": "On Track",
+          "schedule_variance_days": 0,
+          "cost_status": "Within Budget",
+          "health": "Good",
+          "budget": 692791728,
+          "actual_cost": 459040121,
+          "forecast_at_completion": 692791728,
+          "cpi": 1.51,
+          "safe_manhours": 1722864,
+          "incidents": 7,
+          "near_miss": 2,
+          "ncr_open": 0,
+          "inspections_due": 2,
+          "inspections_done": 2,
+          "ddi": null,
+          "ot_rate": null,
+          "olc_alc": null,
+          "planned_finish": "Apr 1, 2029",
+          "forecast_finish": "Apr 1, 2029"
+        }
+      ],
+      "scoreboard": {
+        "period": "May 18-23, 2026",
+        "report_date": "May 25, 2026",
+        "project_label": "Operations Management Division",
+        "subject": "Housing Projects & LBH Project - Progress Scoreboard",
+        "projects": [
+          {
+            "name": "ROPA2",
+            "project_pr": 89,
+            "accomplishment": 42.57,
+            "variance_days": 20,
+            "ddi": 6,
+            "ind": 7,
+            "ot": 6,
+            "ot_ddi_ind_baseline": 20,
+            "pr_baseline": 90,
+            "ranks_cost": 372000,
+            "staff_cost": 55200,
+            "output_labor_cost": 307581,
+            "olc_alc": 83
+          },
+          {
+            "name": "RHBDOS",
+            "project_pr": 92,
+            "accomplishment": 82.54,
+            "variance_days": 12,
+            "ddi": 20,
+            "ind": 27,
+            "ot": 33,
+            "ot_ddi_ind_baseline": 20,
+            "pr_baseline": 90,
+            "ranks_cost": 248641,
+            "staff_cost": 24000,
+            "output_labor_cost": 166611,
+            "olc_alc": 67
+          },
+          {
+            "name": "RPB",
+            "project_pr": 72,
+            "accomplishment": 13.98,
+            "variance_days": 1,
+            "ddi": 21,
+            "ind": 30,
+            "ot": 8,
+            "ot_ddi_ind_baseline": 20,
+            "pr_baseline": 90,
+            "ranks_cost": 151688,
+            "staff_cost": 182025000,
+            "output_labor_cost": 89909,
+            "olc_alc": 59
+          }
+        ],
+        "totals": {
+          "ranks_cost": 772328.13,
+          "staff_cost": 182104200,
+          "output_labor_cost": 564101.6,
+          "olc_alc": 73
+        }
+      }
+    }
+  ]
 }

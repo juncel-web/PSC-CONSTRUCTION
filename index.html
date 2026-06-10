@@ -199,6 +199,7 @@
   <button class="tab-btn" onclick="showTab('exec',this)">🎯 CEO Summary</button>
   <button class="tab-btn" onclick="showTab('scurve',this)">📈 S-Curve</button>
   <button class="tab-btn" onclick="showTab('files',this)">📁 Files</button>
+  <button class="tab-btn" onclick="showTab('history',this)">📜 History</button>
 </div>
 
 <div class="main" id="mainContent" style="display:none">
@@ -644,6 +645,126 @@
   <div id="lightboxCaption" style="color:rgba(255,255,255,.7);font-size:12px;text-align:center"></div>
 </div>
 
+
+<!-- ── HISTORY TAB ── -->
+<div class="tab-panel" id="tab-history">
+
+  <!-- KPI row -->
+  <div class="grid-4 mb-16" id="histKpiCards"></div>
+
+  <!-- Filter -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+    <select id="histProjectFilter" onchange="renderHistoryProject()"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'DM Sans';font-size:12px;outline:none">
+      <option value="all">All Projects — Portfolio View</option>
+    </select>
+    <div id="histWeekCount" style="margin-left:auto;font-size:11px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Portfolio trend charts -->
+  <div id="portfolioHistSection">
+    <div class="section-head">
+      <h2>Portfolio Progress Trend</h2>
+      <div class="section-head-line"></div>
+      <div class="section-head-tag">WEEKLY HISTORY</div>
+    </div>
+    <div class="grid-2 mb-16">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Physical Progress % — All Projects</div>
+          <span class="card-badge badge-info">TREND</span>
+        </div>
+        <div class="chart-box tall"><canvas id="histProgressChart" style="max-height:260px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">CPI Trend — All Projects</div>
+          <span class="card-badge badge-neutral">COST PERFORMANCE</span>
+        </div>
+        <div class="chart-box tall"><canvas id="histCpiChart" style="max-height:260px"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-2 mb-16">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Actual Cost to Date (₱M)</div>
+          <span class="card-badge badge-neutral">WEEKLY SPEND</span>
+        </div>
+        <div class="chart-box tall"><canvas id="histCostChart" style="max-height:260px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Safety — Safe Man-Hours</div>
+          <span class="card-badge badge-good">CUMULATIVE</span>
+        </div>
+        <div class="chart-box tall"><canvas id="histSafetyChart" style="max-height:260px"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-project trend (shown when project selected) -->
+  <div id="projectHistSection" style="display:none">
+    <div class="section-head">
+      <h2 id="histProjectTitle">Project History</h2>
+      <div class="section-head-line"></div>
+      <div class="section-head-tag">WEEKLY SNAPSHOTS</div>
+    </div>
+    <div class="grid-2 mb-16">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Physical Progress %</div>
+          <span class="card-badge badge-info">WEEKLY TREND</span>
+        </div>
+        <div class="chart-box tall"><canvas id="histProjProgressChart" style="max-height:240px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Cost Performance (CPI)</div>
+          <span class="card-badge badge-neutral">TREND</span>
+        </div>
+        <div class="chart-box tall"><canvas id="histProjCpiChart" style="max-height:240px"></canvas></div>
+      </div>
+    </div>
+    <div class="grid-3 mb-16">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Actual Cost (₱M)</div></div>
+        <div class="chart-box"><canvas id="histProjCostChart" style="max-height:200px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">OT Rate %</div></div>
+        <div class="chart-box"><canvas id="histProjOtChart" style="max-height:200px"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Incidents &amp; Near Miss</div></div>
+        <div class="chart-box"><canvas id="histProjIncidentChart" style="max-height:200px"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly history table -->
+  <div class="section-head">
+    <h2>Weekly Snapshot Log</h2>
+    <div class="section-head-line"></div>
+    <div class="section-head-tag" id="histTableLabel">ALL PROJECTS</div>
+  </div>
+  <div class="card mb-16">
+    <div style="overflow-x:auto">
+      <table id="histTable">
+        <thead id="histTableHead"></thead>
+        <tbody id="histTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="histEmpty" style="display:none;text-align:center;padding:60px;color:var(--muted)">
+    <div style="font-size:48px;margin-bottom:12px">📜</div>
+    <div style="font-family:'Bebas Neue';font-size:20px;letter-spacing:1px">No History Yet</div>
+    <div style="font-size:12px;margin-top:6px">History is recorded automatically each time the Admin publishes an update.</div>
+  </div>
+
+</div>
+
 </div><!-- end main -->
 
 <!-- FOOTER -->
@@ -713,7 +834,7 @@ function projColor(i){return[C.gold,C.blue,C.green][i]||C.muted}
 function projBarClass(i){return['prog-gold','prog-blue','prog-green'][i]||'prog-gold'}
 
 // ── FETCH & RENDER ──
-const EMBEDDED_DATA = {"meta": {"week": "May 13, 2026", "prepared_by": "Ariel M. Canino", "verified_by": "", "source_file": "Prototype_Excel_for_Dashboard.xlsx", "file_location": "", "last_updated": "2026-05-13T00:00:00"}, "projects": [{"code": "Y2023-06-R-01", "name": "ROPA DOS", "location": "Dao, Dauis, Panglao, Bohol", "pic": "Desi Bitol", "progress": 42.57, "schedule_variance_days": 20, "schedule_status": "Ahead", "cost_status": "Within Budget", "health": "Good", "planned_finish": "Dec 1, 2028", "forecast_finish": "Dec 1, 2028", "critical_activities": "Structural works Bldg C; Masonry works Bldg D", "schedule_recommendation": "Maintain lead; monitor crew and material availability", "budget": 1445000000, "actual_cost": 552680639, "forecast_at_completion": 1445000000, "cpi": 2.61, "pa_budget": 46899000, "pa_actual": 20220014, "ddi": 25.87, "ot_rate": 2, "ot_baseline": 20, "olc_alc": 0.686, "safe_manhours": 1192973.7, "inspections_due": 10, "inspections_done": 6, "ncr_open": 1, "incidents": 2, "near_miss": 0, "last_toolbox": "Apr 29, 2026", "safety_action": "Close 4 pending inspections; resolve NCR; monitor incidents", "s_curve": [{"period": "Jun 2023", "planned_progress": 1.0, "actual_progress": 0.8, "planned_cost": 14450000, "actual_cost": 12200000, "eac": 1445000000}, {"period": "Jul 2023", "planned_progress": 2.5, "actual_progress": 2.1, "planned_cost": 36125000, "actual_cost": 30500000, "eac": 1445000000}, {"period": "Aug 2023", "planned_progress": 4.5, "actual_progress": 4.0, "planned_cost": 65025000, "actual_cost": 58000000, "eac": 1445000000}, {"period": "Sep 2023", "planned_progress": 7.0, "actual_progress": 6.5, "planned_cost": 101150000, "actual_cost": 93875000, "eac": 1445000000}, {"period": "Oct 2023", "planned_progress": 10.0, "actual_progress": 9.8, "planned_cost": 144500000, "actual_cost": 141625000, "eac": 1445000000}, {"period": "Nov 2023", "planned_progress": 13.5, "actual_progress": 13.2, "planned_cost": 195075000, "actual_cost": 190650000, "eac": 1445000000}, {"period": "Dec 2023", "planned_progress": 17.0, "actual_progress": 17.5, "planned_cost": 245650000, "actual_cost": 252875000, "eac": 1445000000}, {"period": "Jan 2024", "planned_progress": 20.5, "actual_progress": 21.2, "planned_cost": 296225000, "actual_cost": 306280000, "eac": 1445000000}, {"period": "Feb 2024", "planned_progress": 24.0, "actual_progress": 25.0, "planned_cost": 346800000, "actual_cost": 361250000, "eac": 1445000000}, {"period": "Mar 2024", "planned_progress": 27.5, "actual_progress": 28.8, "planned_cost": 397375000, "actual_cost": 415830000, "eac": 1445000000}, {"period": "Apr 2024", "planned_progress": 31.0, "actual_progress": 33.0, "planned_cost": 447950000, "actual_cost": 476850000, "eac": 1445000000}, {"period": "May 2024", "planned_progress": 34.5, "actual_progress": 36.5, "planned_cost": 498525000, "actual_cost": 527425000, "eac": 1445000000}, {"period": "Jun 2024", "planned_progress": 38.0, "actual_progress": 39.8, "planned_cost": 549100000, "actual_cost": 575110000, "eac": 1445000000}, {"period": "Jul 2024", "planned_progress": 40.0, "actual_progress": 42.57, "planned_cost": 578000000, "actual_cost": 552680639, "eac": 1445000000}]}, {"code": "Y2024-06-R-01", "name": "RPBohol Land Devt", "location": "Biking, Dauis, Bohol", "pic": "Feliciano Lumondoc", "progress": 13.98, "schedule_variance_days": 14, "schedule_status": "Ahead", "cost_status": "Within Budget", "health": "Good", "planned_finish": "Oct 1, 2027", "forecast_finish": "Oct 1, 2027", "critical_activities": "Awarding of STG; Roof Framing & Roofing Supplier", "schedule_recommendation": "Expedite STG award this week to protect schedule", "budget": 710466000, "actual_cost": 69446179, "forecast_at_completion": 710466000, "cpi": 10.23, "pa_budget": 28418640, "pa_actual": 4021567, "ddi": 12.05, "ot_rate": 2, "ot_baseline": 20, "olc_alc": 1.346, "safe_manhours": 126474, "inspections_due": 4, "inspections_done": 2, "ncr_open": 0, "incidents": 0, "near_miss": 0, "last_toolbox": "Apr 29, 2026", "safety_action": "Complete 2 remaining inspections; maintain zero-incident record", "s_curve": [{"period": "Jun 2024", "planned_progress": 0.5, "actual_progress": 0.3, "planned_cost": 3552330, "actual_cost": 2130000, "eac": 710466000}, {"period": "Jul 2024", "planned_progress": 1.2, "actual_progress": 0.9, "planned_cost": 8525592, "actual_cost": 6393000, "eac": 710466000}, {"period": "Aug 2024", "planned_progress": 2.1, "actual_progress": 1.8, "planned_cost": 14919786, "actual_cost": 12788000, "eac": 710466000}, {"period": "Sep 2024", "planned_progress": 3.2, "actual_progress": 2.9, "planned_cost": 22734912, "actual_cost": 20602000, "eac": 710466000}, {"period": "Oct 2024", "planned_progress": 4.5, "actual_progress": 4.2, "planned_cost": 31970970, "actual_cost": 29839000, "eac": 710466000}, {"period": "Nov 2024", "planned_progress": 6.0, "actual_progress": 5.8, "planned_cost": 42627960, "actual_cost": 41209000, "eac": 710466000}, {"period": "Dec 2024", "planned_progress": 7.8, "actual_progress": 7.5, "planned_cost": 55416348, "actual_cost": 53285000, "eac": 710466000}, {"period": "Jan 2025", "planned_progress": 9.5, "actual_progress": 9.8, "planned_cost": 67494270, "actual_cost": 69626000, "eac": 710466000}, {"period": "Feb 2025", "planned_progress": 11.0, "actual_progress": 11.2, "planned_cost": 78151260, "actual_cost": 79572000, "eac": 710466000}, {"period": "Mar 2025", "planned_progress": 12.5, "actual_progress": 12.8, "planned_cost": 88808250, "actual_cost": 90940000, "eac": 710466000}, {"period": "Apr 2025", "planned_progress": 13.5, "actual_progress": 13.5, "planned_cost": 95912910, "actual_cost": 95913000, "eac": 710466000}, {"period": "May 2025", "planned_progress": 13.98, "actual_progress": 13.98, "planned_cost": 99341195, "actual_cost": 69446179, "eac": 710466000}]}, {"code": "Y2021-06-R-01", "name": "RHB DOS", "location": "San Isidro, Dauis, Bohol", "pic": "Edison Auxtero", "progress": 82.54, "schedule_variance_days": 0, "schedule_status": "On Track", "cost_status": "Within Budget", "health": "Good", "planned_finish": "Apr 1, 2029", "forecast_finish": "Apr 1, 2029", "critical_activities": "Ground floor wall installation \u2014 catch-up needed", "schedule_recommendation": "Deploy additional masonry crew; consider managed OT within 20% baseline", "budget": 692791728, "actual_cost": 459040121, "forecast_at_completion": 692791728, "cpi": 1.51, "pa_budget": 27861629, "pa_actual": 22945111, "ddi": null, "ot_rate": null, "ot_baseline": null, "olc_alc": null, "safe_manhours": 1722864, "inspections_due": 2, "inspections_done": 2, "ncr_open": 0, "incidents": 7, "near_miss": 2, "last_toolbox": "Apr 29, 2026", "safety_action": "URGENT: RCA on all 7 incidents; safety audit; twice-weekly toolbox; security proposal overdue", "s_curve": [{"period": "Jun 2021", "planned_progress": 0.5, "actual_progress": 0.4, "planned_cost": 3463958, "actual_cost": 2771167, "eac": 692791728}, {"period": "Sep 2021", "planned_progress": 3.0, "actual_progress": 2.8, "planned_cost": 20783752, "actual_cost": 19398902, "eac": 692791728}, {"period": "Dec 2021", "planned_progress": 7.0, "actual_progress": 7.5, "planned_cost": 48495421, "actual_cost": 51959380, "eac": 692791728}, {"period": "Mar 2022", "planned_progress": 13.0, "actual_progress": 13.8, "planned_cost": 90062924, "actual_cost": 95605259, "eac": 692791728}, {"period": "Jun 2022", "planned_progress": 20.0, "actual_progress": 21.0, "planned_cost": 138558345, "actual_cost": 145486263, "eac": 692791728}, {"period": "Sep 2022", "planned_progress": 28.0, "actual_progress": 29.5, "planned_cost": 193981683, "actual_cost": 204373560, "eac": 692791728}, {"period": "Dec 2022", "planned_progress": 37.0, "actual_progress": 38.5, "planned_cost": 256332739, "actual_cost": 266724815, "eac": 692791728}, {"period": "Mar 2023", "planned_progress": 46.0, "actual_progress": 47.0, "planned_cost": 318684295, "actual_cost": 325612112, "eac": 692791728}, {"period": "Jun 2023", "planned_progress": 55.0, "actual_progress": 55.5, "planned_cost": 381035351, "actual_cost": 384559459, "eac": 692791728}, {"period": "Sep 2023", "planned_progress": 63.0, "actual_progress": 63.0, "planned_cost": 436658588, "actual_cost": 436658588, "eac": 692791728}, {"period": "Dec 2023", "planned_progress": 70.0, "actual_progress": 70.5, "planned_cost": 484954209, "actual_cost": 488197569, "eac": 692791728}, {"period": "Mar 2024", "planned_progress": 76.0, "actual_progress": 77.0, "planned_cost": 526521553, "actual_cost": 533649431, "eac": 692791728}, {"period": "Jun 2024", "planned_progress": 80.5, "actual_progress": 80.8, "planned_cost": 557697441, "actual_cost": 559895518, "eac": 692791728}, {"period": "May 2025", "planned_progress": 82.54, "actual_progress": 82.54, "planned_cost": 571630217, "actual_cost": 459040121, "eac": 692791728}]}], "change_orders": [{"project": "Y2023-06-R-01", "co_no": "CHO-01", "description": "Amenities Batch 1 and 2", "amount": 5473000, "status": "For PSC Approval"}, {"project": "Y2023-06-R-01", "co_no": "CHO-01", "description": "Model Unit Construction", "amount": 10500000, "status": "Completed"}, {"project": "Y2024-06-R-01", "co_no": "CHO-02", "description": "Mass Housing Construction", "amount": 376678000, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-01", "description": "Deep Well Construction", "amount": 281395, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-02", "description": "Temporary Electrical Connection", "amount": 1510334, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-03", "description": "Change of Unit", "amount": 13860100, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-04", "description": "Additional Scope for Land Development", "amount": 314400, "status": "Ongoing"}], "procurement": [{"project": "Y2023-06-R-01", "item": "Elevator", "vendor": "Hyundai", "required_date": "May 10, 2026", "delivery_date": "Apr 26, 2026", "status": "Delivered", "buffer": "Early +14d", "action": "No action needed \u2014 delivered early"}, {"project": "Y2024-06-R-01", "item": "Tiles", "vendor": "Worldwide Interiors", "required_date": "May 15, 2026", "delivery_date": "Apr 15, 2026", "status": "In Progress", "buffer": "2 days", "action": "URGENT: Confirm delivery with Worldwide Interiors immediately"}, {"project": "Y2021-06-R-01", "item": "Formworks & TKP Contractor", "vendor": "SCM", "required_date": "May 26, 2026", "delivery_date": "May 26, 2026", "status": "In Progress", "buffer": "0 days", "action": "Issue formal delivery confirmation to SCM this week"}], "risks": [{"project": "Y2021-06-R-01", "risk": "Site Security Improvement", "impact": "High", "status": "Overdue", "owner": "Site Admin / PM", "due_date": "May 9, 2026 (OVERDUE)", "mitigation": "Submit security improvement proposal immediately. Deploy additional guards. Escalate to Operations Manager."}, {"project": "Y2024-06-R-01", "risk": "Lot Boundary Conflict", "impact": "High", "status": "Active", "owner": "PSC", "due_date": "May 28, 2026", "mitigation": "Schedule meeting: adjacent lot owner + PSC Legal + Licensed Surveyor. Prepare contingency construction sequencing."}, {"project": "Y2023-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Formalize escalation contingency plan: bulk-buy contracts, price lock agreements, escalation clauses."}, {"project": "Y2024-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Early procurement of high-cost items for Mass Housing scope."}, {"project": "Y2021-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Material procurement strategy for remaining 17.5% of works."}], "action_items": [{"project": "Y2021-06-R-01", "item": "Site Security \u2014 RHB DOS", "priority": "Overdue", "action": "Submit security improvement proposal to Ops Manager. Deploy additional security personnel pending formal plan.", "responsible": "Site Admin / PM", "due_date": "May 9, 2026 (OVERDUE)", "status": "Overdue"}, {"project": "Y2024-06-R-01", "item": "Lot Boundary Conflict \u2014 RPBohol Land", "priority": "High", "action": "PSC Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.", "responsible": "PSC / Legal", "due_date": "May 28, 2026", "status": "Pending"}, {"project": "Y2023-06-R-01", "item": "Guardhouse Construction \u2014 ROPA DOS", "priority": "Medium", "action": "Commence construction immediately. Supports site security and access control.", "responsible": "PIC", "due_date": "Jun 30, 2026", "status": "Pending"}, {"project": "ALL", "item": "Price Escalation Contingency Plan", "priority": "Medium", "action": "Develop formal plan: bulk-buy contracts, price lock agreements, escalation clauses with major suppliers.", "responsible": "Project Managers", "due_date": "Jun 2026", "status": "Pending"}, {"project": "Y2023-06-R-01", "item": "PSC Approval \u2014 ROPA DOS Amenities CO", "priority": "Normal", "action": "Approve or reject CHO-01 (\u20b15.47M). Delays risk contractor standby claims.", "responsible": "PSC Management", "due_date": "May 2026", "status": "Pending"}, {"project": "ALL", "item": "Safety Audit \u2014 All Sites", "priority": "Medium", "action": "Commission formal HSE audit. RHB DOS immediate review required. Increase toolbox talks to twice-weekly at RHB DOS.", "responsible": "Safety Officer", "due_date": "Jun 2026", "status": "Pending"}], "users": [{"username": "admin", "display_name": "System Administrator", "role": "admin", "password": "psc2026admin", "projects": ["ALL"], "active": true}, {"username": "acanino", "display_name": "Ariel M. Canino", "role": "pm", "password": "pm_acanino2026", "projects": ["Y2023-06-R-01", "Y2024-06-R-01", "Y2021-06-R-01"], "active": true}, {"username": "dbitol", "display_name": "Desi Bitol", "role": "pm", "password": "pm_dbitol2026", "projects": ["Y2023-06-R-01"], "active": true}, {"username": "flumondoc", "display_name": "Feliciano Lumondoc", "role": "pm", "password": "pm_flumondoc2026", "projects": ["Y2024-06-R-01"], "active": true}, {"username": "eauxtero", "display_name": "Edison Auxtero", "role": "pm", "password": "pm_eauxtero2026", "projects": ["Y2021-06-R-01"], "active": true}, {"username": "WLJ", "display_name": "CEO-President", "role": "viewer", "password": "WLJ2026", "projects": ["ALL"], "active": true}, {"username": "jamerced", "display_name": "Juncel Merced", "role": "admin", "password": "jam2026", "projects": ["ALL"], "active": true}, {"username": "jhlatoga", "display_name": "Jennifer Latoga", "role": "viewer", "password": "jhl2026", "projects": ["ALL"], "active": true}], "files": [{"id": "f001", "project_code": "Y2023-06-R-01", "section": "progress", "filename": "ropa_dos_progress_may2026.jpg", "original_name": "Site Progress Photo May 2026.jpg", "github_path": "files/Y2023-06-R-01/progress/ropa_dos_progress_may2026.jpg", "file_type": "image", "uploader": "dbitol", "upload_date": "2026-05-13T08:00:00", "status": "approved", "approved_by": "admin", "notes": "Week 18 progress photo"}, {"id": "f002", "project_code": "Y2021-06-R-01", "section": "safety", "filename": "rhb_incident_report_may2026.pdf", "original_name": "Incident Report May 9 2026.pdf", "github_path": "files/Y2021-06-R-01/safety/rhb_incident_report_may2026.pdf", "file_type": "document", "uploader": "eauxtero", "upload_date": "2026-05-13T09:30:00", "status": "approved", "approved_by": "admin", "notes": "Incident RCA document"}], "scoreboard": {"period": "May 18-23, 2026", "report_date": "May 25, 2026", "project_label": "Operations Management Division", "subject": "Housing Projects & LBH Project - Progress Scoreboard", "projects": [{"name": "ROPA2", "project_pr": 89, "accomplishment": 42.57, "variance_days": 20, "ddi": 6, "ind": 7, "ot": 6, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 372000, "staff_cost": 55200, "output_labor_cost": 307581, "olc_alc": 83}, {"name": "RHBDOS", "project_pr": 92, "accomplishment": 82.54, "variance_days": 12, "ddi": 20, "ind": 27, "ot": 33, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 248641, "staff_cost": 24000, "output_labor_cost": 166611, "olc_alc": 67}, {"name": "RPB", "project_pr": 72, "accomplishment": 13.98, "variance_days": 1, "ddi": 21, "ind": 30, "ot": 8, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 151688, "staff_cost": 182025000, "output_labor_cost": 89909, "olc_alc": 59}], "totals": {"ranks_cost": 772328.13, "staff_cost": 182104200, "output_labor_cost": 564101.6, "olc_alc": 73}}};
+const EMBEDDED_DATA = {"meta": {"week": "May 13, 2026", "prepared_by": "Ariel M. Canino", "verified_by": "", "source_file": "Prototype_Excel_for_Dashboard.xlsx", "file_location": "", "last_updated": "2026-05-13T00:00:00"}, "projects": [{"code": "Y2023-06-R-01", "name": "ROPA DOS", "location": "Dao, Dauis, Panglao, Bohol", "pic": "Desi Bitol", "progress": 42.57, "schedule_variance_days": 20, "schedule_status": "Ahead", "cost_status": "Within Budget", "health": "Good", "planned_finish": "Dec 1, 2028", "forecast_finish": "Dec 1, 2028", "critical_activities": "Structural works Bldg C; Masonry works Bldg D", "schedule_recommendation": "Maintain lead; monitor crew and material availability", "budget": 1445000000, "actual_cost": 552680639, "forecast_at_completion": 1445000000, "cpi": 2.61, "pa_budget": 46899000, "pa_actual": 20220014, "ddi": 25.87, "ot_rate": 2, "ot_baseline": 20, "olc_alc": 0.686, "safe_manhours": 1192973.7, "inspections_due": 10, "inspections_done": 6, "ncr_open": 1, "incidents": 2, "near_miss": 0, "last_toolbox": "Apr 29, 2026", "safety_action": "Close 4 pending inspections; resolve NCR; monitor incidents", "s_curve": [{"period": "Jun 2023", "planned_progress": 1.0, "actual_progress": 0.8, "planned_cost": 14450000, "actual_cost": 12200000, "eac": 1445000000}, {"period": "Jul 2023", "planned_progress": 2.5, "actual_progress": 2.1, "planned_cost": 36125000, "actual_cost": 30500000, "eac": 1445000000}, {"period": "Aug 2023", "planned_progress": 4.5, "actual_progress": 4.0, "planned_cost": 65025000, "actual_cost": 58000000, "eac": 1445000000}, {"period": "Sep 2023", "planned_progress": 7.0, "actual_progress": 6.5, "planned_cost": 101150000, "actual_cost": 93875000, "eac": 1445000000}, {"period": "Oct 2023", "planned_progress": 10.0, "actual_progress": 9.8, "planned_cost": 144500000, "actual_cost": 141625000, "eac": 1445000000}, {"period": "Nov 2023", "planned_progress": 13.5, "actual_progress": 13.2, "planned_cost": 195075000, "actual_cost": 190650000, "eac": 1445000000}, {"period": "Dec 2023", "planned_progress": 17.0, "actual_progress": 17.5, "planned_cost": 245650000, "actual_cost": 252875000, "eac": 1445000000}, {"period": "Jan 2024", "planned_progress": 20.5, "actual_progress": 21.2, "planned_cost": 296225000, "actual_cost": 306280000, "eac": 1445000000}, {"period": "Feb 2024", "planned_progress": 24.0, "actual_progress": 25.0, "planned_cost": 346800000, "actual_cost": 361250000, "eac": 1445000000}, {"period": "Mar 2024", "planned_progress": 27.5, "actual_progress": 28.8, "planned_cost": 397375000, "actual_cost": 415830000, "eac": 1445000000}, {"period": "Apr 2024", "planned_progress": 31.0, "actual_progress": 33.0, "planned_cost": 447950000, "actual_cost": 476850000, "eac": 1445000000}, {"period": "May 2024", "planned_progress": 34.5, "actual_progress": 36.5, "planned_cost": 498525000, "actual_cost": 527425000, "eac": 1445000000}, {"period": "Jun 2024", "planned_progress": 38.0, "actual_progress": 39.8, "planned_cost": 549100000, "actual_cost": 575110000, "eac": 1445000000}, {"period": "Jul 2024", "planned_progress": 40.0, "actual_progress": 42.57, "planned_cost": 578000000, "actual_cost": 552680639, "eac": 1445000000}]}, {"code": "Y2024-06-R-01", "name": "RPBohol Land Devt", "location": "Biking, Dauis, Bohol", "pic": "Feliciano Lumondoc", "progress": 13.98, "schedule_variance_days": 14, "schedule_status": "Ahead", "cost_status": "Within Budget", "health": "Good", "planned_finish": "Oct 1, 2027", "forecast_finish": "Oct 1, 2027", "critical_activities": "Awarding of STG; Roof Framing & Roofing Supplier", "schedule_recommendation": "Expedite STG award this week to protect schedule", "budget": 710466000, "actual_cost": 69446179, "forecast_at_completion": 710466000, "cpi": 10.23, "pa_budget": 28418640, "pa_actual": 4021567, "ddi": 12.05, "ot_rate": 2, "ot_baseline": 20, "olc_alc": 1.346, "safe_manhours": 126474, "inspections_due": 4, "inspections_done": 2, "ncr_open": 0, "incidents": 0, "near_miss": 0, "last_toolbox": "Apr 29, 2026", "safety_action": "Complete 2 remaining inspections; maintain zero-incident record", "s_curve": [{"period": "Jun 2024", "planned_progress": 0.5, "actual_progress": 0.3, "planned_cost": 3552330, "actual_cost": 2130000, "eac": 710466000}, {"period": "Jul 2024", "planned_progress": 1.2, "actual_progress": 0.9, "planned_cost": 8525592, "actual_cost": 6393000, "eac": 710466000}, {"period": "Aug 2024", "planned_progress": 2.1, "actual_progress": 1.8, "planned_cost": 14919786, "actual_cost": 12788000, "eac": 710466000}, {"period": "Sep 2024", "planned_progress": 3.2, "actual_progress": 2.9, "planned_cost": 22734912, "actual_cost": 20602000, "eac": 710466000}, {"period": "Oct 2024", "planned_progress": 4.5, "actual_progress": 4.2, "planned_cost": 31970970, "actual_cost": 29839000, "eac": 710466000}, {"period": "Nov 2024", "planned_progress": 6.0, "actual_progress": 5.8, "planned_cost": 42627960, "actual_cost": 41209000, "eac": 710466000}, {"period": "Dec 2024", "planned_progress": 7.8, "actual_progress": 7.5, "planned_cost": 55416348, "actual_cost": 53285000, "eac": 710466000}, {"period": "Jan 2025", "planned_progress": 9.5, "actual_progress": 9.8, "planned_cost": 67494270, "actual_cost": 69626000, "eac": 710466000}, {"period": "Feb 2025", "planned_progress": 11.0, "actual_progress": 11.2, "planned_cost": 78151260, "actual_cost": 79572000, "eac": 710466000}, {"period": "Mar 2025", "planned_progress": 12.5, "actual_progress": 12.8, "planned_cost": 88808250, "actual_cost": 90940000, "eac": 710466000}, {"period": "Apr 2025", "planned_progress": 13.5, "actual_progress": 13.5, "planned_cost": 95912910, "actual_cost": 95913000, "eac": 710466000}, {"period": "May 2025", "planned_progress": 13.98, "actual_progress": 13.98, "planned_cost": 99341195, "actual_cost": 69446179, "eac": 710466000}]}, {"code": "Y2021-06-R-01", "name": "RHB DOS", "location": "San Isidro, Dauis, Bohol", "pic": "Edison Auxtero", "progress": 82.54, "schedule_variance_days": 0, "schedule_status": "On Track", "cost_status": "Within Budget", "health": "Good", "planned_finish": "Apr 1, 2029", "forecast_finish": "Apr 1, 2029", "critical_activities": "Ground floor wall installation \u2014 catch-up needed", "schedule_recommendation": "Deploy additional masonry crew; consider managed OT within 20% baseline", "budget": 692791728, "actual_cost": 459040121, "forecast_at_completion": 692791728, "cpi": 1.51, "pa_budget": 27861629, "pa_actual": 22945111, "ddi": null, "ot_rate": null, "ot_baseline": null, "olc_alc": null, "safe_manhours": 1722864, "inspections_due": 2, "inspections_done": 2, "ncr_open": 0, "incidents": 7, "near_miss": 2, "last_toolbox": "Apr 29, 2026", "safety_action": "URGENT: RCA on all 7 incidents; safety audit; twice-weekly toolbox; security proposal overdue", "s_curve": [{"period": "Jun 2021", "planned_progress": 0.5, "actual_progress": 0.4, "planned_cost": 3463958, "actual_cost": 2771167, "eac": 692791728}, {"period": "Sep 2021", "planned_progress": 3.0, "actual_progress": 2.8, "planned_cost": 20783752, "actual_cost": 19398902, "eac": 692791728}, {"period": "Dec 2021", "planned_progress": 7.0, "actual_progress": 7.5, "planned_cost": 48495421, "actual_cost": 51959380, "eac": 692791728}, {"period": "Mar 2022", "planned_progress": 13.0, "actual_progress": 13.8, "planned_cost": 90062924, "actual_cost": 95605259, "eac": 692791728}, {"period": "Jun 2022", "planned_progress": 20.0, "actual_progress": 21.0, "planned_cost": 138558345, "actual_cost": 145486263, "eac": 692791728}, {"period": "Sep 2022", "planned_progress": 28.0, "actual_progress": 29.5, "planned_cost": 193981683, "actual_cost": 204373560, "eac": 692791728}, {"period": "Dec 2022", "planned_progress": 37.0, "actual_progress": 38.5, "planned_cost": 256332739, "actual_cost": 266724815, "eac": 692791728}, {"period": "Mar 2023", "planned_progress": 46.0, "actual_progress": 47.0, "planned_cost": 318684295, "actual_cost": 325612112, "eac": 692791728}, {"period": "Jun 2023", "planned_progress": 55.0, "actual_progress": 55.5, "planned_cost": 381035351, "actual_cost": 384559459, "eac": 692791728}, {"period": "Sep 2023", "planned_progress": 63.0, "actual_progress": 63.0, "planned_cost": 436658588, "actual_cost": 436658588, "eac": 692791728}, {"period": "Dec 2023", "planned_progress": 70.0, "actual_progress": 70.5, "planned_cost": 484954209, "actual_cost": 488197569, "eac": 692791728}, {"period": "Mar 2024", "planned_progress": 76.0, "actual_progress": 77.0, "planned_cost": 526521553, "actual_cost": 533649431, "eac": 692791728}, {"period": "Jun 2024", "planned_progress": 80.5, "actual_progress": 80.8, "planned_cost": 557697441, "actual_cost": 559895518, "eac": 692791728}, {"period": "May 2025", "planned_progress": 82.54, "actual_progress": 82.54, "planned_cost": 571630217, "actual_cost": 459040121, "eac": 692791728}]}], "change_orders": [{"project": "Y2023-06-R-01", "co_no": "CHO-01", "description": "Amenities Batch 1 and 2", "amount": 5473000, "status": "For PSC Approval"}, {"project": "Y2023-06-R-01", "co_no": "CHO-01", "description": "Model Unit Construction", "amount": 10500000, "status": "Completed"}, {"project": "Y2024-06-R-01", "co_no": "CHO-02", "description": "Mass Housing Construction", "amount": 376678000, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-01", "description": "Deep Well Construction", "amount": 281395, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-02", "description": "Temporary Electrical Connection", "amount": 1510334, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-03", "description": "Change of Unit", "amount": 13860100, "status": "Ongoing"}, {"project": "Y2021-06-R-01", "co_no": "CHO-04", "description": "Additional Scope for Land Development", "amount": 314400, "status": "Ongoing"}], "procurement": [{"project": "Y2023-06-R-01", "item": "Elevator", "vendor": "Hyundai", "required_date": "May 10, 2026", "delivery_date": "Apr 26, 2026", "status": "Delivered", "buffer": "Early +14d", "action": "No action needed \u2014 delivered early"}, {"project": "Y2024-06-R-01", "item": "Tiles", "vendor": "Worldwide Interiors", "required_date": "May 15, 2026", "delivery_date": "Apr 15, 2026", "status": "In Progress", "buffer": "2 days", "action": "URGENT: Confirm delivery with Worldwide Interiors immediately"}, {"project": "Y2021-06-R-01", "item": "Formworks & TKP Contractor", "vendor": "SCM", "required_date": "May 26, 2026", "delivery_date": "May 26, 2026", "status": "In Progress", "buffer": "0 days", "action": "Issue formal delivery confirmation to SCM this week"}], "risks": [{"project": "Y2021-06-R-01", "risk": "Site Security Improvement", "impact": "High", "status": "Overdue", "owner": "Site Admin / PM", "due_date": "May 9, 2026 (OVERDUE)", "mitigation": "Submit security improvement proposal immediately. Deploy additional guards. Escalate to Operations Manager."}, {"project": "Y2024-06-R-01", "risk": "Lot Boundary Conflict", "impact": "High", "status": "Active", "owner": "PSC", "due_date": "May 28, 2026", "mitigation": "Schedule meeting: adjacent lot owner + PSC Legal + Licensed Surveyor. Prepare contingency construction sequencing."}, {"project": "Y2023-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Formalize escalation contingency plan: bulk-buy contracts, price lock agreements, escalation clauses."}, {"project": "Y2024-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Early procurement of high-cost items for Mass Housing scope."}, {"project": "Y2021-06-R-01", "risk": "Price Escalation", "impact": "Medium", "status": "Ongoing", "owner": "Project Manager", "due_date": "Jun 2026", "mitigation": "Material procurement strategy for remaining 17.5% of works."}], "action_items": [{"project": "Y2021-06-R-01", "item": "Site Security \u2014 RHB DOS", "priority": "Overdue", "action": "Submit security improvement proposal to Ops Manager. Deploy additional security personnel pending formal plan.", "responsible": "Site Admin / PM", "due_date": "May 9, 2026 (OVERDUE)", "status": "Overdue"}, {"project": "Y2024-06-R-01", "item": "Lot Boundary Conflict \u2014 RPBohol Land", "priority": "High", "action": "PSC Legal to facilitate meeting with adjacent lot owner and licensed surveyor. Resolve before construction reaches boundary area.", "responsible": "PSC / Legal", "due_date": "May 28, 2026", "status": "Pending"}, {"project": "Y2023-06-R-01", "item": "Guardhouse Construction \u2014 ROPA DOS", "priority": "Medium", "action": "Commence construction immediately. Supports site security and access control.", "responsible": "PIC", "due_date": "Jun 30, 2026", "status": "Pending"}, {"project": "ALL", "item": "Price Escalation Contingency Plan", "priority": "Medium", "action": "Develop formal plan: bulk-buy contracts, price lock agreements, escalation clauses with major suppliers.", "responsible": "Project Managers", "due_date": "Jun 2026", "status": "Pending"}, {"project": "Y2023-06-R-01", "item": "PSC Approval \u2014 ROPA DOS Amenities CO", "priority": "Normal", "action": "Approve or reject CHO-01 (\u20b15.47M). Delays risk contractor standby claims.", "responsible": "PSC Management", "due_date": "May 2026", "status": "Pending"}, {"project": "ALL", "item": "Safety Audit \u2014 All Sites", "priority": "Medium", "action": "Commission formal HSE audit. RHB DOS immediate review required. Increase toolbox talks to twice-weekly at RHB DOS.", "responsible": "Safety Officer", "due_date": "Jun 2026", "status": "Pending"}], "users": [{"username": "admin", "display_name": "System Administrator", "role": "admin", "password": "psc2026admin", "projects": ["ALL"], "active": true}, {"username": "acanino", "display_name": "Ariel M. Canino", "role": "pm", "password": "pm_acanino2026", "projects": ["Y2023-06-R-01", "Y2024-06-R-01", "Y2021-06-R-01"], "active": true}, {"username": "dbitol", "display_name": "Desi Bitol", "role": "pm", "password": "pm_dbitol2026", "projects": ["Y2023-06-R-01"], "active": true}, {"username": "flumondoc", "display_name": "Feliciano Lumondoc", "role": "pm", "password": "pm_flumondoc2026", "projects": ["Y2024-06-R-01"], "active": true}, {"username": "eauxtero", "display_name": "Edison Auxtero", "role": "pm", "password": "pm_eauxtero2026", "projects": ["Y2021-06-R-01"], "active": true}, {"username": "WLJ", "display_name": "CEO-President", "role": "viewer", "password": "WLJ2026", "projects": ["ALL"], "active": true}, {"username": "jamerced", "display_name": "Juncel Merced", "role": "admin", "password": "jam2026", "projects": ["ALL"], "active": true}, {"username": "jhlatoga", "display_name": "Jennifer Latoga", "role": "viewer", "password": "jhl2026", "projects": ["ALL"], "active": true}], "files": [{"id": "f001", "project_code": "Y2023-06-R-01", "section": "progress", "filename": "ropa_dos_progress_may2026.jpg", "original_name": "Site Progress Photo May 2026.jpg", "github_path": "files/Y2023-06-R-01/progress/ropa_dos_progress_may2026.jpg", "file_type": "image", "uploader": "dbitol", "upload_date": "2026-05-13T08:00:00", "status": "approved", "approved_by": "admin", "notes": "Week 18 progress photo"}, {"id": "f002", "project_code": "Y2021-06-R-01", "section": "safety", "filename": "rhb_incident_report_may2026.pdf", "original_name": "Incident Report May 9 2026.pdf", "github_path": "files/Y2021-06-R-01/safety/rhb_incident_report_may2026.pdf", "file_type": "document", "uploader": "eauxtero", "upload_date": "2026-05-13T09:30:00", "status": "approved", "approved_by": "admin", "notes": "Incident RCA document"}], "scoreboard": {"period": "May 18-23, 2026", "report_date": "May 25, 2026", "project_label": "Operations Management Division", "subject": "Housing Projects & LBH Project - Progress Scoreboard", "projects": [{"name": "ROPA2", "project_pr": 89, "accomplishment": 42.57, "variance_days": 20, "ddi": 6, "ind": 7, "ot": 6, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 372000, "staff_cost": 55200, "output_labor_cost": 307581, "olc_alc": 83}, {"name": "RHBDOS", "project_pr": 92, "accomplishment": 82.54, "variance_days": 12, "ddi": 20, "ind": 27, "ot": 33, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 248641, "staff_cost": 24000, "output_labor_cost": 166611, "olc_alc": 67}, {"name": "RPB", "project_pr": 72, "accomplishment": 13.98, "variance_days": 1, "ddi": 21, "ind": 30, "ot": 8, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 151688, "staff_cost": 182025000, "output_labor_cost": 89909, "olc_alc": 59}], "totals": {"ranks_cost": 772328.13, "staff_cost": 182104200, "output_labor_cost": 564101.6, "olc_alc": 73}}, "history": [{"week": "May 13, 2026", "snapshot_date": "2026-05-13T08:00:00", "prepared_by": "Ariel M. Canino", "projects": [{"code": "Y2023-06-R-01", "name": "ROPA DOS", "progress": 42.57, "schedule_status": "Ahead", "schedule_variance_days": 20, "cost_status": "Within Budget", "health": "Good", "budget": 1445000000, "actual_cost": 552680639, "forecast_at_completion": 1445000000, "cpi": 2.61, "safe_manhours": 1192973.7, "incidents": 2, "near_miss": 0, "ncr_open": 1, "inspections_due": 10, "inspections_done": 6, "ddi": 25.87, "ot_rate": 2, "olc_alc": 0.686, "planned_finish": "Dec 1, 2028", "forecast_finish": "Dec 1, 2028"}, {"code": "Y2024-06-R-01", "name": "RPBohol Land Devt", "progress": 13.98, "schedule_status": "Ahead", "schedule_variance_days": 14, "cost_status": "Within Budget", "health": "Good", "budget": 710466000, "actual_cost": 69446179, "forecast_at_completion": 710466000, "cpi": 10.23, "safe_manhours": 126474, "incidents": 0, "near_miss": 0, "ncr_open": 0, "inspections_due": 4, "inspections_done": 2, "ddi": 12.05, "ot_rate": 2, "olc_alc": 1.346, "planned_finish": "Oct 1, 2027", "forecast_finish": "Oct 1, 2027"}, {"code": "Y2021-06-R-01", "name": "RHB DOS", "progress": 82.54, "schedule_status": "On Track", "schedule_variance_days": 0, "cost_status": "Within Budget", "health": "Good", "budget": 692791728, "actual_cost": 459040121, "forecast_at_completion": 692791728, "cpi": 1.51, "safe_manhours": 1722864, "incidents": 7, "near_miss": 2, "ncr_open": 0, "inspections_due": 2, "inspections_done": 2, "ddi": null, "ot_rate": null, "olc_alc": null, "planned_finish": "Apr 1, 2029", "forecast_finish": "Apr 1, 2029"}], "scoreboard": {"period": "May 18-23, 2026", "report_date": "May 25, 2026", "project_label": "Operations Management Division", "subject": "Housing Projects & LBH Project - Progress Scoreboard", "projects": [{"name": "ROPA2", "project_pr": 89, "accomplishment": 42.57, "variance_days": 20, "ddi": 6, "ind": 7, "ot": 6, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 372000, "staff_cost": 55200, "output_labor_cost": 307581, "olc_alc": 83}, {"name": "RHBDOS", "project_pr": 92, "accomplishment": 82.54, "variance_days": 12, "ddi": 20, "ind": 27, "ot": 33, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 248641, "staff_cost": 24000, "output_labor_cost": 166611, "olc_alc": 67}, {"name": "RPB", "project_pr": 72, "accomplishment": 13.98, "variance_days": 1, "ddi": 21, "ind": 30, "ot": 8, "ot_ddi_ind_baseline": 20, "pr_baseline": 90, "ranks_cost": 151688, "staff_cost": 182025000, "output_labor_cost": 89909, "olc_alc": 59}], "totals": {"ranks_cost": 772328.13, "staff_cost": 182104200, "output_labor_cost": 564101.6, "olc_alc": 73}}}]};
 
 async function loadData(){
   // Try live fetch first; fall back to embedded data
@@ -758,6 +879,7 @@ function render(){
   renderExec();
   renderSCurve();
   renderFiles();
+  renderHistory();
 }
 
 // ─────────────────────────────────
@@ -1843,6 +1965,286 @@ function openLightbox(src, caption){
 function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
 
+
+
+// ─────────────────────────────────
+// HISTORY TAB
+// ─────────────────────────────────
+function renderHistory(){
+  const history = (D.history || []).slice().sort((a,b)=>new Date(a.snapshot_date)-new Date(b.snapshot_date));
+  const ps = D.projects;
+
+  // Populate project filter
+  const pf = document.getElementById('histProjectFilter');
+  if(pf.options.length <= 1){
+    ps.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.code; o.textContent=p.name; pf.appendChild(o);
+    });
+  }
+
+  // KPI cards
+  const weekCount = history.length;
+  const firstSnap = history[0];
+  const lastSnap  = history[history.length-1];
+
+  document.getElementById('histKpiCards').innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Weeks on Record</div><span class="card-badge badge-info">HISTORY</span></div>
+      <div class="stat-val" style="color:var(--accent)">${weekCount}</div>
+      <div class="stat-label">Weekly snapshots saved</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">First Snapshot</div></div>
+      <div class="stat-val" style="font-size:18px;color:var(--muted)">${firstSnap?firstSnap.week:'—'}</div>
+      <div class="stat-label">Earliest week on record</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Latest Snapshot</div></div>
+      <div class="stat-val" style="font-size:18px;color:var(--accent2)">${lastSnap?lastSnap.week:'—'}</div>
+      <div class="stat-label">Most recent publish</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Projects Tracked</div></div>
+      <div class="stat-val">${ps.length}</div>
+      <div class="stat-label">All with full weekly history</div>
+    </div>`;
+
+  document.getElementById('histWeekCount').textContent =
+    `${weekCount} snapshot${weekCount!==1?'s':''} recorded`;
+
+  if(!history.length){
+    document.getElementById('histEmpty').style.display='block';
+    document.getElementById('portfolioHistSection').style.display='none';
+    return;
+  }
+  document.getElementById('histEmpty').style.display='none';
+
+  renderHistoryPortfolio(history, ps);
+  renderHistoryTable(history, ps, 'all');
+}
+
+function renderHistoryProject(){
+  const code = document.getElementById('histProjectFilter').value;
+  const history = (D.history||[]).slice().sort((a,b)=>new Date(a.snapshot_date)-new Date(b.snapshot_date));
+  const ps = D.projects;
+
+  if(code==='all'){
+    document.getElementById('portfolioHistSection').style.display='block';
+    document.getElementById('projectHistSection').style.display='none';
+    renderHistoryPortfolio(history, ps);
+    renderHistoryTable(history, ps, 'all');
+  } else {
+    const proj = ps.find(p=>p.code===code);
+    document.getElementById('portfolioHistSection').style.display='none';
+    document.getElementById('projectHistSection').style.display='block';
+    document.getElementById('histProjectTitle').textContent = proj?proj.name:code;
+    document.getElementById('histTableLabel').textContent = (proj?proj.name:code).toUpperCase();
+    renderHistoryProjectCharts(history, code, proj);
+    renderHistoryTable(history, ps, code);
+  }
+}
+
+function renderHistoryPortfolio(history, ps){
+  const labels = history.map(h=>h.week);
+  const colors = [C.gold, C.blue, C.green];
+
+  // Progress chart — one line per project
+  const progDatasets = ps.map((p,i)=>({
+    label: p.name,
+    data: history.map(h=>{
+      const hp = (h.projects||[]).find(x=>x.code===p.code);
+      return hp ? hp.progress : null;
+    }),
+    borderColor: colors[i%colors.length],
+    backgroundColor: 'transparent',
+    borderWidth: 2.5, pointRadius: 4, tension: 0.3
+  }));
+  makeChart('histProgressChart','line',{labels,datasets:progDatasets},{
+    scales:{
+      y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#1e2840'}},
+      x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}
+    }
+  });
+
+  // CPI chart
+  const cpiDatasets = ps.map((p,i)=>({
+    label: p.name,
+    data: history.map(h=>{
+      const hp=(h.projects||[]).find(x=>x.code===p.code);
+      return hp ? hp.cpi : null;
+    }),
+    borderColor: colors[i%colors.length],
+    backgroundColor:'transparent',
+    borderWidth:2.5,pointRadius:4,tension:0.3
+  }));
+  makeChart('histCpiChart','line',{labels,datasets:[
+    ...cpiDatasets,
+    {label:'Baseline (1.0)',data:history.map(()=>1.0),
+      borderColor:'rgba(255,255,255,.2)',backgroundColor:'transparent',
+      borderWidth:1,pointRadius:0,borderDash:[4,4]}
+  ]},{
+    scales:{
+      y:{min:0.5,max:1.5,ticks:{callback:v=>v.toFixed(2)},grid:{color:'#1e2840'}},
+      x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}
+    }
+  });
+
+  // Actual cost chart (₱M)
+  const costDatasets = ps.map((p,i)=>({
+    label: p.name,
+    data: history.map(h=>{
+      const hp=(h.projects||[]).find(x=>x.code===p.code);
+      return hp ? +(hp.actual_cost/1e6).toFixed(1) : null;
+    }),
+    borderColor: colors[i%colors.length],
+    backgroundColor: colors[i%colors.length]+'22',
+    borderWidth:2.5,pointRadius:4,tension:0.3,fill:false
+  }));
+  makeChart('histCostChart','line',{labels,datasets:costDatasets},{
+    scales:{
+      y:{ticks:{callback:v=>'₱'+v+'M'},grid:{color:'#1e2840'}},
+      x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}
+    }
+  });
+
+  // Safety manhours chart
+  const safetyDatasets = ps.map((p,i)=>({
+    label: p.name,
+    data: history.map(h=>{
+      const hp=(h.projects||[]).find(x=>x.code===p.code);
+      return hp ? hp.safe_manhours : null;
+    }),
+    borderColor: colors[i%colors.length],
+    backgroundColor:'transparent',
+    borderWidth:2.5,pointRadius:4,tension:0.3
+  }));
+  makeChart('histSafetyChart','line',{labels,datasets:safetyDatasets},{
+    scales:{
+      y:{ticks:{callback:v=>v>=1000?+(v/1000).toFixed(1)+'K':v},grid:{color:'#1e2840'}},
+      x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}
+    }
+  });
+}
+
+function renderHistoryProjectCharts(history, code, proj){
+  const labels = history.map(h=>h.week);
+  const getData = field => history.map(h=>{
+    const hp=(h.projects||[]).find(x=>x.code===code);
+    return hp!=null ? hp[field] : null;
+  });
+
+  // Progress
+  makeChart('histProjProgressChart','line',{labels,datasets:[
+    {label:'Progress %',data:getData('progress'),borderColor:C.gold,backgroundColor:C.goldA,
+     borderWidth:2.5,pointRadius:4,tension:0.3,fill:true}
+  ]},{scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#1e2840'}},x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}}});
+
+  // CPI
+  makeChart('histProjCpiChart','line',{labels,datasets:[
+    {label:'CPI',data:getData('cpi'),borderColor:C.blue,backgroundColor:'transparent',
+     borderWidth:2.5,pointRadius:4,tension:0.3},
+    {label:'Baseline',data:history.map(()=>1.0),borderColor:'rgba(255,255,255,.2)',
+     backgroundColor:'transparent',borderWidth:1,pointRadius:0,borderDash:[4,4]}
+  ]},{scales:{y:{ticks:{callback:v=>v.toFixed(2)},grid:{color:'#1e2840'}},x:{grid:{display:false},ticks:{maxRotation:45,font:{size:9}}}}});
+
+  // Actual cost
+  makeChart('histProjCostChart','bar',{labels,datasets:[
+    {label:'Actual Cost (₱M)',data:getData('actual_cost').map(v=>v!=null?+(v/1e6).toFixed(1):null),
+     backgroundColor:C.blueA,borderColor:C.blue,borderWidth:2}
+  ]},{scales:{y:{ticks:{callback:v=>'₱'+v+'M'},grid:{color:'#1e2840'}},x:{grid:{display:false},ticks:{font:{size:9}}}}});
+
+  // OT rate
+  makeChart('histProjOtChart','line',{labels,datasets:[
+    {label:'OT Rate %',data:getData('ot_rate'),borderColor:C.orange,backgroundColor:C.orangeA,
+     borderWidth:2,pointRadius:4,fill:true,tension:0.3},
+    {label:'Baseline 20%',data:history.map(()=>20),borderColor:'rgba(255,255,255,.2)',
+     backgroundColor:'transparent',borderWidth:1,pointRadius:0,borderDash:[4,4]}
+  ]},{scales:{y:{ticks:{callback:v=>v+'%'},grid:{color:'#1e2840'}},x:{grid:{display:false},ticks:{font:{size:9}}}}});
+
+  // Incidents
+  makeChart('histProjIncidentChart','bar',{labels,datasets:[
+    {label:'Incidents',data:getData('incidents'),backgroundColor:C.redA,borderColor:C.red,borderWidth:2},
+    {label:'Near Miss',data:getData('near_miss'),backgroundColor:C.orangeA,borderColor:C.orange,borderWidth:2}
+  ]},{scales:{y:{ticks:{stepSize:1},grid:{color:'#1e2840'}},x:{grid:{display:false},ticks:{font:{size:9}}}},plugins:{legend:{labels:{boxWidth:10}}}});
+}
+
+function renderHistoryTable(history, ps, filterCode){
+  const sorted = history.slice().sort((a,b)=>new Date(b.snapshot_date)-new Date(a.snapshot_date));
+  const head   = document.getElementById('histTableHead');
+  const body   = document.getElementById('histTableBody');
+  if(!head || !body) return;
+
+  const hColor = v => v==='Good'?'var(--good)':v==='At Risk'?'var(--warn)':'var(--danger)';
+  const cColor = v => v==='Within Budget'?'var(--good)':v==='At Risk'?'var(--warn)':'var(--danger)';
+
+  if(filterCode==='all'){
+    // Portfolio table — one row per week, columns per project
+    head.innerHTML=`<tr>
+      <th>Week</th>
+      <th>Date</th>
+      ${ps.map(p=>`<th colspan="4" style="text-align:center;border-left:1px solid var(--border)">${p.name}</th>`).join('')}
+    </tr>
+    <tr>
+      <th></th><th></th>
+      ${ps.map(()=>`
+        <th style="border-left:1px solid var(--border)">Progress</th>
+        <th>CPI</th>
+        <th>Cost (₱M)</th>
+        <th>Health</th>
+      `).join('')}
+    </tr>`;
+
+    body.innerHTML = sorted.map(h=>`<tr>
+      <td class="fw-bold td-mono" style="white-space:nowrap">${h.week}</td>
+      <td style="font-size:10px;color:var(--muted)">${new Date(h.snapshot_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</td>
+      ${ps.map(p=>{
+        const hp=(h.projects||[]).find(x=>x.code===p.code);
+        if(!hp) return '<td colspan="4" style="color:var(--muted);text-align:center;border-left:1px solid var(--border)">—</td>';
+        return `
+          <td class="td-mono" style="text-align:center;border-left:1px solid var(--border);color:var(--accent);font-weight:700">${hp.progress}%</td>
+          <td class="td-mono" style="text-align:center;color:${parseFloat(hp.cpi)>=1?'var(--good)':'var(--danger)'}">${hp.cpi}</td>
+          <td class="td-mono" style="text-align:right">₱${(hp.actual_cost/1e6).toFixed(1)}M</td>
+          <td style="text-align:center;font-size:10px;font-weight:700;color:${hColor(hp.health)}">${hp.health}</td>`;
+      }).join('')}
+    </tr>`).join('');
+  } else {
+    // Per-project detailed table
+    const proj = ps.find(p=>p.code===filterCode);
+    head.innerHTML=`<tr>
+      <th>Week</th><th>Date</th>
+      <th>Progress</th><th>Schedule</th><th>Variance</th>
+      <th>CPI</th><th>Actual Cost (₱M)</th><th>Budget Used</th>
+      <th>Safe MH</th><th>Incidents</th><th>NCR</th>
+      <th>OT %</th><th>DDI %</th><th>OLC/ALC</th><th>Health</th>
+    </tr>`;
+
+    body.innerHTML = sorted.map(h=>{
+      const hp=(h.projects||[]).find(x=>x.code===filterCode);
+      if(!hp) return `<tr><td class="fw-bold td-mono">${h.week}</td><td colspan="14" style="color:var(--muted)">No data</td></tr>`;
+      const budgetUsed = hp.budget>0 ? ((hp.actual_cost/hp.budget)*100).toFixed(1)+'%' : '—';
+      return `<tr>
+        <td class="fw-bold td-mono" style="white-space:nowrap">${h.week}</td>
+        <td style="font-size:10px;color:var(--muted)">${new Date(h.snapshot_date).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</td>
+        <td class="td-mono" style="color:var(--accent);font-weight:700">${hp.progress}%</td>
+        <td style="font-size:11px;color:${hp.schedule_status==='Ahead'?'var(--good)':hp.schedule_status==='Delayed'?'var(--danger)':'var(--text)'}">${hp.schedule_status}</td>
+        <td class="td-mono" style="text-align:center">${hp.schedule_variance_days}d</td>
+        <td class="td-mono" style="color:${parseFloat(hp.cpi)>=1?'var(--good)':'var(--danger)'};font-weight:700">${hp.cpi}</td>
+        <td class="td-mono" style="text-align:right">₱${(hp.actual_cost/1e6).toFixed(1)}M</td>
+        <td class="td-mono" style="text-align:center">${budgetUsed}</td>
+        <td class="td-mono" style="text-align:right">${hp.safe_manhours?.toLocaleString()??'—'}</td>
+        <td class="td-mono" style="text-align:center;color:${hp.incidents>0?'var(--danger)':'var(--good)'}">${hp.incidents??0}</td>
+        <td class="td-mono" style="text-align:center;color:${hp.ncr_open>0?'var(--warn)':'var(--text)'}">${hp.ncr_open??0}</td>
+        <td class="td-mono" style="text-align:center">${hp.ot_rate!=null?hp.ot_rate+'%':'—'}</td>
+        <td class="td-mono" style="text-align:center">${hp.ddi!=null?hp.ddi+'%':'—'}</td>
+        <td class="td-mono" style="text-align:center">${hp.olc_alc!=null?hp.olc_alc+'%':'—'}</td>
+        <td style="text-align:center;font-size:10px;font-weight:700;color:${hColor(hp.health)}">${hp.health}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+const hColor = v => v==='Good'?'var(--good)':v==='At Risk'?'var(--warn)':'var(--danger)';
 
 // ── BOOT ──
 loadData();
