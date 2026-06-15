@@ -692,7 +692,7 @@ async function doLogin(){
 function doLogout(){
   if(_notifPollTimer){ clearInterval(_notifPollTimer); _notifPollTimer=null; }
   const np = document.getElementById('notifPanel');
-  if(np) np.style.display = 'none';
+  if(np){ np.style.display = 'none'; }
   currentUser=null; currentData=null; location.reload();
 }
 
@@ -1599,9 +1599,8 @@ function renderNotifications(){
 
 function toggleNotifPanel(){
   const panel = document.getElementById('notifPanel');
-  const opening = !panel.classList.contains('show');
-  panel.classList.toggle('show');
-  // Refresh pending_submissions from server when opening the panel
+  const opening = (panel.style.display === 'none' || panel.style.display === '');
+  panel.style.display = opening ? 'block' : 'none';
   if(opening){
     fetch(`${RAW_BASE}/data.json?t=${Date.now()}`)
       .then(r=>r.ok?r.json():null)
@@ -1617,10 +1616,9 @@ function toggleNotifPanel(){
 document.addEventListener('click', function(e){
   const panel = document.getElementById('notifPanel');
   const wrap  = document.getElementById('notifBellWrap');
-  if(!panel || !panel.classList.contains('show')) return;
+  if(!panel || panel.style.display === 'none' || panel.style.display === '') return;
   if(panel.contains(e.target)) return;
   if(wrap && wrap.contains(e.target)) return;
-  panel.classList.remove('show');
   panel.style.display = 'none';
 });
 
@@ -1638,7 +1636,7 @@ async function markAllRead(){
   renderNotifications();
   const cachedPAT = sessionStorage.getItem('psc_pat');
   if(cachedPAT && isAdmin()) await pushNotificationsToGitHub(cachedPAT);
-  document.getElementById('notifPanel').classList.remove('show');
+  document.getElementById('notifPanel').style.display = 'none';
 }
 
 async function pushNotificationsToGitHub(pat){
@@ -1796,7 +1794,7 @@ let _reviewSubmission  = null;
 async function openReviewModal(username){
   // Close the notification panel first so it doesn't block the modal
   const np = document.getElementById('notifPanel');
-  if(np) np.style.display = 'none';
+  if(np){ np.style.display = 'none'; }
 
   // Always fetch fresh data to ensure we have latest pending_submissions
   try {
