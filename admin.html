@@ -14,7 +14,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:380px}
 .login-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:4px;text-align:center}
 .login-sub{font-size:11px;color:var(--muted);margin-bottom:24px;text-align:center;line-height:1.6}
-.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:400;overflow:visible}
+.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:400}
 .topbar-logo{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;color:#000}
 .topbar-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:1px}
 .topbar-sub{font-size:10px;color:var(--muted)}
@@ -118,7 +118,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .notif-body{flex:1}
 .notif-title{font-weight:700;font-size:12px}
 .notif-meta{font-size:10px;color:var(--muted);margin-top:2px}
-.notif-panel{position:absolute;top:54px;right:0;width:360px;background:var(--surface);
+.notif-panel{position:fixed;top:54px;right:16px;width:360px;background:var(--surface);
   border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.5);
   z-index:300;display:none;max-height:480px;overflow-y:auto}
 .notif-panel.show{display:block;animation:fadeIn .2s ease}
@@ -179,7 +179,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
   <div style="display:flex;align-items:center;gap:9px">
     <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">↗ Dashboard</a>
-    <div style="position:relative" id="notifBellWrap" style="display:none">
+    <div style="position:relative;display:none" id="notifBellWrap">
       <button class="btn btn-secondary btn-sm" onclick="toggleNotifPanel()" id="notifBell"
         style="position:relative;padding:7px 10px">
         🔔
@@ -194,28 +194,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div style="font-size:10px;color:var(--muted)" id="uRole">—</div>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="doLogout()">Sign Out</button>
+    <button class="btn btn-secondary btn-sm" onclick="doLogout()" style="position:relative;z-index:9999">Sign Out</button>
   </div>
-
-  <!-- NOTIFICATION PANEL -->
-  <div class="notif-panel" id="notifPanel">
-  <div class="notif-header">
-    <div>
-      <div class="notif-header-title">PM Submissions</div>
-      <div style="font-size:10px;color:var(--muted)">Updates pending your review &amp; publish</div>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="btn btn-secondary btn-sm" onclick="markAllRead()">✓ All Read</button>
-      <button onclick="toggleNotifPanel()"
-        style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0 4px">✕</button>
-    </div>
-  </div>
-  <div id="notifList">
-    <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">
-      No notifications yet.<br>PM submissions will appear here.
-    </div>
-  </div>
-</div>
 </div>
 
 
@@ -590,6 +570,25 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <div>
+      <div class="notif-header-title">PM Submissions</div>
+      <div style="font-size:10px;color:var(--muted)">Updates pending your review &amp; publish</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="markAllRead()">✓ All Read</button>
+      <button onclick="toggleNotifPanel()"
+        style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:0 4px">✕</button>
+    </div>
+  </div>
+  <div id="notifList">
+    <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">
+      No notifications yet.<br>PM submissions will appear here.
+    </div>
+  </div>
+</div>
 
 <!-- PM TOKEN ENTRY MODAL -->
 <div class="modal-overlay" id="pmTokenModal">
@@ -1617,12 +1616,12 @@ function toggleNotifPanel(){
 // Close notif panel when clicking outside of it
 document.addEventListener('click', function(e){
   const panel = document.getElementById('notifPanel');
-  const bell  = document.getElementById('notifBell');
   const wrap  = document.getElementById('notifBellWrap');
   if(!panel || !panel.classList.contains('show')) return;
   if(panel.contains(e.target)) return;
   if(wrap && wrap.contains(e.target)) return;
   panel.classList.remove('show');
+  panel.style.display = 'none';
 });
 
 async function markRead(notifId){
@@ -1823,8 +1822,10 @@ async function openReviewModal(username){
     `Submitted: ${new Date(sub.submitted_at).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'})} · Week: ${sub.week}`;
 
   document.getElementById('reviewDiffContent').innerHTML = buildDiffHTML(sub, currentData);
-  document.getElementById('reviewModal').style.display = 'flex';
-  document.getElementById('reviewModal').classList.add('show');
+  const rm = document.getElementById('reviewModal');
+  rm.style.display = 'flex';
+  rm.classList.add('show');
+  rm.scrollTop = 0;
 }
 
 function closeReviewModal(){
