@@ -515,24 +515,8 @@
   </div>
   <div class="grid-3 mb-16" id="projectSCurveCards"></div>
 
-  <!-- Portfolio combined -->
-  <div class="section-head">
-    <h2>Portfolio Cumulative S-Curve</h2>
-    <div class="section-head-line"></div>
-    <div class="section-head-tag">ALL PROJECTS COMBINED</div>
-  </div>
-  <div class="grid-2 mb-16">
-    <div class="card">
-      <div class="card-header"><div class="card-title">Portfolio — Cumulative Physical Progress (%)</div><span class="card-badge badge-info">COMBINED</span></div>
-      <div class="chart-box" style="position:relative"><canvas id="portfolioProgressChart" style="max-height:280px"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Portfolio — Cumulative Cost (₱M)</div><span class="card-badge badge-info">COMBINED</span></div>
-      <div class="chart-box" style="position:relative"><canvas id="portfolioCostChart" style="max-height:280px"></canvas></div>
-    </div>
-  </div>
 
-  <!-- EVM Table -->
+  <!-- EVM Table  <!-- EVM Table -->
   <div class="card mb-16">
     <div class="card-header">
       <div class="card-title">Earned Value Management (EVM) Summary</div>
@@ -1758,44 +1742,6 @@ function renderSCurve(){
     let val=0,cnt=0;
     ps.forEach((p,i)=>{const d=interpProgress(p,lbl);if(d){val+=d.actual_progress*weights[i];cnt++;}});
     return cnt?+val.toFixed(2):null;
-  });
-
-  makeChart('portfolioProgressChart','line',{
-    labels:allLabels,
-    datasets:[
-      {label:'Portfolio Planned (%)',data:portfolioPlanned,borderColor:'#6b7a99',backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[4,2]},
-      {label:'Portfolio Actual (%)',data:portfolioActual,borderColor:'#f0b429',backgroundColor:'rgba(240,180,41,.12)',borderWidth:2.5,pointRadius:3,fill:true},
-    ]
-  },{
-    scales:{
-      y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:'#1e2840'}},
-      x:{grid:{display:false},ticks:{maxRotation:55,font:{size:9}}}
-    }
-  });
-
-  // Portfolio cost
-  const portfolioCostPlanned = allLabels.map(lbl=>{
-    let val=0;
-    ps.forEach(p=>{const d=interpProgress(p,lbl);if(d)val+=d.planned_cost;});
-    return +(val/1e6).toFixed(1);
-  });
-  const portfolioCostActual = allLabels.map(lbl=>{
-    let val=0,cnt=0;
-    ps.forEach(p=>{const d=interpProgress(p,lbl);if(d){val+=d.actual_cost;cnt++;}});
-    return cnt?+(val/1e6).toFixed(1):null;
-  });
-
-  makeChart('portfolioCostChart','line',{
-    labels:allLabels,
-    datasets:[
-      {label:'Portfolio Planned (₱M)',data:portfolioCostPlanned,borderColor:'#6b7a99',backgroundColor:'transparent',borderWidth:2,pointRadius:2,borderDash:[4,2]},
-      {label:'Portfolio Actual (₱M)',data:portfolioCostActual,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.12)',borderWidth:2.5,pointRadius:3,fill:true},
-    ]
-  },{
-    scales:{
-      y:{ticks:{callback:v=>'₱'+v+'M'},grid:{color:'#1e2840'}},
-      x:{grid:{display:false},ticks:{maxRotation:55,font:{size:9}}}
-    }
   });
 
   // EVM Table
