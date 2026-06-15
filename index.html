@@ -1191,9 +1191,9 @@ function renderProductivity(){
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">Portfolio OLC/ALC</div></div>
-      <div class="stat-val" style="color:var(--good)">${sb?sb.totals.olc_alc+'%':'—'}</div>
+      <div class="stat-val" style="color:${parseInt(sb?.totals?.olc_alc||0)>=100?'var(--good)':parseInt(sb?.totals?.olc_alc||0)>=80?'var(--accent)':'var(--danger)'}">${sb?sb.totals.olc_alc+'%':'—'}</div>
       <div class="stat-label">Output Labor Cost ratio</div>
-      <div class="stat-sub">${parseInt(sb?.totals?.olc_alc||0)<100?'↑ Efficient':'↓ Monitor'}</div>
+      <div class="stat-sub">${parseInt(sb?.totals?.olc_alc||0)>=100?'↑ Efficient':'↓ Monitor'}</div>
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">Total Output Labor Cost</div></div>
@@ -1211,7 +1211,7 @@ function renderProductivity(){
   // ── Scoreboard table ──
   const fmtPct = v => v!=null ? v+'%' : '—';
   const fmtNum = v => v!=null ? '₱'+fmt(v) : '—';
-  const olcColor = v => v>=80?'var(--good)':v>=60?'var(--accent)':'var(--danger)';
+  const olcColor = v => v>=100?'var(--good)':v>=80?'var(--accent)':'var(--danger)';
   const prColor  = v => v>=90?'var(--good)':v>=70?'var(--accent)':'var(--danger)';
 
   const rows = sbp.map(p=>`<tr>
@@ -1252,27 +1252,27 @@ function renderProductivity(){
     <td class="td-mono" style="text-align:right">₱${fmt(p.output_labor_cost)}</td>
     <td style="text-align:center;color:${olcColor(p.olc_alc)};font-weight:700">${p.olc_alc}%</td>
     <td style="text-align:center">
-      <span class="card-badge ${p.olc_alc<100?'badge-good':'badge-warn'}">${p.olc_alc<100?'Efficient':'Monitor'}</span>
+      <span class="card-badge ${p.olc_alc>=100?'badge-good':p.olc_alc>=80?'badge-warn':'badge-danger'}">${p.olc_alc>=100?'Efficient':p.olc_alc>=80?'Monitor':'At Risk'}</span>
     </td>
   </tr>`).join('') + (sb?`<tr style="background:rgba(240,180,41,.08)">
     <td class="fw-bold" style="color:var(--accent)">TOTAL</td>
     <td class="td-mono fw-bold" style="text-align:right;color:var(--accent)">₱${fmt(sb.totals.ranks_cost)}</td>
     <td class="td-mono fw-bold" style="text-align:right;color:var(--accent)">₱${fmt(sb.totals.staff_cost)}</td>
     <td class="td-mono fw-bold" style="text-align:right;color:var(--accent)">₱${fmt(sb.totals.output_labor_cost)}</td>
-    <td style="text-align:center;color:var(--good);font-weight:700">${sb.totals.olc_alc}%</td>
+    <td style="text-align:center;color:${sb.totals.olc_alc>=100?'var(--good)':sb.totals.olc_alc>=80?'var(--accent)':'var(--danger)'};font-weight:700">${sb.totals.olc_alc}%</td>
     <td></td>
   </tr>`:'');
 
   // ── OLC/ALC rows ──
   const olcEl = document.getElementById('olcRows');
   if(olcEl) olcEl.innerHTML = sbp.map(p=>{
-    const good = p.olc_alc < 100;
+    const good = p.olc_alc >= 100; const warn = p.olc_alc >= 80;
     return `<div class="olc-indicator ${good?'olc-good':'olc-bad'}">
       <div>
         <div class="fw-bold">${p.name}</div>
-        <div style="font-size:11px;color:var(--muted)">${good?'Efficient — output recovering full cost':'Watch — output not recovering full cost'}</div>
+        <div style="font-size:11px;color:var(--muted)">${good?'Efficient — output recovering full cost':warn?'Monitor — output partially recovering cost':'At Risk — output not recovering labor cost'}</div>
       </div>
-      <div style="font-family:'Bebas Neue';font-size:24px;color:${good?'var(--good)':'var(--warn)'}">${p.olc_alc}%</div>
+      <div style="font-family:'Bebas Neue';font-size:24px;color:${good?'var(--good)':warn?'var(--accent)':'var(--danger)'}">${p.olc_alc}%</div>
     </div>`;
   }).join('');
 
