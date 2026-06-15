@@ -1781,7 +1781,11 @@ let _reviewSubmission  = null;
 
 // Called by Admin when clicking 🔍 Review on a notification
 function openReviewModal(username){
-  const sub = (currentData.pending_submissions || {})[username];
+  // DEBUG - remove after fix confirmed
+  const _ps = currentData.pending_submissions || {};
+  const _keys = Object.keys(_ps);
+  alert('openReviewModal called\nusername: ' + username + '\npending_submissions keys: [' + _keys.join(',') + ']\nhas submission: ' + (!!_ps[username]));
+  const sub = _ps[username];
   if(!sub){
     showStatus('No pending submission found for this PM.','error');
     return;
