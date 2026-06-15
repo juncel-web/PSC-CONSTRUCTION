@@ -1474,7 +1474,7 @@ function initNotifications(){
 }
 
 let _notifPollTimer = null;
-function startNotifPolling(){
+async function startNotifPolling(){
   if(_notifPollTimer) clearInterval(_notifPollTimer);
   _notifPollTimer = setInterval(async ()=>{
     try {
@@ -1914,4 +1914,4 @@ function buildDiffHTML(sub, live){
                 <td>${cell(r.planned_progress+'%',lr.planned_progress+'%',false)}</td>
                 <td>${cell(r.actual_progress+'%',lr.actual_progress+'%',false)}</td>
                 <td>${cell(r.planned_cost,lr.planned_cost,true)}</td>
-                <td>${cell(r.actual_
+                <td>${cell(r.a
