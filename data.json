@@ -1351,7 +1351,7 @@
       "notes": ""
     },
     {
-      "id": "n1781509426887",
+      "id": "n1781509499079",
       "title": "Ariel M. Canino submitted weekly update",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1360,7 +1360,7 @@
         "RPBohol Land Devt",
         "RHB DOS"
       ],
-      "timestamp": "2026-06-15T07:43:46.887Z",
+      "timestamp": "2026-06-15T07:44:59.079Z",
       "week": "June 1-6",
       "read": false,
       "has_submission": true,
@@ -1369,7 +1369,7 @@
   ],
   "pending_submissions": {
     "acanino": {
-      "submitted_at": "2026-06-15T07:43:46.887Z",
+      "submitted_at": "2026-06-15T07:44:59.079Z",
       "week": "June 1-6",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1440,7 +1440,7 @@
               "eac": 1285956339.37
             },
             {
-              "period": "August 30, 2024",
+              "period": "Aigust 30, 2024",
               "planned_progress": 3.2800000000000002,
               "actual_progress": 3.34,
               "planned_cost": 47730560,
