@@ -1079,7 +1079,7 @@
       "notes": ""
     },
     {
-      "id": "n1781506994565",
+      "id": "n1781508142084",
       "title": "Ariel M. Canino submitted weekly update",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1088,7 +1088,7 @@
         "RPBohol Land Devt",
         "RHB DOS"
       ],
-      "timestamp": "2026-06-15T07:03:14.565Z",
+      "timestamp": "2026-06-15T07:22:22.084Z",
       "week": "June 1-6",
       "read": false,
       "has_submission": true,
@@ -1097,7 +1097,7 @@
   ],
   "pending_submissions": {
     "acanino": {
-      "submitted_at": "2026-06-15T07:03:14.565Z",
+      "submitted_at": "2026-06-15T07:22:22.084Z",
       "week": "June 1-6",
       "submitter": "acanino",
       "submitter_name": "Ariel M. Canino",
@@ -1144,44 +1144,292 @@
               "eac": 1445000000
             },
             {
-              "period": "January 2026",
-              "planned_progress": 35,
-              "actual_progress": 36.42,
+              "period": "45442",
+              "planned_progress": 0.0041,
+              "actual_progress": 0.0064,
+              "planned_cost": 5966320.000000001,
+              "actual_cost": 9313280,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45473",
+              "planned_progress": 0.0097,
+              "actual_progress": 0.0124,
+              "planned_cost": 14115440,
+              "actual_cost": 18044480,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45503",
+              "planned_progress": 0.0225,
+              "actual_progress": 0.0229,
+              "planned_cost": 32742000,
+              "actual_cost": 33324080,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45534",
+              "planned_progress": 0.0328,
+              "actual_progress": 0.0334,
+              "planned_cost": 47730560.00000001,
+              "actual_cost": 48603680,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "September 30, 2024",
+              "planned_progress": 0.0424,
+              "actual_progress": 0.044,
+              "planned_cost": 61700480,
+              "actual_cost": 64028800,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "October 30, 2024",
+              "planned_progress": 0.0564,
+              "actual_progress": 0.0592,
+              "planned_cost": 82073280,
+              "actual_cost": 86147840,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "November 30, 2024",
+              "planned_progress": 0.0672,
+              "actual_progress": 0.0746,
+              "planned_cost": 97789440,
+              "actual_cost": 108557920,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "December 30, 2024",
+              "planned_progress": 0.0795,
+              "actual_progress": 0.0896,
+              "planned_cost": 115688400,
+              "actual_cost": 130385920,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "January 30, 2025",
+              "planned_progress": 0.1082,
+              "actual_progress": 0.1072,
+              "planned_cost": 157452640,
+              "actual_cost": 155997440,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "February 28, 2025",
+              "planned_progress": 0.126,
+              "actual_progress": 0.1327,
+              "planned_cost": 183355200,
+              "actual_cost": 193105040.00000003,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "March 30, 2025",
+              "planned_progress": 0.142,
+              "actual_progress": 0.1522,
+              "planned_cost": 206638399.99999997,
+              "actual_cost": 221481440,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "April 30, 2025",
+              "planned_progress": 0.1675,
+              "actual_progress": 0.1726,
+              "planned_cost": 243746000,
+              "actual_cost": 251167520,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45807",
+              "planned_progress": 0.1926,
+              "actual_progress": 0.1932,
+              "planned_cost": 280271520,
+              "actual_cost": 281144640,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45838",
+              "planned_progress": 0.2056,
+              "actual_progress": 0.2141,
+              "planned_cost": 299189120,
+              "actual_cost": 311558320,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45868",
+              "planned_progress": 0.226,
+              "actual_progress": 0.2351,
+              "planned_cost": 328875200,
+              "actual_cost": 342117520,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "45899",
+              "planned_progress": 0.2469,
+              "actual_progress": 0.2565,
+              "planned_cost": 359288880,
+              "actual_cost": 373258800,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "September 30, 2025",
+              "planned_progress": 0.2678,
+              "actual_progress": 0.2783,
+              "planned_cost": 389702560,
+              "actual_cost": 404982160,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "October 30, 2025",
+              "planned_progress": 0.2884,
+              "actual_progress": 0.3006,
+              "planned_cost": 419679680,
+              "actual_cost": 437433119.99999994,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "November 30, 2025",
+              "planned_progress": 0.3093,
+              "actual_progress": 0.3228,
+              "planned_cost": 450093360,
+              "actual_cost": 469738559.99999994,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "December 30, 2025",
+              "planned_progress": 0.3296,
+              "actual_progress": 0.3433,
+              "planned_cost": 479633920,
+              "actual_cost": 499570160,
+              "eac": 1285956339.37
+            },
+            {
+              "period": "January 30, 2026",
+              "planned_progress": 0.35,
+              "actual_progress": 0.3642,
               "planned_cost": 509320000,
               "actual_cost": 529983840,
               "eac": 1285956339.37
             },
             {
-              "period": "February 2026",
-              "planned_progress": 37.03,
-              "actual_progress": 38.54,
+              "period": "February 28, 2026",
+              "planned_progress": 0.3703,
+              "actual_progress": 0.3854,
               "planned_cost": 538860560,
               "actual_cost": 560834080,
               "eac": 1285956339.37
             },
             {
-              "period": "March 2026",
-              "planned_progress": 39.12,
-              "actual_progress": 40.62,
+              "period": "March 30, 2026",
+              "planned_progress": 0.3912,
+              "actual_progress": 0.4062,
               "planned_cost": 569274240,
               "actual_cost": 591102240,
               "eac": 1285956339.37
             },
             {
-              "period": "April 2026",
-              "planned_progress": 41.12,
-              "actual_progress": 42.57,
+              "period": "April 30, 2026",
+              "planned_progress": 0.4112,
+              "actual_progress": 0.4257,
               "planned_cost": 598378240,
               "actual_cost": 619478640,
               "eac": 1285956339.37
             },
             {
-              "period": "May 2026",
-              "planned_progress": 43.181,
+              "period": "46172",
+              "planned_progress": 0.4318,
               "actual_progress": 44.58,
               "planned_cost": 628355360,
               "actual_cost": 648728160,
               "eac": 1285956339.37
+            },
+            {
+              "period": "46203",
+              "planned_progress": 0.4524,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "46233",
+              "planned_progress": 0.4733,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "46264",
+              "planned_progress": 0.4937,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "September 30, 2026",
+              "planned_progress": 0.5147,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "October 30, 2026",
+              "planned_progress": 0.5355,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "November 30, 2026",
+              "planned_progress": 0.5565,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "December 30, 2026",
+              "planned_progress": 0.5772,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "January 30, 2027",
+              "planned_progress": 0.5983,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "February 28, 2027",
+              "planned_progress": 0.6186,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "March 30, 2027",
+              "planned_progress": 0.6389,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
+            },
+            {
+              "period": "April 30, 2027",
+              "planned_progress": 0.6589,
+              "actual_progress": 0,
+              "planned_cost": 0,
+              "actual_cost": 0,
+              "eac": 1445000000
             }
           ]
         },
