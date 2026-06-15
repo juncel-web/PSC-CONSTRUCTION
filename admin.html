@@ -520,6 +520,31 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 
+
+<!-- UPLOAD PAT MODAL -->
+<div class="modal-overlay" id="uploadPatModal" style="display:none">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">🔑 Upload File to GitHub</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+      Enter your GitHub Personal Access Token to upload the file directly to the repository.
+      The token is used only for this upload and never stored.
+    </p>
+    <div class="form-group" style="margin-bottom:6px">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="uploadPatInput" placeholder="ghp_xxxxxxxxxxxx"
+        onkeydown="if(event.key==='Enter')confirmUpload()"/>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:16px">
+      Need a token? GitHub → Settings → Developer settings → Personal access tokens → <strong>repo</strong> scope.
+    </div>
+    <div id="uploadPatStatus" style="font-size:12px;margin-bottom:12px;display:none;padding:8px 12px;border-radius:6px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeUploadPatModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmUpload()" id="confirmUploadBtn">⬆ Upload</button>
+    </div>
+  </div>
+</div>
+
 <!-- PAT MODAL — shown only when Admin clicks Save & Publish -->
 <div class="modal-overlay" id="patModal">
   <div class="modal" style="width:420px">
@@ -1200,85 +1225,115 @@ function previewFile(){
   }
 }
 
-async function uploadFile(){
+async // Pending upload state
+let _pendingUpload = null;
+
+function uploadFile(){
   const fileEl   = document.getElementById('f_file');
   const projCode = document.getElementById('f_project').value;
   const section  = document.getElementById('f_section').value;
   const notes    = document.getElementById('f_notes').value.trim();
-  const prog     = document.getElementById('uploadProgress');
-  const btn      = document.getElementById('uploadBtn');
   const file     = fileEl.files[0];
 
   if(!file){ showStatus('Please select a file to upload.','error'); return; }
+  if(!projCode){ showStatus('Please select a project.','error'); return; }
   if(file.size > 5*1024*1024){ showStatus('File exceeds 5MB limit.','error'); return; }
 
-  // Ask for PAT if admin, or just store in metadata if PM
-  let pat = '';
-  if(isAdmin()){
-    pat = prompt('Enter your GitHub PAT to upload the file:');
-    if(!pat) return;
-  }
-
-  btn.disabled=true; prog.textContent='Reading file…';
-
+  // Read file first, then show PAT modal
+  document.getElementById('uploadProgress').textContent = 'Reading file…';
   const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const base64  = e.target.result.split(',')[1];
-      const isImage = file.type.startsWith('image/');
-      const ext     = file.name.split('.').pop().toLowerCase();
-      const safeName= file.name.replace(/[^a-zA-Z0-9._-]/g,'_').toLowerCase();
-      const ts      = Date.now();
-      const fname   = `${ts}_${safeName}`;
-      const ghPath  = `files/${projCode}/${section}/${fname}`;
+  reader.onload = e => {
+    const base64   = e.target.result.split(',')[1];
+    const isImage  = file.type.startsWith('image/');
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_').toLowerCase();
+    const ts       = Date.now();
+    const fname    = `${ts}_${safeName}`;
+    const ghPath   = `files/${projCode}/${section}/${fname}`;
 
-      const newFileMeta = {
-        id          : 'f'+ts,
-        project_code: projCode,
-        section,
-        filename    : fname,
-        original_name: file.name,
-        github_path : ghPath,
-        file_type   : isImage ? 'image' : 'document',
-        uploader    : currentUser.username,
-        upload_date : new Date().toISOString(),
-        status      : isAdmin() ? 'approved' : 'pending',
-        approved_by : isAdmin() ? 'admin' : '',
-        notes
-      };
-
-      if(isAdmin() && pat){
-        // Upload file bytes to GitHub
-        prog.textContent='Uploading to GitHub…';
-        const GITHUB_USER='juncel-web', GITHUB_REPO='PSC-CONSTRUCTION';
-        const apiUrl=`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghPath}`;
-        const headers={'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
-        const res = await fetch(apiUrl,{method:'PUT',headers,
-          body:JSON.stringify({message:`Upload: ${file.name} for ${projCode}`,content:base64})});
-        if(!res.ok){ const err=await res.json(); throw new Error(err.message||'Upload failed'); }
-        prog.textContent='File uploaded ✓  Saving metadata…';
-      } else {
-        // PM: just save metadata as pending, no actual file upload
-        newFileMeta.status = 'pending';
-        prog.textContent='File queued for admin upload ✓';
+    _pendingUpload = {
+      file, base64, projCode, section, notes, fname, ghPath, isImage,
+      meta: {
+        id: 'f'+ts, project_code: projCode, section,
+        filename: fname, original_name: file.name,
+        github_path: ghPath,
+        file_type: isImage ? 'image' : 'document',
+        uploader: currentUser.username,
+        upload_date: new Date().toISOString(),
+        status: 'approved', approved_by: currentUser.username, notes
       }
-
-      if(!currentData.files) currentData.files=[];
-      currentData.files.push(newFileMeta);
-
-      buildFilesPanel();
-      updatePendingBadge();
-      fileEl.value='';
-      document.getElementById('filePreviewArea').style.display='none';
-      document.getElementById('f_notes').value='';
-      showStatus(isAdmin()?`✓ "${file.name}" uploaded and approved.`:`✓ "${file.name}" submitted for admin approval.`,'success');
-      prog.textContent='';
-    } catch(err){
-      showStatus('Upload error: '+err.message,'error');
-      prog.textContent='';
-    } finally { btn.disabled=false; }
+    };
+    document.getElementById('uploadProgress').textContent = '';
+    // Show PAT modal for both Admin and PM
+    document.getElementById('uploadPatInput').value = '';
+    document.getElementById('uploadPatStatus').style.display = 'none';
+    document.getElementById('confirmUploadBtn').disabled = false;
+    document.getElementById('uploadPatModal').style.display = 'flex';
+    setTimeout(()=>document.getElementById('uploadPatInput').focus(), 100);
   };
   reader.readAsDataURL(file);
+}
+
+function closeUploadPatModal(){
+  document.getElementById('uploadPatModal').style.display = 'none';
+  _pendingUpload = null;
+}
+
+async function confirmUpload(){
+  const pat = document.getElementById('uploadPatInput').value.trim();
+  const statusEl = document.getElementById('uploadPatStatus');
+  const btn = document.getElementById('confirmUploadBtn');
+  if(!pat){ 
+    statusEl.textContent = 'Please enter your GitHub PAT.';
+    statusEl.style.display = 'block';
+    statusEl.style.background = 'rgba(239,68,68,.15)';
+    statusEl.style.color = 'var(--danger)';
+    return; 
+  }
+  if(!_pendingUpload){ closeUploadPatModal(); return; }
+
+  btn.disabled = true;
+  statusEl.textContent = 'Uploading to GitHub…';
+  statusEl.style.display = 'block';
+  statusEl.style.background = 'rgba(59,130,246,.15)';
+  statusEl.style.color = 'var(--accent2)';
+
+  const { base64, ghPath, file, projCode, meta } = _pendingUpload;
+
+  try {
+    const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ghPath}`;
+    const headers = {
+      'Authorization': `token ${pat}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    };
+    const res = await fetch(apiUrl, {
+      method: 'PUT', headers,
+      body: JSON.stringify({ message: `Upload: ${file.name} for ${projCode}`, content: base64 })
+    });
+    if(!res.ok){ const err=await res.json(); throw new Error(err.message||'Upload failed'); }
+
+    // Success - add to currentData
+    if(!currentData.files) currentData.files = [];
+    currentData.files.push(meta);
+
+    buildFilesPanel();
+    updatePendingBadge();
+
+    document.getElementById('f_file').value = '';
+    document.getElementById('filePreviewArea').style.display = 'none';
+    document.getElementById('f_notes').value = '';
+    document.getElementById('uploadProgress').textContent = '';
+
+    closeUploadPatModal();
+    showStatus(`✓ "${file.name}" uploaded successfully. Remember to Save & Publish to update the dashboard.`, 'success');
+    _pendingUpload = null;
+
+  } catch(err) {
+    statusEl.textContent = '❌ Error: ' + err.message;
+    statusEl.style.background = 'rgba(239,68,68,.15)';
+    statusEl.style.color = 'var(--danger)';
+    btn.disabled = false;
+  }
 }
 
 function buildFilesPanel(){
