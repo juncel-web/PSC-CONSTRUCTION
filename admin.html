@@ -1914,4 +1914,780 @@ function buildDiffHTML(sub, live){
                 <td>${cell(r.planned_progress+'%',lr.planned_progress+'%',false)}</td>
                 <td>${cell(r.actual_progress+'%',lr.actual_progress+'%',false)}</td>
                 <td>${cell(r.planned_cost,lr.planned_cost,true)}</td>
-                <td>${cell(r.a
+                <td>${cell(r.actual_cost,lr.actual_cost,true)}</td>
+                <td>${cell(r.eac,lr.eac,true)}</td>
+              </tr>`;
+            }).join('')}
+          </table>`;
+        } else {
+          // Regular field diff table
+          panelContent = `<table class="diff-table">
+            <tr><th>Field</th><th>Current Live Value</th><th>PM Submitted Value</th><th>Status</th></tr>
+            ${gdata.changes.map(f=>{
+              const isFlag = f.flag && f.flag(subProj[f.key], liveProj[f.key]);
+              const oldVal = f.fmt==='money'?fmtM(liveProj[f.key]):f.fmt==='pct'?fmtP(liveProj[f.key]):fmt(liveProj[f.key]);
+              const newVal = f.fmt==='money'?fmtM(subProj[f.key]):f.fmt==='pct'?fmtP(subProj[f.key]):fmt(subProj[f.key]);
+              return `<tr style="${isFlag?'background:rgba(239,68,68,.05)':''}">
+                <td style="font-weight:600">${isFlag?'🚨 ':''}${f.label}</td>
+                <td><span class="diff-old">${oldVal}</span></td>
+                <td><span class="diff-new">${newVal}</span></td>
+                <td>${isFlag
+                  ?`<span style="color:var(--danger);font-size:10px;font-weight:700">⚠ Review Required</span>`
+                  :`<span style="color:var(--accent3);font-size:10px">✓ Updated</span>`
+                }</td>
+              </tr>`;
+            }).join('')}
+          </table>`;
+        }
+
+        return `<div id="difftab_${pi}_${g}" class="diff-tab-panel" style="display:${gi===0?'block':'none'}">
+          ${panelContent}
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+
+  return html;
+}
+
+function switchDiffTab(tabKey, btn){
+  // Find all tab buttons and panels within the same project block
+  const container = btn.closest('[style*="margin-bottom:14px"]');
+  if(!container) return;
+  container.querySelectorAll('.diff-tab').forEach(b=>b.classList.remove('diff-tab-active'));
+  container.querySelectorAll('.diff-tab-panel').forEach(p=>p.style.display='none');
+  btn.classList.add('diff-tab-active');
+  const [pi, g] = tabKey.split('_');
+  const panel = document.getElementById(`difftab_${pi}_${g}`);
+  if(panel) panel.style.display='block';
+}
+
+
+function acceptSubmission(){
+  if(!_reviewSubmission) return;
+  const sub = _reviewSubmission;
+
+  // Merge PM's project data into currentData
+  (sub.projects||[]).forEach(subProj=>{
+    const idx = currentData.projects.findIndex(p=>p.code===subProj.code);
+    if(idx<0) return;
+    // Merge all editable fields
+    const fields = ['progress','schedule_status','schedule_variance_days','cost_status','health',
+      'planned_finish','forecast_finish','actual_cost','forecast_at_completion','cpi',
+      'pa_budget','pa_actual','safe_manhours','inspections_due','inspections_done',
+      'ncr_open','incidents','near_miss','ddi','ot_rate','olc_alc',
+      'last_toolbox','safety_action','critical_activities','schedule_recommendation','s_curve'];
+    fields.forEach(f=>{ if(subProj[f]!==undefined) currentData.projects[idx][f] = subProj[f]; });
+  });
+
+  // Mark notification as read and remove pending submission
+  const notif = (currentData.notifications||[]).find(n=>n.submitter===_reviewingUsername&&!n.read);
+  if(notif) notif.read = true;
+  if(currentData.pending_submissions) delete currentData.pending_submissions[_reviewingUsername];
+
+  // Rebuild all forms with the merged data
+  populateForms();
+  closeReviewModal();
+  showStatus(`✅ Changes from ${_reviewingUsername} accepted. Review all panels then Save & Publish.`,'success');
+}
+
+function rejectSubmission(){
+  if(!_reviewingUsername) return;
+  if(!confirm(`Reject all changes from ${_reviewingUsername}? Their submission will be discarded.`)) return;
+
+  // Mark notification read, remove pending submission
+  const notif = (currentData.notifications||[]).find(n=>n.submitter===_reviewingUsername&&!n.read);
+  if(notif){ notif.read=true; notif.title='[REJECTED] '+notif.title; }
+  if(currentData.pending_submissions) delete currentData.pending_submissions[_reviewingUsername];
+
+  renderNotifications();
+  closeReviewModal();
+  showStatus(`Changes from ${_reviewingUsername} rejected and discarded.`,'success');
+}
+
+// ── ADD ROW HELPERS ──
+function addSCurveRow(idx){
+  sc_counts[idx]=(sc_counts[idx]||0)+1;
+  const j='n'+sc_counts[idx];
+  const div=document.createElement('div');
+  div.id=`sc${idx}-row-${j}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(6,1fr)">
+    <div class="form-group"><label>Period</label><input id="sc${idx}_${j}_period" placeholder="e.g. May 20, 2026"/></div>
+    <div class="form-group"><label>Planned %</label><input id="sc${idx}_${j}_pp" type="number" step="0.01" placeholder="0.00"/></div>
+    <div class="form-group"><label>Actual %</label><input id="sc${idx}_${j}_ap" type="number" step="0.01" placeholder="0.00"/></div>
+    <div class="form-group"><label>Planned Cost (₱)</label><input id="sc${idx}_${j}_pc" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>Actual Cost (₱)</label><input id="sc${idx}_${j}_ac" type="number" placeholder="0"/></div>
+    <div class="form-group"><label>EAC (₱)</label><input id="sc${idx}_${j}_eac" type="number" placeholder="0"/></div>
+  </div>
+  <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px"
+    onclick="document.getElementById('sc${idx}-row-${j}').remove()">✕</button>`;
+  document.getElementById(`sc${idx}-rows`).appendChild(div);
+}
+
+function addProcRow(){
+  pc++; const i='n'+pc; const ps=currentData.projects;
+  const div=document.createElement('div'); div.id=`proc-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(4,1fr)">
+    <div class="form-group"><label>Project</label><select id="pr${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Item</label><input id="pr${i}_item"/></div>
+    <div class="form-group"><label>Vendor</label><input id="pr${i}_vendor"/></div>
+    <div class="form-group"><label>Required Date</label><input id="pr${i}_req"/></div>
+    <div class="form-group"><label>Delivery Date</label><input id="pr${i}_dlv"/></div>
+    <div class="form-group"><label>Status</label><select id="pr${i}_st"><option>In Progress</option><option>Delivered</option><option>Delayed</option></select></div>
+    <div class="form-group"><label>Buffer</label><input id="pr${i}_buf"/></div>
+    <div class="form-group"><label>Action Note</label><input id="pr${i}_act"/></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('proc-row-${i}').remove()">✕</button>`;
+  document.getElementById('procForms').appendChild(div);
+}
+
+function addCORow(){
+  cc++; const i='n'+cc; const ps=currentData.projects;
+  const div=document.createElement('div'); div.id=`co-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project</label><select id="co${i}_p">${ps.map(x=>`<option value="${x.code}">${x.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>CO No.</label><input id="co${i}_no"/></div>
+    <div class="form-group"><label>Description</label><input id="co${i}_desc"/></div>
+    <div class="form-group"><label>Amount (₱)</label><input id="co${i}_amt" type="number" value="0"/></div>
+    <div class="form-group"><label>Status</label><select id="co${i}_st"><option>Ongoing</option><option>For PSC Approval</option><option>Completed</option><option>Cancelled</option></select></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('co-row-${i}').remove()">✕</button>`;
+  document.getElementById('coForms').appendChild(div);
+}
+
+function addRiskRow(){
+  rc++; const i='n'+rc;
+  const div=document.createElement('div'); div.id=`risk-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project Code</label><input id="ri${i}_p"/></div>
+    <div class="form-group"><label>Risk</label><input id="ri${i}_risk"/></div>
+    <div class="form-group"><label>Impact</label><select id="ri${i}_imp"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+    <div class="form-group"><label>Status</label><select id="ri${i}_st"><option>Active</option><option>Ongoing</option><option>Overdue</option><option>Resolved</option></select></div>
+    <div class="form-group"><label>Owner</label><input id="ri${i}_own"/></div>
+    <div class="form-group"><label>Due Date</label><input id="ri${i}_due"/></div>
+    <div class="form-group full"><label>Mitigation</label><textarea id="ri${i}_mit"></textarea></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('risk-row-${i}').remove()">✕</button>`;
+  document.getElementById('riskForms').appendChild(div);
+}
+
+function addActionRow(){
+  ac++; const i='n'+ac;
+  const div=document.createElement('div'); div.id=`action-row-${i}`; div.className='repeat-row';
+  div.innerHTML=`<div class="row-fields" style="grid-template-columns:repeat(3,1fr)">
+    <div class="form-group"><label>Project</label><input id="ai${i}_p"/></div>
+    <div class="form-group"><label>Item</label><input id="ai${i}_item"/></div>
+    <div class="form-group"><label>Priority</label><select id="ai${i}_pri"><option>High</option><option selected>Medium</option><option>Normal</option><option>Overdue</option></select></div>
+    <div class="form-group full"><label>Action</label><textarea id="ai${i}_act"></textarea></div>
+    <div class="form-group"><label>Responsible</label><input id="ai${i}_resp"/></div>
+    <div class="form-group"><label>Due Date</label><input id="ai${i}_due"/></div>
+    <div class="form-group"><label>Status</label><select id="ai${i}_st"><option selected>Pending</option><option>In Progress</option><option>Done</option><option>Overdue</option></select></div>
+  </div><button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-top:2px" onclick="document.getElementById('action-row-${i}').remove()">✕</button>`;
+  document.getElementById('actionForms').appendChild(div);
+}
+
+// ── COLLECT DATA ──
+function collectData(){
+  const d=JSON.parse(JSON.stringify(currentData));
+  d.meta.week          = g('m_week')         || d.meta.week;
+  d.meta.prepared_by   = g('m_prepared_by')  || d.meta.prepared_by;
+  d.meta.verified_by   = g('m_verified_by')  || '';
+  d.meta.source_file   = g('m_source_file')  || d.meta.source_file;
+  d.meta.file_location = g('m_file_location')|| '';
+  d.meta.last_updated  = new Date().toISOString();
+  d.meta.last_updated_by = currentUser.username;
+
+  d.projects=d.projects.map((p,i)=>{
+    if(!canEdit(p.code)) return p;
+    const scRows=[...(document.getElementById(`sc${i}-rows`)?.querySelectorAll('.repeat-row')||[])];
+    const sc=scRows.map(row=>{
+      const id=row.id.replace(`sc${i}-row-`,'');
+      const period=g(`sc${i}_${id}_period`);
+      if(!period) return null;
+      return{period,
+        planned_progress:gn(`sc${i}_${id}_pp`)||0,actual_progress:gn(`sc${i}_${id}_ap`)||0,
+        planned_cost:gn(`sc${i}_${id}_pc`)||0,actual_cost:gn(`sc${i}_${id}_ac`)||0,
+        eac:gn(`sc${i}_${id}_eac`)||p.budget};
+    }).filter(Boolean);
+    return{...p,
+      progress:gn(`p${i}_progress`)??p.progress,
+      schedule_status:g(`p${i}_schedule_status`)||p.schedule_status,
+      schedule_variance_days:gni(`p${i}_variance`)??p.schedule_variance_days,
+      cost_status:g(`p${i}_cost_status`)||p.cost_status,
+      health:g(`p${i}_health`)||p.health,
+      planned_finish:g(`p${i}_planned_finish`)||p.planned_finish,
+      forecast_finish:g(`p${i}_forecast_finish`)||p.forecast_finish,
+      critical_activities:g(`s${i}_crit`)||p.critical_activities,
+      schedule_recommendation:g(`s${i}_rec`)||p.schedule_recommendation,
+      budget:gn(`c${i}_budget`)??p.budget,actual_cost:gn(`c${i}_actual`)??p.actual_cost,
+      forecast_at_completion:gn(`c${i}_fac`)??p.forecast_at_completion,
+      cpi:gn(`c${i}_cpi`)??p.cpi,pa_budget:gn(`c${i}_pab`)??p.pa_budget,
+      pa_actual:gn(`c${i}_paa`)??p.pa_actual,
+      safe_manhours:gn(`sf${i}_mh`)??p.safe_manhours,
+      inspections_due:gni(`sf${i}_id`)??p.inspections_due,
+      inspections_done:gni(`sf${i}_ion`)??p.inspections_done,
+      ncr_open:gni(`sf${i}_ncr`)??p.ncr_open,incidents:gni(`sf${i}_inc`)??p.incidents,
+      near_miss:gni(`sf${i}_nm`)??p.near_miss,
+      ddi:gn(`sf${i}_ddi`),ot_rate:gn(`sf${i}_ot`),olc_alc:gn(`sf${i}_olc`),
+      last_toolbox:g(`sf${i}_tb`)||p.last_toolbox,
+      safety_action:g(`sf${i}_sa`)||p.safety_action,
+      s_curve:sc.length?sc:p.s_curve,
+    };
+  });
+
+  d.procurement=[...document.getElementById('procForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('proc-row-','');
+    return{project:g(`pr${id}_p`)||'',item:g(`pr${id}_item`)||'',vendor:g(`pr${id}_vendor`)||'',
+      required_date:g(`pr${id}_req`)||'',delivery_date:g(`pr${id}_dlv`)||'',
+      status:g(`pr${id}_st`)||'In Progress',buffer:g(`pr${id}_buf`)||'',action:g(`pr${id}_act`)||''};
+  }).filter(r=>r.item);
+
+  d.change_orders=[...document.getElementById('coForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('co-row-','');
+    return{project:g(`co${id}_p`)||'',co_no:g(`co${id}_no`)||'',
+      description:g(`co${id}_desc`)||'',amount:gn(`co${id}_amt`)||0,status:g(`co${id}_st`)||'Ongoing'};
+  }).filter(r=>r.description);
+
+  d.risks=[...document.getElementById('riskForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('risk-row-','');
+    return{project:g(`ri${id}_p`)||'',risk:g(`ri${id}_risk`)||'',impact:g(`ri${id}_imp`)||'Medium',
+      status:g(`ri${id}_st`)||'Ongoing',owner:g(`ri${id}_own`)||'',
+      due_date:g(`ri${id}_due`)||'',mitigation:g(`ri${id}_mit`)||''};
+  }).filter(r=>r.risk);
+
+  d.action_items=[...document.getElementById('actionForms').querySelectorAll('.repeat-row')].map(row=>{
+    const id=row.id.replace('action-row-','');
+    return{project:g(`ai${id}_p`)||'',item:g(`ai${id}_item`)||'',priority:g(`ai${id}_pri`)||'Normal',
+      action:g(`ai${id}_act`)||'',responsible:g(`ai${id}_resp`)||'',
+      due_date:g(`ai${id}_due`)||'',status:g(`ai${id}_st`)||'Pending'};
+  }).filter(r=>r.item);
+
+  return d;
+}
+
+// ── SAVE & PUBLISH ──
+let _pendingData = null;
+
+function saveAll(){
+  if(!isAdmin()){
+    pmSubmitNotification();
+    return;
+  }
+  // Collect data first, then ask for PAT
+  _pendingData = collectData();
+  document.getElementById('patInput').value = '';
+  document.getElementById('patErr').textContent = '';
+  document.getElementById('patModal').classList.add('show');
+  setTimeout(()=>document.getElementById('patInput').focus(), 100);
+}
+
+function closePatModal(){
+  document.getElementById('patModal').classList.remove('show');
+  _pendingData = null;
+}
+
+async function confirmPublish(){
+  const pat = document.getElementById('patInput').value.trim();
+  const err = document.getElementById('patErr');
+  err.textContent = '';
+  if(!pat || (!pat.startsWith('ghp_') && !pat.startsWith('github_pat_'))){
+    err.textContent = 'Please enter a valid GitHub Personal Access Token.';
+    return;
+  }
+  const btn = document.getElementById('publishConfirmBtn');
+  btn.textContent = 'Publishing…'; btn.disabled = true;
+  showStatus('Publishing to GitHub…','info');
+
+  const GITHUB_USER = 'juncel-web';
+  const GITHUB_REPO = 'PSC-CONSTRUCTION';
+  const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data.json`;
+  const headers = {
+    'Authorization': `token ${pat}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    // Get current file SHA
+    const shaRes = await fetch(API_URL, { headers });
+    if(!shaRes.ok) throw new Error(`GitHub auth failed (${shaRes.status}). Check your PAT has repo scope.`);
+    const shaData = await shaRes.json();
+
+    // Auto-snapshot — capture full state before publishing
+    if(!_pendingData.history) _pendingData.history = [];
+    const snapshot = {
+      week: _pendingData.meta.week,
+      snapshot_date: new Date().toISOString(),
+      prepared_by: _pendingData.meta.prepared_by,
+      projects: _pendingData.projects.map(p=>({
+        code: p.code, name: p.name,
+        progress: p.progress,
+        schedule_status: p.schedule_status,
+        schedule_variance_days: p.schedule_variance_days,
+        cost_status: p.cost_status,
+        health: p.health,
+        budget: p.budget,
+        actual_cost: p.actual_cost,
+        forecast_at_completion: p.forecast_at_completion,
+        cpi: p.cpi,
+        safe_manhours: p.safe_manhours,
+        incidents: p.incidents,
+        near_miss: p.near_miss,
+        ncr_open: p.ncr_open,
+        inspections_due: p.inspections_due,
+        inspections_done: p.inspections_done,
+        ddi: p.ddi,
+        ot_rate: p.ot_rate,
+        olc_alc: p.olc_alc,
+        planned_finish: p.planned_finish,
+        forecast_finish: p.forecast_finish,
+      })),
+      scoreboard: _pendingData.scoreboard || {}
+    };
+    // Avoid duplicate snapshots for the same week
+    const dupIdx = _pendingData.history.findIndex(h=>h.week===snapshot.week);
+    if(dupIdx >= 0) _pendingData.history[dupIdx] = snapshot; // overwrite same week
+    else _pendingData.history.push(snapshot);
+
+    // Push updated data.json
+    const content = JSON.stringify(_pendingData, null, 2);
+    const encoded = btoa(unescape(encodeURIComponent(content)));
+    const res = await fetch(API_URL, {
+      method: 'PUT', headers,
+      body: JSON.stringify({
+        message: `Weekly update — ${_pendingData.meta.week} by ${currentUser.username}`,
+        content: encoded,
+        sha: shaData.sha
+      })
+    });
+    if(!res.ok){
+      const e = await res.json();
+      throw new Error(e.message || 'GitHub API error');
+    }
+    currentData = _pendingData;
+    sessionStorage.setItem('psc_pat', pat); // cache for notification read state
+    // Mark all notifications as read on publish
+    if(_pendingData.notifications) _pendingData.notifications.forEach(n=>n.read=true);
+    closePatModal();
+    showStatus('✅ Published! Dashboard is live at juncel-web.github.io/PSC-CONSTRUCTION/','success');
+  } catch(e){
+    err.textContent = e.message;
+  } finally {
+    btn.textContent = '🚀 Publish Live'; btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════════════════
+// EXCEL IMPORT FEATURE
+// ══════════════════════════════════════════════
+
+function loadSheetJS(callback){
+  if(typeof XLSX !== 'undefined'){ callback(); return; }
+  const urls = [
+    'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+    'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+  ];
+  let idx = 0;
+  function tryNext(){
+    if(idx >= urls.length){ 
+      alert('Could not load Excel library. Please check your internet connection and try again.');
+      return; 
+    }
+    const s = document.createElement('script');
+    s.src = urls[idx++];
+    s.onload = () => callback();
+    s.onerror = () => { document.head.removeChild(s); tryNext(); };
+    document.head.appendChild(s);
+  }
+  tryNext();
+}
+
+function buildXLTemplateButtons(){
+  const container = document.getElementById('xlTemplateButtons');
+  if(!container) return;
+  const ps = currentData.projects.filter(p => canEdit(p.code));
+  if(!ps.length){ container.innerHTML='<div style="color:var(--muted);font-size:12px">No projects assigned.</div>'; return; }
+  container.innerHTML = ps.map((p,i) =>
+    `<button class="btn btn-secondary btn-sm" onclick="downloadXLTemplate(${i})" style="gap:6px">⬇ ${p.name}</button>`
+  ).join('');
+}
+
+function downloadXLTemplate(projIdx){
+  loadSheetJS(() => _doDownloadXLTemplate(projIdx));
+}
+function _doDownloadXLTemplate(projIdx){
+  const p = currentData.projects[projIdx];
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Project Status ──
+  const statusData = [
+    ['PSC Construction Dashboard — Weekly Update Template'],
+    ['Project:', p.name, '', 'Code:', p.code],
+    ['Instructions: Fill YELLOW cells only. Do not change headers or sheet names.'],
+    [],
+    ['FIELD', 'CURRENT VALUE', 'NEW VALUE', 'NOTES'],
+    ['Week Of (meta)', currentData.meta.week || '', '', 'e.g. Jun 15, 2026'],
+    ['Prepared By (meta)', currentData.meta.prepared_by || '', '', ''],
+    ['Physical Progress (%)', p.progress, '', '0–100'],
+    ['Schedule Status', p.schedule_status, '', 'Ahead / On Track / Delayed'],
+    ['Schedule Variance (days)', p.schedule_variance_days, '', 'positive = ahead'],
+    ['Cost Status', p.cost_status, '', 'Within Budget / Over Budget'],
+    ['Health', p.health, '', 'Good / Fair / At Risk'],
+    ['Planned Finish', p.planned_finish, '', ''],
+    ['Forecast Finish', p.forecast_finish, '', ''],
+    ['Critical Activities', p.critical_activities, '', ''],
+    ['Schedule Recommendation', p.schedule_recommendation, '', ''],
+    ['Budget (₱)', p.budget, '', ''],
+    ['Actual Cost (₱)', p.actual_cost, '', ''],
+    ['Forecast at Completion (₱)', p.forecast_at_completion, '', ''],
+    ['CPI', p.cpi, '', 'Cost Performance Index'],
+    ['PA Budget (₱)', p.pa_budget, '', 'Period Accomplishment Budget'],
+    ['PA Actual (₱)', p.pa_actual, '', 'Period Accomplishment Actual'],
+    ['Safe Man-Hours', p.safe_manhours, '', ''],
+    ['Inspections Due', p.inspections_due, '', ''],
+    ['Inspections Done', p.inspections_done, '', ''],
+    ['NCR Open', p.ncr_open, '', ''],
+    ['Incidents', p.incidents, '', ''],
+    ['Near Miss', p.near_miss, '', ''],
+    ['Last Toolbox Meeting', p.last_toolbox, '', 'e.g. Jun 10, 2026'],
+    ['Safety Action', p.safety_action, '', ''],
+    ['DDI (%)', p.ddi ?? '', '', 'Defect Density Index'],
+    ['OT Rate (%)', p.ot_rate ?? '', '', 'Overtime Rate'],
+    ['OT Baseline (%)', p.ot_baseline ?? '', '', ''],
+    ['OLC/ALC', p.olc_alc ?? '', '', 'Output Labor Cost / Allowed Labor Cost'],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(statusData);
+  ws1['!cols'] = [{wch:30},{wch:30},{wch:30},{wch:25}];
+  // Style header rows (SheetJS CE: just set widths, full styling needs Pro)
+  XLSX.utils.book_append_sheet(wb, ws1, 'Status');
+
+  // ── Sheet 2: S-Curve ──
+  const scRows = (p.s_curve || []).map(r => [r.period, r.planned_progress, r.actual_progress, r.planned_cost, r.actual_cost, r.eac]);
+  const scData = [
+    [`S-Curve Data — ${p.name}`],
+    ['Instructions: Add new rows at the bottom for new periods. Do not delete existing rows.'],
+    [],
+    ['Period', 'Planned Progress (%)', 'Actual Progress (%)', 'Planned Cost (₱)', 'Actual Cost (₱)', 'EAC (₱)'],
+    ...scRows,
+    ['', '', '', '', '', ''],  // blank row for new entry
+    ['', '', '', '', '', ''],
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(scData);
+  ws2['!cols'] = [{wch:14},{wch:20},{wch:20},{wch:18},{wch:18},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'SCurve');
+
+  // ── Sheet 3: Procurement ──
+  const myProc = (currentData.procurement || []).filter(r => r.project === p.code);
+  const procRows = myProc.map(r => [r.item, r.vendor, r.required_date, r.delivery_date, r.status, r.buffer, r.action]);
+  const procData = [
+    [`Procurement — ${p.name}`],
+    ['Item', 'Vendor', 'Required Date', 'Delivery Date', 'Status', 'Buffer', 'Action / Remarks'],
+    ...procRows,
+    ['', '', '', '', 'In Progress', '', ''],  // blank row
+  ];
+  const ws3 = XLSX.utils.aoa_to_sheet(procData);
+  ws3['!cols'] = [{wch:20},{wch:20},{wch:14},{wch:14},{wch:14},{wch:12},{wch:35}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Procurement');
+
+  // ── Sheet 4: Risks ──
+  const myRisks = (currentData.risks || []).filter(r => r.project === p.code);
+  const riskRows = myRisks.map(r => [r.risk, r.impact, r.status, r.owner, r.due_date, r.mitigation]);
+  const riskData = [
+    [`Risks — ${p.name}`],
+    ['Risk Description', 'Impact', 'Status', 'Owner', 'Due Date', 'Mitigation'],
+    ...riskRows,
+    ['', 'Medium', 'Active', '', '', ''],  // blank row
+  ];
+  const ws4 = XLSX.utils.aoa_to_sheet(riskData);
+  ws4['!cols'] = [{wch:30},{wch:12},{wch:12},{wch:18},{wch:16},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, ws4, 'Risks');
+
+  XLSX.writeFile(wb, `PSC_Weekly_Template_${p.code}_${(currentData.meta.week||'').replace(/[^a-z0-9]/gi,'_')}.xlsx`);
+}
+
+let xlParsedData = null;
+
+function handleXLImport(input){
+  const file = input.files[0];
+  if(!file){ return; }
+  loadSheetJS(() => _doHandleXLImport(file));
+  input.value = '';
+}
+function _doHandleXLImport(file){
+
+  document.getElementById('xlUploadStatus').textContent = `Reading: ${file.name}…`;
+  document.getElementById('xlPreviewCard').style.display = 'none';
+  document.getElementById('xlSuccessCard').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      xlParsedData = parseXLWorkbook(wb);
+      if(!xlParsedData){ 
+        document.getElementById('xlUploadStatus').textContent = '❌ Could not parse file. Make sure you used the downloaded template.';
+        return;
+      }
+      document.getElementById('xlUploadStatus').textContent = `✅ ${file.name} — parsed successfully`;
+      renderXLPreview(xlParsedData);
+      document.getElementById('xlPreviewCard').style.display = 'block';
+    } catch(err) {
+      document.getElementById('xlUploadStatus').textContent = '❌ Error reading file: ' + err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function parseXLWorkbook(wb){
+  const result = { status: {}, scurve: [], procurement: [], risks: [] };
+
+  // ── Parse Status sheet ──
+  const ws = wb.Sheets['Status'];
+  if(!ws){ alert('Sheet named "Status" not found. Use the downloaded template.'); return null; }
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+  // Map field names to result keys (column 2 = NEW VALUE, index 2)
+  const fieldMap = {
+    'Week Of (meta)':              'meta_week',
+    'Prepared By (meta)':          'meta_prepared_by',
+    'Physical Progress (%)':       'progress',
+    'Schedule Status':             'schedule_status',
+    'Schedule Variance (days)':    'schedule_variance_days',
+    'Cost Status':                 'cost_status',
+    'Health':                      'health',
+    'Planned Finish':              'planned_finish',
+    'Forecast Finish':             'forecast_finish',
+    'Critical Activities':         'critical_activities',
+    'Schedule Recommendation':     'schedule_recommendation',
+    'Budget (₱)':                  'budget',
+    'Actual Cost (₱)':             'actual_cost',
+    'Forecast at Completion (₱)':  'forecast_at_completion',
+    'CPI':                         'cpi',
+    'PA Budget (₱)':               'pa_budget',
+    'PA Actual (₱)':               'pa_actual',
+    'Safe Man-Hours':              'safe_manhours',
+    'Inspections Due':             'inspections_due',
+    'Inspections Done':            'inspections_done',
+    'NCR Open':                    'ncr_open',
+    'Incidents':                   'incidents',
+    'Near Miss':                   'near_miss',
+    'Last Toolbox Meeting':        'last_toolbox',
+    'Safety Action':               'safety_action',
+    'DDI (%)':                     'ddi',
+    'OT Rate (%)':                 'ot_rate',
+    'OT Baseline (%)':             'ot_baseline',
+    'OLC/ALC':                     'olc_alc',
+  };
+
+  // Extract project code from row index 1
+  const headerRow = rows[1] || [];
+  result.projectCode = headerRow[4] || '';  // col E = code
+
+  for(let i = 4; i < rows.length; i++){  // data starts row 5 (index 4)
+    const row = rows[i];
+    const fieldName = String(row[0] || '').trim();
+    const newVal = row[2];  // column C = NEW VALUE
+    if(fieldMap[fieldName] && newVal !== '' && newVal !== undefined){
+      result.status[fieldMap[fieldName]] = newVal;
+    }
+  }
+
+  // ── Parse S-Curve sheet ──
+  const wsSC = wb.Sheets['SCurve'];
+  if(wsSC){
+    const scRows = XLSX.utils.sheet_to_json(wsSC, {header:1, defval:''});
+    for(let i = 3; i < scRows.length; i++){  // data from row 4 (index 3)
+      const r = scRows[i];
+      if(!r[0] || String(r[0]).trim() === '') continue;
+      result.scurve.push({
+        period: String(r[0]).trim(),
+        planned_progress: parseFloat(r[1]) || 0,
+        actual_progress:  parseFloat(r[2]) || 0,
+        planned_cost:     parseFloat(r[3]) || 0,
+        actual_cost:      parseFloat(r[4]) || 0,
+        eac:              parseFloat(r[5]) || 0,
+      });
+    }
+  }
+
+  // ── Parse Procurement sheet ──
+  const wsPR = wb.Sheets['Procurement'];
+  if(wsPR){
+    const prRows = XLSX.utils.sheet_to_json(wsPR, {header:1, defval:''});
+    for(let i = 1; i < prRows.length; i++){
+      const r = prRows[i];
+      if(!r[0] || String(r[0]).trim() === '') continue;
+      result.procurement.push({
+        item:          String(r[0]).trim(),
+        vendor:        String(r[1]).trim(),
+        required_date: String(r[2]).trim(),
+        delivery_date: String(r[3]).trim(),
+        status:        String(r[4]).trim() || 'In Progress',
+        buffer:        String(r[5]).trim(),
+        action:        String(r[6]).trim(),
+      });
+    }
+  }
+
+  // ── Parse Risks sheet ──
+  const wsRI = wb.Sheets['Risks'];
+  if(wsRI){
+    const riRows = XLSX.utils.sheet_to_json(wsRI, {header:1, defval:''});
+    for(let i = 1; i < riRows.length; i++){
+      const r = riRows[i];
+      if(!r[0] || String(r[0]).trim() === '') continue;
+      result.risks.push({
+        risk:       String(r[0]).trim(),
+        impact:     String(r[1]).trim(),
+        status:     String(r[2]).trim(),
+        owner:      String(r[3]).trim(),
+        due_date:   String(r[4]).trim(),
+        mitigation: String(r[5]).trim(),
+      });
+    }
+  }
+
+  return result;
+}
+
+function renderXLPreview(data){
+  const st = data.status;
+  const rows = Object.entries(st).filter(([k,v]) => v !== '').map(([k,v]) =>
+    `<tr><td style="padding:4px 8px;color:var(--muted);font-size:11px">${k.replace(/_/g,' ')}</td>
+     <td style="padding:4px 8px;font-size:11px;font-weight:600;color:var(--text)">${v}</td></tr>`
+  ).join('');
+
+  let html = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Project Code: <strong style="color:var(--accent)">${data.projectCode||'—'}</strong></div>
+    <table style="width:100%;border-collapse:collapse;background:var(--surface2);border-radius:6px;overflow:hidden">
+      <thead><tr>
+        <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)">Field</th>
+        <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border)">New Value</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  if(data.scurve.length){
+    html += `<div style="margin-top:10px;font-size:11px;color:var(--muted)">📈 S-Curve: <strong>${data.scurve.length}</strong> period rows parsed</div>`;
+  }
+  if(data.procurement.length){
+    html += `<div style="font-size:11px;color:var(--muted)">📦 Procurement: <strong>${data.procurement.length}</strong> items parsed</div>`;
+  }
+  if(data.risks.length){
+    html += `<div style="font-size:11px;color:var(--muted)">⚠️ Risks: <strong>${data.risks.length}</strong> items parsed</div>`;
+  }
+
+  document.getElementById('xlPreviewTable').innerHTML = html;
+}
+
+function applyXLData(){
+  if(!xlParsedData){ return; }
+  const d = xlParsedData;
+  const st = d.status;
+  const ps = currentData.projects;
+
+  // Find matching project index
+  const projIdx = ps.findIndex(p => p.code === d.projectCode);
+
+  // ── Apply meta ──
+  if(st.meta_week)        { const el=document.getElementById('m_week');        if(el) el.value=st.meta_week; }
+  if(st.meta_prepared_by) { const el=document.getElementById('m_prepared_by'); if(el) el.value=st.meta_prepared_by; }
+
+  // ── Apply project status fields ──
+  if(projIdx >= 0){
+    const i = projIdx;
+    const setF = (id, val) => { const el=document.getElementById(id); if(el && val!==undefined && val!=='') el.value=val; };
+    setF(`p${i}_progress`,          st.progress);
+    setF(`p${i}_schedule_status`,   st.schedule_status);
+    setF(`p${i}_variance`,          st.schedule_variance_days);
+    setF(`p${i}_cost_status`,       st.cost_status);
+    setF(`p${i}_health`,            st.health);
+    setF(`p${i}_planned_finish`,    st.planned_finish);
+    setF(`p${i}_forecast_finish`,   st.forecast_finish);
+    setF(`s${i}_crit`,              st.critical_activities);
+    setF(`s${i}_rec`,               st.schedule_recommendation);
+    setF(`c${i}_budget`,            st.budget);
+    setF(`c${i}_actual`,            st.actual_cost);
+    setF(`c${i}_fac`,               st.forecast_at_completion);
+    setF(`c${i}_cpi`,               st.cpi);
+    setF(`c${i}_pab`,               st.pa_budget);
+    setF(`c${i}_paa`,               st.pa_actual);
+    setF(`sf${i}_mh`,               st.safe_manhours);
+    setF(`sf${i}_id`,               st.inspections_due);
+    setF(`sf${i}_ion`,              st.inspections_done);
+    setF(`sf${i}_ncr`,              st.ncr_open);
+    setF(`sf${i}_inc`,              st.incidents);
+    setF(`sf${i}_nm`,               st.near_miss);
+    setF(`sf${i}_tb`,               st.last_toolbox);
+    setF(`sf${i}_sa`,               st.safety_action);
+    setF(`sf${i}_ddi`,              st.ddi);
+    setF(`sf${i}_ot`,               st.ot_rate);
+    setF(`sf${i}_olc`,              st.olc_alc);
+  }
+
+  // ── Apply S-Curve rows ──
+  if(projIdx >= 0 && d.scurve.length){
+    const i = projIdx;
+    // Clear existing rows and rebuild from Excel data
+    const scContainer = document.getElementById(`sc${i}-rows`);
+    if(scContainer){
+      // Store in currentData so buildSCurveForms picks it up
+      currentData.projects[i].s_curve = d.scurve;
+      // Rebuild the S-Curve form section for this project
+      const tempProjects = [currentData.projects[i]];
+      buildSCurveForms(currentData.projects);
+    }
+  }
+
+  // ── Apply Procurement (for this project) ──
+  if(projIdx >= 0 && d.procurement.length){
+    const projCode = currentData.projects[projIdx].code;
+    // Remove existing rows for this project and add new ones
+    const newProc = (currentData.procurement || []).filter(r => r.project !== projCode);
+    d.procurement.forEach(r => newProc.push({...r, project: projCode}));
+    currentData.procurement = newProc;
+    buildProcForms(currentData.procurement, currentData.projects);
+  }
+
+  // ── Apply Risks (for this project) ──
+  if(projIdx >= 0 && d.risks.length){
+    const projCode = currentData.projects[projIdx].code;
+    const newRisks = (currentData.risks || []).filter(r => r.project !== projCode);
+    d.risks.forEach(r => newRisks.push({...r, project: projCode}));
+    currentData.risks = newRisks;
+    buildRiskForms(currentData.risks);
+  }
+
+  // ── Show success ──
+  document.getElementById('xlPreviewCard').style.display = 'none';
+  document.getElementById('xlSuccessCard').style.display = 'block';
+  xlParsedData = null;
+  document.getElementById('xlUploadInput').value = '';
+
+  // Show toast
+  showToast('Excel data applied — review each section then submit.');
+}
+
+function clearXLPreview(){
+  xlParsedData = null;
+  document.getElementById('xlPreviewCard').style.display = 'none';
+  document.getElementById('xlUploadStatus').textContent = 'No file selected';
+  document.getElementById('xlUploadInput').value = '';
+}
+
+function showToast(msg){
+  let t = document.getElementById('xlToast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'xlToast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--good);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:opacity .4s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(() => t.style.opacity = '0', 3000);
+}
+
+
+</script>
+</body>
+</html>
