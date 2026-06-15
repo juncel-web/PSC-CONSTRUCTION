@@ -1780,12 +1780,17 @@ let _reviewingUsername = null;
 let _reviewSubmission  = null;
 
 // Called by Admin when clicking 🔍 Review on a notification
-function openReviewModal(username){
-  // DEBUG - remove after fix confirmed
-  const _ps = currentData.pending_submissions || {};
-  const _keys = Object.keys(_ps);
-  alert('openReviewModal called\nusername: ' + username + '\npending_submissions keys: [' + _keys.join(',') + ']\nhas submission: ' + (!!_ps[username]));
-  const sub = _ps[username];
+async function openReviewModal(username){
+  // Always fetch fresh data to ensure we have latest pending_submissions
+  try {
+    const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+    if(res.ok){
+      const fresh = await res.json();
+      if(fresh.pending_submissions) currentData.pending_submissions = fresh.pending_submissions;
+    }
+  } catch(e){}
+
+  const sub = (currentData.pending_submissions || {})[username];
   if(!sub){
     showStatus('No pending submission found for this PM.','error');
     return;
@@ -1800,11 +1805,14 @@ function openReviewModal(username){
     `Submitted: ${new Date(sub.submitted_at).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'})} · Week: ${sub.week}`;
 
   document.getElementById('reviewDiffContent').innerHTML = buildDiffHTML(sub, currentData);
+  document.getElementById('reviewModal').style.display = 'flex';
   document.getElementById('reviewModal').classList.add('show');
 }
 
 function closeReviewModal(){
-  document.getElementById('reviewModal').classList.remove('show');
+  const m = document.getElementById('reviewModal');
+  m.classList.remove('show');
+  m.style.display = '';
   _reviewingUsername = null;
   _reviewSubmission  = null;
 }
