@@ -14,7 +14,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:380px}
 .login-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:4px;text-align:center}
 .login-sub{font-size:11px;color:var(--muted);margin-bottom:24px;text-align:center;line-height:1.6}
-.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:50}
+.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:400}
 .topbar-logo{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;color:#000}
 .topbar-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:1px}
 .topbar-sub{font-size:10px;color:var(--muted)}
@@ -691,6 +691,8 @@ async function doLogin(){
 
 function doLogout(){
   if(_notifPollTimer){ clearInterval(_notifPollTimer); _notifPollTimer=null; }
+  const np = document.getElementById('notifPanel');
+  if(np) np.style.display = 'none';
   currentUser=null; currentData=null; location.reload();
 }
 
@@ -1611,6 +1613,17 @@ function toggleNotifPanel(){
   }
 }
 
+// Close notif panel when clicking outside of it
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('notifPanel');
+  const bell  = document.getElementById('notifBell');
+  const wrap  = document.getElementById('notifBellWrap');
+  if(!panel || !panel.classList.contains('show')) return;
+  if(panel.contains(e.target)) return;
+  if(wrap && wrap.contains(e.target)) return;
+  panel.classList.remove('show');
+});
+
 async function markRead(notifId){
   const n = (currentData.notifications||[]).find(x=>x.id===notifId);
   if(!n) return;
@@ -1781,6 +1794,10 @@ let _reviewSubmission  = null;
 
 // Called by Admin when clicking 🔍 Review on a notification
 async function openReviewModal(username){
+  // Close the notification panel first so it doesn't block the modal
+  const np = document.getElementById('notifPanel');
+  if(np) np.style.display = 'none';
+
   // Always fetch fresh data to ensure we have latest pending_submissions
   try {
     const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
