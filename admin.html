@@ -408,36 +408,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
       </div>
       <div class="user-grid" id="userGrid"></div>
     </div>
-  </div>
-</div>
-
-<!-- ADD PROJECT MODAL -->
-<div class="modal-overlay" id="projectModal">
-  <div class="modal">
-    <div class="modal-title">Add New Project</div>
-    <div class="form-grid">
-      <div class="form-group"><label>Project Code</label><input id="np_code" placeholder="e.g. Y2025-06-R-01"/></div>
-      <div class="form-group"><label>Project Name</label><input id="np_name" placeholder="e.g. New Development"/></div>
-      <div class="form-group"><label>Location</label><input id="np_location" placeholder="e.g. Dauis, Bohol"/></div>
-      <div class="form-group"><label>PIC (Person in Charge)</label><input id="np_pic" placeholder="e.g. Juan Dela Cruz"/></div>
-      <div class="form-group"><label>Approved Budget (₱)</label><input id="np_budget" type="number" placeholder="0"/></div>
-      <div class="form-group"><label>OT Baseline (%)</label><input id="np_ot_baseline" type="number" value="20"/></div>
-      <div class="form-group"><label>Planned Finish Date</label><input id="np_planned_finish" placeholder="e.g. Dec 1, 2028"/></div>
-      <div class="form-group"><label>Forecast Finish Date</label><input id="np_forecast_finish" placeholder="e.g. Dec 1, 2028"/></div>
-      <div class="form-group full"><label>Assign PM Users (hold Ctrl/Cmd for multiple)</label>
-        <select id="np_pm_users" multiple style="height:80px"></select>
-      </div>
-    </div>
-    <div style="padding:10px 12px;background:var(--surface2);border-radius:6px;margin-top:10px;font-size:11px;color:var(--muted)">
-      💡 All other fields (progress, cost, safety, S-Curve) start at zero and will be updated by the assigned PM.
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewProject()">Add Project</button>
-    </div>
-  </div>
-</div>
-
 
     <!-- EXCEL IMPORT PANEL -->
     <div class="admin-panel" id="panel-excel">
@@ -489,6 +459,35 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-title">Add New Project</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Project Code</label><input id="np_code" placeholder="e.g. Y2025-06-R-01"/></div>
+      <div class="form-group"><label>Project Name</label><input id="np_name" placeholder="e.g. New Development"/></div>
+      <div class="form-group"><label>Location</label><input id="np_location" placeholder="e.g. Dauis, Bohol"/></div>
+      <div class="form-group"><label>PIC (Person in Charge)</label><input id="np_pic" placeholder="e.g. Juan Dela Cruz"/></div>
+      <div class="form-group"><label>Approved Budget (₱)</label><input id="np_budget" type="number" placeholder="0"/></div>
+      <div class="form-group"><label>OT Baseline (%)</label><input id="np_ot_baseline" type="number" value="20"/></div>
+      <div class="form-group"><label>Planned Finish Date</label><input id="np_planned_finish" placeholder="e.g. Dec 1, 2028"/></div>
+      <div class="form-group"><label>Forecast Finish Date</label><input id="np_forecast_finish" placeholder="e.g. Dec 1, 2028"/></div>
+      <div class="form-group full"><label>Assign PM Users (hold Ctrl/Cmd for multiple)</label>
+        <select id="np_pm_users" multiple style="height:80px"></select>
+      </div>
+    </div>
+    <div style="padding:10px 12px;background:var(--surface2);border-radius:6px;margin-top:10px;font-size:11px;color:var(--muted)">
+      💡 All other fields (progress, cost, safety, S-Curve) start at zero and will be updated by the assigned PM.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewProject()">Add Project</button>
+    </div>
+  </div>
+</div>
 
 <!-- USER MODAL -->
 <div class="modal-overlay" id="userModal">
