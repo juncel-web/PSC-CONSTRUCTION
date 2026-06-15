@@ -1520,12 +1520,18 @@ const API_DATA_URL  = `https://api.github.com/repos/${GITHUB_USER_N}/${GITHUB_RE
 
 function initNotifications(){
   if(isAdmin()){
-    // Only Admin sees the notification bell
     document.getElementById('notifBellWrap').style.display = 'block';
-    renderNotifications();
+    // Refresh pending_submissions from server then render
+    fetch(`${RAW_BASE}/data.json?t=${Date.now()}`)
+      .then(r=>r.ok?r.json():null)
+      .then(fresh=>{ 
+        if(fresh&&fresh.pending_submissions!==undefined) 
+          currentData.pending_submissions=fresh.pending_submissions; 
+        renderNotifications(); 
+      })
+      .catch(()=>renderNotifications());
     startNotifPolling();
   }
-  // PMs do not see the bell — they get success message after submit
 }
 
 let _notifPollTimer = null;
@@ -1539,6 +1545,10 @@ async function startNotifPolling(){
       const freshNotifs  = fresh.notifications || [];
       const freshUnread  = freshNotifs.filter(n=>!n.read).length;
       const currentUnread = (currentData.notifications||[]).filter(n=>!n.read).length;
+      // Always sync pending_submissions from fresh data
+      if(fresh.pending_submissions !== undefined){
+        currentData.pending_submissions = fresh.pending_submissions;
+      }
       if(freshUnread > currentUnread){
         currentData.notifications = freshNotifs;
         renderNotifications();
@@ -1587,7 +1597,18 @@ function renderNotifications(){
 
 function toggleNotifPanel(){
   const panel = document.getElementById('notifPanel');
+  const opening = !panel.classList.contains('show');
   panel.classList.toggle('show');
+  // Refresh pending_submissions from server when opening the panel
+  if(opening){
+    fetch(`${RAW_BASE}/data.json?t=${Date.now()}`)
+      .then(r=>r.ok?r.json():null)
+      .then(fresh=>{
+        if(fresh&&fresh.pending_submissions!==undefined)
+          currentData.pending_submissions=fresh.pending_submissions;
+        renderNotifications();
+      }).catch(()=>{});
+  }
 }
 
 async function markRead(notifId){
