@@ -1579,7 +1579,7 @@ function renderNotifications(){
         ${n.notes?`<div style="font-size:10px;color:var(--muted);margin-top:3px;font-style:italic">"${n.notes}"</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-      ${isAdmin()&&n.has_submission?`<button class="btn btn-primary btn-sm" onclick="openReviewModal('${n.submitter}')">🔍 Review</button>`:''}
+      ${isAdmin()&&(currentData.pending_submissions||{})[n.submitter]?`<button class="btn btn-primary btn-sm" onclick="openReviewModal('${n.submitter}')">🔍 Review</button>`:''}
       ${isAdmin()&&!n.read?`<button class="btn btn-secondary btn-sm" onclick="markRead('${n.id}')">✓ Read</button>`:''}
     </div>
     </div>`).join('');
@@ -2043,6 +2043,8 @@ function acceptSubmission(){
   // Rebuild all forms with the merged data
   populateForms();
   closeReviewModal();
+  renderNotifications();
+  updatePendingBadge();
   showStatus(`✅ Changes from ${_reviewingUsername} accepted. Review all panels then Save & Publish.`,'success');
 }
 
