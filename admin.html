@@ -1807,6 +1807,21 @@ function openReviewModal(username){
   }
   alert('DEBUG 3: sub found, projects=' + (sub.projects||[]).length);
 
+  // Build html with per-step debug
+  let html = '';
+  try {
+    (sub.projects||[]).forEach(function(sp, spIdx) {
+      alert('DEBUG 3b: processing project ' + spIdx + ' = ' + sp.code);
+      const lp = (currentData.projects||[]).find(function(p){ return p.code === sp.code; }) || {};
+      const liveSC = lp.s_curve || [];
+      const subSC  = sp.s_curve || [];
+      alert('DEBUG 3c: ' + sp.code + ' subSC=' + subSC.length + ' liveSC=' + liveSC.length);
+    });
+    alert('DEBUG 3d: loop done, no crash');
+  } catch(loopErr) {
+    alert('DEBUG 3 ERROR: ' + loopErr.message);
+  }
+
   _reviewingUsername = username;
   _reviewSubmission  = sub;
 
