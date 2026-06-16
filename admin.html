@@ -1792,35 +1792,11 @@ let _reviewSubmission  = null;
 
 // Called by Admin when clicking 🔍 Review on a notification
 function openReviewModal(username){
-  alert('DEBUG 1: openReviewModal called for ' + username);
-
-  // Close notif panel
   const np = document.getElementById('notifPanel');
   if(np) np.style.display = 'none';
 
-  alert('DEBUG 2: currentData exists=' + !!currentData + ', pending_submissions=' + JSON.stringify(Object.keys((currentData||{}).pending_submissions||{})));
-
   const sub = (currentData.pending_submissions || {})[username];
-  if(!sub){
-    alert('No pending submission found for ' + username);
-    return;
-  }
-  alert('DEBUG 3: sub found, projects=' + (sub.projects||[]).length);
-
-  // Build html with per-step debug
-  let html = '';
-  try {
-    (sub.projects||[]).forEach(function(sp, spIdx) {
-      alert('DEBUG 3b: processing project ' + spIdx + ' = ' + sp.code);
-      const lp = (currentData.projects||[]).find(function(p){ return p.code === sp.code; }) || {};
-      const liveSC = lp.s_curve || [];
-      const subSC  = sp.s_curve || [];
-      alert('DEBUG 3c: ' + sp.code + ' subSC=' + subSC.length + ' liveSC=' + liveSC.length);
-    });
-    alert('DEBUG 3d: loop done, no crash');
-  } catch(loopErr) {
-    alert('DEBUG 3 ERROR: ' + loopErr.message);
-  }
+  if(!sub){ showStatus('No pending submission found.','error'); return; }
 
   _reviewingUsername = username;
   _reviewSubmission  = sub;
@@ -1831,84 +1807,45 @@ function openReviewModal(username){
   document.getElementById('reviewModalSub').textContent =
     'Submitted: ' + new Date(sub.submitted_at).toLocaleString() + '  ·  Week: ' + sub.week;
 
-  // Build simple HTML — no complex template nesting
-  let html = '';
+  var html = '';
   (sub.projects||[]).forEach(function(sp) {
-    const lp = (currentData.projects||[]).find(function(p){ return p.code === sp.code; }) || {};
-    const liveSC = lp.s_curve || [];
-    const subSC  = sp.s_curve || [];
-    const scNew  = subSC.filter(function(r){ return !liveSC.find(function(lr){ return lr.period===r.period; }); });
-    const scMod  = subSC.filter(function(r){
+    var lp = (currentData.projects||[]).find(function(p){ return p.code===sp.code; }) || {};
+    var liveSC = lp.s_curve || [];
+    var subSC  = sp.s_curve || [];
+    var scNew  = subSC.filter(function(r){ return !liveSC.find(function(lr){ return lr.period===r.period; }); });
+    var scMod  = subSC.filter(function(r){
       var lr = liveSC.find(function(x){ return x.period===r.period; });
-      return lr && JSON.stringify(lr) !== JSON.stringify(r);
+      return lr && JSON.stringify(lr)!==JSON.stringify(r);
     });
 
-    var fields = [
-      ['Progress', sp.progress != null ? (sp.progress > 1 ? sp.progress.toFixed(2)+'%' : (sp.progress*100).toFixed(2)+'%') : '—',
-                   lp.progress != null ? (lp.progress > 1 ? lp.progress.toFixed(2)+'%' : (lp.progress*100).toFixed(2)+'%') : '—'],
-      ['Health', sp.health||'—', lp.health||'—'],
-      ['Schedule Status', sp.schedule_status||'—', lp.schedule_status||'—'],
-      ['Cost Status', sp.cost_status||'—', lp.cost_status||'—'],
-      ['Actual Cost', sp.actual_cost != null ? '₱'+Number(sp.actual_cost).toLocaleString() : '—',
-                      lp.actual_cost != null ? '₱'+Number(lp.actual_cost).toLocaleString() : '—'],
-      ['CPI', sp.cpi||'—', lp.cpi||'—'],
-      ['Incidents', sp.incidents != null ? sp.incidents : '—', lp.incidents != null ? lp.incidents : '—'],
-      ['S-Curve Rows', subSC.length + ' rows (' + scNew.length + ' new, ' + scMod.length + ' modified)',
-                       liveSC.length + ' rows'],
-    ];
-
-    var changed = fields.filter(function(f){ return f[1] !== f[2]; });
-    var unchanged = fields.filter(function(f){ return f[1] === f[2]; });
-
     html += '<div style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
-    html += '<div style="background:var(--surface2);padding:8px 14px;font-weight:700;font-size:13px">' + sp.name + ' <span style="font-size:10px;color:var(--muted);font-weight:400">' + sp.code + '</span></div>';
+    html += '<div style="background:var(--surface2);padding:8px 14px;font-weight:700;font-size:13px">' + sp.name + '</div>';
 
-    if(scNew.length || scMod.length) {
-      html += '<div style="padding:8px 14px;background:rgba(59,130,246,.08);border-bottom:1px solid var(--border);font-size:11px;color:var(--accent2)">';
-      html += '📈 S-Curve: <strong>' + scNew.length + ' new row(s)</strong>, <strong>' + scMod.length + ' modified row(s)</strong>';
-      html += '</div>';
-      // Show S-curve rows
+    if(scNew.length || scMod.length){
+      html += '<div style="padding:8px 14px;font-size:11px;color:var(--accent2);border-bottom:1px solid var(--border)">S-Curve: ' + scNew.length + ' new row(s), ' + scMod.length + ' modified row(s)</div>';
       html += '<table class="diff-table"><tr><th>Period</th><th>Type</th><th>Planned%</th><th>Actual%</th><th>Planned Cost</th><th>Actual Cost</th></tr>';
       scNew.forEach(function(r){
-        html += '<tr style="background:rgba(16,185,129,.06)"><td><strong>' + r.period + '</strong></td><td style="color:var(--accent3)">NEW</td>';
-        html += '<td>' + r.planned_progress + '%</td><td>' + r.actual_progress + '%</td>';
-        html += '<td>₱' + Number(r.planned_cost).toLocaleString() + '</td>';
-        html += '<td>₱' + Number(r.actual_cost).toLocaleString() + '</td></tr>';
+        html += '<tr><td>'+r.period+'</td><td style="color:var(--accent3)">NEW</td><td>'+r.planned_progress+'%</td><td>'+r.actual_progress+'%</td><td>'+Number(r.planned_cost).toLocaleString()+'</td><td>'+Number(r.actual_cost).toLocaleString()+'</td></tr>';
       });
       scMod.forEach(function(r){
-        var lr = liveSC.find(function(x){ return x.period===r.period; }) || {};
-        html += '<tr><td><strong>' + r.period + '</strong></td><td style="color:var(--accent)">MOD</td>';
-        html += '<td>' + (lr.planned_progress !== r.planned_progress ? '<s style="color:var(--muted)">' + lr.planned_progress + '%</s> → <strong>' + r.planned_progress + '%</strong>' : r.planned_progress + '%') + '</td>';
-        html += '<td>' + (lr.actual_progress !== r.actual_progress ? '<s style="color:var(--muted)">' + lr.actual_progress + '%</s> → <strong>' + r.actual_progress + '%</strong>' : r.actual_progress + '%') + '</td>';
-        html += '<td>' + (lr.planned_cost !== r.planned_cost ? '<s style="color:var(--muted)">₱' + Number(lr.planned_cost).toLocaleString() + '</s> → <strong>₱' + Number(r.planned_cost).toLocaleString() + '</strong>' : '₱' + Number(r.planned_cost).toLocaleString()) + '</td>';
-        html += '<td>' + (lr.actual_cost !== r.actual_cost ? '<s style="color:var(--muted)">₱' + Number(lr.actual_cost).toLocaleString() + '</s> → <strong>₱' + Number(r.actual_cost).toLocaleString() + '</strong>' : '₱' + Number(r.actual_cost).toLocaleString()) + '</td>';
-        html += '</tr>';
+        var lr = liveSC.find(function(x){ return x.period===r.period; })||{};
+        html += '<tr><td>'+r.period+'</td><td style="color:var(--accent)">MOD</td>';
+        html += '<td>'+(lr.planned_progress!==r.planned_progress?lr.planned_progress+'→<b>'+r.planned_progress+'</b>':r.planned_progress)+'%</td>';
+        html += '<td>'+(lr.actual_progress!==r.actual_progress?lr.actual_progress+'→<b>'+r.actual_progress+'</b>':r.actual_progress)+'%</td>';
+        html += '<td>'+(lr.planned_cost!==r.planned_cost?Number(lr.planned_cost).toLocaleString()+'→<b>'+Number(r.planned_cost).toLocaleString()+'</b>':Number(r.planned_cost).toLocaleString())+'</td>';
+        html += '<td>'+(lr.actual_cost!==r.actual_cost?Number(lr.actual_cost).toLocaleString()+'→<b>'+Number(r.actual_cost).toLocaleString()+'</b>':Number(r.actual_cost).toLocaleString())+'</td></tr>';
       });
       html += '</table>';
+    } else {
+      html += '<div style="padding:10px 14px;font-size:11px;color:var(--muted)">No S-Curve changes.</div>';
     }
-
-    if(changed.length) {
-      html += '<table class="diff-table"><tr><th>Field</th><th>Live Value</th><th>Submitted Value</th></tr>';
-      changed.forEach(function(f){
-        html += '<tr><td>' + f[0] + '</td><td style="color:var(--muted)">' + f[2] + '</td><td style="color:var(--accent2);font-weight:600">' + f[1] + '</td></tr>';
-      });
-      html += '</table>';
-    }
-
-    if(!changed.length && !scNew.length && !scMod.length) {
-      html += '<div style="padding:12px 14px;font-size:11px;color:var(--muted)">✅ No field changes — PM confirmed current values.</div>';
-    }
-
     html += '</div>';
   });
 
   document.getElementById('reviewDiffContent').innerHTML = html;
-
   var rm = document.getElementById('reviewModal');
-  alert('DEBUG 4: rm found=' + !!rm + ', current display=' + rm.style.display);
   rm.style.display = 'flex';
   rm.classList.add('show');
-  alert('DEBUG 5: after show, display=' + rm.style.display + ', computed=' + window.getComputedStyle(rm).display);
 }
 
 function closeReviewModal(){
