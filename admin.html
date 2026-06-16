@@ -14,7 +14,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;width:380px}
 .login-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;margin-bottom:4px;text-align:center}
 .login-sub{font-size:11px;color:var(--muted);margin-bottom:24px;text-align:center;line-height:1.6}
-.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:400}
+.topbar{background:rgba(10,13,20,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:50}
 .topbar-logo{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#e67e00);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:16px;color:#000}
 .topbar-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:1px}
 .topbar-sub{font-size:10px;color:var(--muted)}
@@ -179,7 +179,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
   <div style="display:flex;align-items:center;gap:9px">
     <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">↗ Dashboard</a>
-    <div style="position:relative;display:none" id="notifBellWrap">
+    <div style="position:relative" id="notifBellWrap" style="display:none">
       <button class="btn btn-secondary btn-sm" onclick="toggleNotifPanel()" id="notifBell"
         style="position:relative;padding:7px 10px">
         🔔
@@ -194,7 +194,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div style="font-size:10px;color:var(--muted)" id="uRole">—</div>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="doLogout()" style="position:relative;z-index:9999">Sign Out</button>
+    <button class="btn btn-secondary btn-sm" onclick="doLogout()">Sign Out</button>
   </div>
 </div>
 
@@ -691,8 +691,6 @@ async function doLogin(){
 
 function doLogout(){
   if(_notifPollTimer){ clearInterval(_notifPollTimer); _notifPollTimer=null; }
-  const np = document.getElementById('notifPanel');
-  if(np){ np.style.display = 'none'; }
   currentUser=null; currentData=null; location.reload();
 }
 
@@ -1599,8 +1597,9 @@ function renderNotifications(){
 
 function toggleNotifPanel(){
   const panel = document.getElementById('notifPanel');
-  const opening = (panel.style.display === 'none' || panel.style.display === '');
-  panel.style.display = opening ? 'block' : 'none';
+  const opening = !panel.classList.contains('show');
+  panel.classList.toggle('show');
+  // Refresh pending_submissions from server when opening the panel
   if(opening){
     fetch(`${RAW_BASE}/data.json?t=${Date.now()}`)
       .then(r=>r.ok?r.json():null)
@@ -1611,16 +1610,6 @@ function toggleNotifPanel(){
       }).catch(()=>{});
   }
 }
-
-// Close notif panel when clicking outside of it
-document.addEventListener('click', function(e){
-  const panel = document.getElementById('notifPanel');
-  const wrap  = document.getElementById('notifBellWrap');
-  if(!panel || panel.style.display === 'none' || panel.style.display === '') return;
-  if(panel.contains(e.target)) return;
-  if(wrap && wrap.contains(e.target)) return;
-  panel.style.display = 'none';
-});
 
 async function markRead(notifId){
   const n = (currentData.notifications||[]).find(x=>x.id===notifId);
@@ -1636,7 +1625,7 @@ async function markAllRead(){
   renderNotifications();
   const cachedPAT = sessionStorage.getItem('psc_pat');
   if(cachedPAT && isAdmin()) await pushNotificationsToGitHub(cachedPAT);
-  document.getElementById('notifPanel').style.display = 'none';
+  document.getElementById('notifPanel').classList.remove('show');
 }
 
 async function pushNotificationsToGitHub(pat){
@@ -1791,61 +1780,33 @@ let _reviewingUsername = null;
 let _reviewSubmission  = null;
 
 // Called by Admin when clicking 🔍 Review on a notification
-function openReviewModal(username){
-  const np = document.getElementById('notifPanel');
-  if(np) np.style.display = 'none';
+async function openReviewModal(username){
+  // Always fetch fresh data to ensure we have latest pending_submissions
+  try {
+    const res = await fetch(`${RAW_BASE}/data.json?t=${Date.now()}`);
+    if(res.ok){
+      const fresh = await res.json();
+      if(fresh.pending_submissions) currentData.pending_submissions = fresh.pending_submissions;
+    }
+  } catch(e){}
 
   const sub = (currentData.pending_submissions || {})[username];
-  if(!sub){ showStatus('No pending submission found.','error'); return; }
-
+  if(!sub){
+    showStatus('No pending submission found for this PM.','error');
+    return;
+  }
   _reviewingUsername = username;
   _reviewSubmission  = sub;
-
   const user = (currentData.users||[]).find(u=>u.username===username);
+
   document.getElementById('reviewModalTitle').textContent =
-    'Review Submission — ' + (user ? user.display_name : username);
+    `Review Submission — ${user?.display_name || username}`;
   document.getElementById('reviewModalSub').textContent =
-    'Submitted: ' + new Date(sub.submitted_at).toLocaleString() + '  ·  Week: ' + sub.week;
+    `Submitted: ${new Date(sub.submitted_at).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'})} · Week: ${sub.week}`;
 
-  var html = '';
-  (sub.projects||[]).forEach(function(sp) {
-    var lp = (currentData.projects||[]).find(function(p){ return p.code===sp.code; }) || {};
-    var liveSC = lp.s_curve || [];
-    var subSC  = sp.s_curve || [];
-    var scNew  = subSC.filter(function(r){ return !liveSC.find(function(lr){ return lr.period===r.period; }); });
-    var scMod  = subSC.filter(function(r){
-      var lr = liveSC.find(function(x){ return x.period===r.period; });
-      return lr && JSON.stringify(lr)!==JSON.stringify(r);
-    });
-
-    html += '<div style="margin-bottom:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
-    html += '<div style="background:var(--surface2);padding:8px 14px;font-weight:700;font-size:13px">' + sp.name + '</div>';
-
-    if(scNew.length || scMod.length){
-      html += '<div style="padding:8px 14px;font-size:11px;color:var(--accent2);border-bottom:1px solid var(--border)">S-Curve: ' + scNew.length + ' new row(s), ' + scMod.length + ' modified row(s)</div>';
-      html += '<table class="diff-table"><tr><th>Period</th><th>Type</th><th>Planned%</th><th>Actual%</th><th>Planned Cost</th><th>Actual Cost</th></tr>';
-      scNew.forEach(function(r){
-        html += '<tr><td>'+r.period+'</td><td style="color:var(--accent3)">NEW</td><td>'+r.planned_progress+'%</td><td>'+r.actual_progress+'%</td><td>'+Number(r.planned_cost).toLocaleString()+'</td><td>'+Number(r.actual_cost).toLocaleString()+'</td></tr>';
-      });
-      scMod.forEach(function(r){
-        var lr = liveSC.find(function(x){ return x.period===r.period; })||{};
-        html += '<tr><td>'+r.period+'</td><td style="color:var(--accent)">MOD</td>';
-        html += '<td>'+(lr.planned_progress!==r.planned_progress?lr.planned_progress+'→<b>'+r.planned_progress+'</b>':r.planned_progress)+'%</td>';
-        html += '<td>'+(lr.actual_progress!==r.actual_progress?lr.actual_progress+'→<b>'+r.actual_progress+'</b>':r.actual_progress)+'%</td>';
-        html += '<td>'+(lr.planned_cost!==r.planned_cost?Number(lr.planned_cost).toLocaleString()+'→<b>'+Number(r.planned_cost).toLocaleString()+'</b>':Number(r.planned_cost).toLocaleString())+'</td>';
-        html += '<td>'+(lr.actual_cost!==r.actual_cost?Number(lr.actual_cost).toLocaleString()+'→<b>'+Number(r.actual_cost).toLocaleString()+'</b>':Number(r.actual_cost).toLocaleString())+'</td></tr>';
-      });
-      html += '</table>';
-    } else {
-      html += '<div style="padding:10px 14px;font-size:11px;color:var(--muted)">No S-Curve changes.</div>';
-    }
-    html += '</div>';
-  });
-
-  document.getElementById('reviewDiffContent').innerHTML = html;
-  var rm = document.getElementById('reviewModal');
-  rm.style.display = 'flex';
-  rm.classList.add('show');
+  document.getElementById('reviewDiffContent').innerHTML = buildDiffHTML(sub, currentData);
+  document.getElementById('reviewModal').style.display = 'flex';
+  document.getElementById('reviewModal').classList.add('show');
 }
 
 function closeReviewModal(){
