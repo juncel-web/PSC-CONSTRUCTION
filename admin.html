@@ -1792,15 +1792,20 @@ let _reviewSubmission  = null;
 
 // Called by Admin when clicking 🔍 Review on a notification
 function openReviewModal(username){
+  alert('DEBUG 1: openReviewModal called for ' + username);
+
   // Close notif panel
   const np = document.getElementById('notifPanel');
   if(np) np.style.display = 'none';
+
+  alert('DEBUG 2: currentData exists=' + !!currentData + ', pending_submissions=' + JSON.stringify(Object.keys((currentData||{}).pending_submissions||{})));
 
   const sub = (currentData.pending_submissions || {})[username];
   if(!sub){
     alert('No pending submission found for ' + username);
     return;
   }
+  alert('DEBUG 3: sub found, projects=' + (sub.projects||[]).length);
 
   _reviewingUsername = username;
   _reviewSubmission  = sub;
