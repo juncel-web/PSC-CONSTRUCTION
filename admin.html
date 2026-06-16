@@ -1890,8 +1890,10 @@ function openReviewModal(username){
   document.getElementById('reviewDiffContent').innerHTML = html;
 
   var rm = document.getElementById('reviewModal');
+  alert('DEBUG 4: rm found=' + !!rm + ', current display=' + rm.style.display);
   rm.style.display = 'flex';
   rm.classList.add('show');
+  alert('DEBUG 5: after show, display=' + rm.style.display + ', computed=' + window.getComputedStyle(rm).display);
 }
 
 function closeReviewModal(){
